@@ -1,6 +1,6 @@
 {
   "expo": {
-    "jsEngine": "jsc",
+    "jsEngine": "hermes",
     "name": "Control de Equipos",
     "slug": "apilamiento-mobile",
     "version": "1.0.0",
