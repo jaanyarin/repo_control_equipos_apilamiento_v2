@@ -83,10 +83,55 @@ public class AuthService {
         return authorizeUrlBase + "&state=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8);
     }
 
+    public String generateMobileAuthorizeUrl(String mobileRedirectUri) {
+        return "https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/authorize"
+                + "?client_id=" + clientId
+                + "&response_type=code"
+                + "&redirect_uri=" + URLEncoder.encode(mobileRedirectUri, StandardCharsets.UTF_8)
+                + "&response_mode=query"
+                + "&scope=" + URLEncoder.encode("openid email profile User.Read", StandardCharsets.UTF_8)
+                + "&prompt=select_account"
+                + "&state=" + URLEncoder.encode(mobileRedirectUri, StandardCharsets.UTF_8);
+    }
+
+    @Transactional
+    public String handleMobileCallback(String code, String mobileRedirectUri) throws Exception {
+        String accessToken = exchangeCodeForToken(code, mobileRedirectUri);
+        return processGraphUser(accessToken);
+    }
+
     @Transactional
     public String handleCallback(String code) throws Exception {
-        String accessToken = exchangeCodeForToken(code);
+        String accessToken = exchangeCodeForToken(code, redirectUri);
+        return processGraphUser(accessToken);
+    }
 
+    private String exchangeCodeForToken(String code, String redirectUri) throws Exception {
+        String body = new StringJoiner("&")
+                .add("client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8))
+                .add("client_secret=" + URLEncoder.encode(clientSecret, StandardCharsets.UTF_8))
+                .add("code=" + URLEncoder.encode(code, StandardCharsets.UTF_8))
+                .add("redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8))
+                .add("grant_type=authorization_code")
+                .toString();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(tokenUrl))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Error al intercambiar código por token: " + response.body());
+        }
+
+        JsonNode json = objectMapper.readTree(response.body());
+        return json.get("access_token").asText();
+    }
+
+    @Transactional
+    protected String processGraphUser(String accessToken) throws Exception {
         JsonNode graphUser = callGraphApi(accessToken);
 
         if (graphUser.has("accountEnabled") && !graphUser.get("accountEnabled").asBoolean()) {
@@ -132,30 +177,6 @@ public class AuthService {
         usuarioRepository.persist(user);
 
         return jwtService.generateToken(user);
-    }
-
-    private String exchangeCodeForToken(String code) throws Exception {
-        String body = new StringJoiner("&")
-                .add("client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8))
-                .add("client_secret=" + URLEncoder.encode(clientSecret, StandardCharsets.UTF_8))
-                .add("code=" + URLEncoder.encode(code, StandardCharsets.UTF_8))
-                .add("redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8))
-                .add("grant_type=authorization_code")
-                .toString();
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(tokenUrl))
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
-
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() != 200) {
-            throw new RuntimeException("Error al intercambiar código por token: " + response.body());
-        }
-
-        JsonNode json = objectMapper.readTree(response.body());
-        return json.get("access_token").asText();
     }
 
     private JsonNode callGraphApi(String accessToken) throws Exception {

@@ -8,6 +8,7 @@ import jakarta.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @Path("/auth")
 @PermitAll
@@ -54,6 +55,41 @@ public class AuthResource {
             return Response.seeOther(
                     URI.create(base + "/login?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8))
             ).build();
+        }
+    }
+
+    @GET
+    @Path("/authorize-url")
+    public Response getAuthorizeUrl(@QueryParam("redirect_uri") String redirectUri) {
+        if (redirectUri == null || redirectUri.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"message\":\"redirect_uri requerido\"}").build();
+        }
+        String authUrl = authService.generateMobileAuthorizeUrl(redirectUri);
+        return Response.ok(Map.of("authorizeUrl", authUrl)).build();
+    }
+
+    @POST
+    @Path("/exchange-code")
+    public Response exchangeCode(Map<String, String> body) {
+        String code = body != null ? body.get("code") : null;
+        String redirectUri = body != null ? body.get("redirect_uri") : null;
+
+        if (code == null || code.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"message\":\"Código de autorización requerido\"}").build();
+        }
+        if (redirectUri == null || redirectUri.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"message\":\"redirect_uri requerido\"}").build();
+        }
+
+        try {
+            String jwt = authService.handleMobileCallback(code, redirectUri);
+            return Response.ok(Map.of("token", jwt)).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"message\":\"" + e.getMessage() + "\"}").build();
         }
     }
 }

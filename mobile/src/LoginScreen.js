@@ -19,22 +19,43 @@ export default function LoginScreen() {
 
     try {
       const apiUrl = await loadApiUrl()
-      const authUrl = `${apiUrl}/auth/login`
       const redirectUri = Linking.createURL('callback')
-      const result = await WebBrowser.openAuthSessionAsync(
-        `${authUrl}?redirect_uri=${encodeURIComponent(redirectUri)}`,
-        redirectUri
-      )
+
+      const authUrlResp = await fetch(`${apiUrl}/auth/authorize-url?redirect_uri=${encodeURIComponent(redirectUri)}`)
+      if (!authUrlResp.ok) {
+        throw new Error('Error al obtener URL de autorizacion')
+      }
+      const { authorizeUrl } = await authUrlResp.json()
+
+      const result = await WebBrowser.openAuthSessionAsync(authorizeUrl, redirectUri)
 
       if (result.type === 'success' && result.url) {
         const { queryParams } = Linking.parse(result.url)
-        const token = queryParams?.token
+        const code = queryParams?.code
         const authError = queryParams?.error
 
         if (authError) {
           setError(String(authError))
           return
         }
+
+        if (!code) {
+          setError('No se recibio codigo de autorizacion.')
+          return
+        }
+
+        const tokenResp = await fetch(`${apiUrl}/auth/exchange-code`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, redirect_uri: redirectUri }),
+        })
+
+        if (!tokenResp.ok) {
+          const errBody = await tokenResp.json().catch(() => ({}))
+          throw new Error(errBody.message || 'Error al intercambiar codigo')
+        }
+
+        const { token } = await tokenResp.json()
 
         if (token) {
           await setToken(String(token))
@@ -46,8 +67,8 @@ export default function LoginScreen() {
       } else if (result.type !== 'cancel') {
         setError('No se pudo completar el inicio de sesion.')
       }
-    } catch {
-      setError('No se pudo conectar con Microsoft. Verifica la conexion y la URL del backend.')
+    } catch (e) {
+      setError(e.message || 'No se pudo conectar con Microsoft. Verifica la conexion y la URL del backend.')
     } finally {
       setLoading(false)
     }
