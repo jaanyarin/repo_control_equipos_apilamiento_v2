@@ -258,7 +258,7 @@ Implementar una aplicación móvil operativa robusta para operación en campo.
 
 | Componente | Tecnología |
 |---|---|
-| Framework | Expo SDK 54 + React Native 0.76.6 |
+| Framework | Expo SDK 54.0.35 + React Native 0.81.5 |
 | UI | React Native Paper (Material Design 3) |
 | Estado Global | React Context |
 | Navegación | React Navigation Native Stack |
@@ -266,19 +266,23 @@ Implementar una aplicación móvil operativa robusta para operación en campo.
 | Almacenamiento Seguro | expo-secure-store |
 | Autenticación | expo-web-browser + expo-auth-session |
 | Deep Linking | expo-linking |
+| JS Engine | Hermes (obligatorio con newArch) |
+| New Architecture | Habilitado (newArchEnabled=true) |
+| Entry Point | expo/AppEntry (registerRootComponent) |
 
 ## Estructura General Mobile (Actual)
 
 ```text
 mobile/
-├── App.js                          # Entry point con providers
-├── app.json                        # Configuración Expo (plugins, scheme, etc.)
-├── .env                            # Variables de entorno (EXPO_PUBLIC_API_URL)
+├── App.js                          # Componente raíz con providers
+├── app.json                        # Configuración Expo (jsEngine: hermes, plugins, scheme)
+├── eas.json                        # Perfiles EAS Build (preview=APK, production=AAB)
+├── package.json                    # main: expo/AppEntry (NO CAMBIAR)
 ├── assets/
 │   └── fondo_login.png             # Imagen de fondo del login
 ├── src/
 │   ├── AuthContext.js              # Contexto de autenticación (user, login, logout)
-│   ├── api.js                      # Cliente Axios + SecureStore para JWT
+│   ├── api.js                      # Cliente Axios + SecureStore (JWT + API URL)
 │   └── LoginScreen.js              # Pantalla de login OIDC + éxito
 ```
 
@@ -295,15 +299,25 @@ mobile/
 
 ## Variables de Entorno
 
-| Variable | Obligatorio | Descripción |
-|---|---|---|
-| `EXPO_PUBLIC_API_URL` | Sí | URL base del backend API (ej: `http://192.168.1.50:8080/api/v1`) |
+### Build-time (EAS Cloud)
+No se requieren variables `EXPO_PUBLIC_*`. La URL del API se configura en runtime.
 
-La URL se configura en `mobile/.env` o como variable de entorno al iniciar Expo:
+### Runtime (URL del API configurable)
+La URL del backend se almacena en `SecureStore` del dispositivo. Se puede cambiar sin rebuild mediante:
+
+```js
+import { setApiUrl } from './api'
+await setApiUrl('http://NUEVA_IP:8080/api/v1')
 ```
-set EXPO_PUBLIC_API_URL=http://192.168.x.x:8080/api/v1
-npx expo start
+
+Valor por defecto en `src/api.js`:
+```js
+const DEFAULT_API_URL = 'http://10.13.18.115:8080/api/v1'
 ```
+
+**ADVERTENCIA**: No cambiar el entry point `"main": "expo/AppEntry"` en `package.json`.
+No cambiar `"jsEngine": "hermes"` en `app.json`.
+No cambiar `hermesEnabled=true` ni `newArchEnabled=true` en `gradle.properties`.
 
 ## Lineamientos Frontend Mobile
 
@@ -313,13 +327,17 @@ npx expo start
 - Manejo global errores.
 - Validaciones frontend obligatorias.
 - Control automático sesión (SecureStore + AuthContext).
-- Consumo APIs desacoplado vía Axios interceptors.
+- Consumo APIs desacoplado vía Axios interceptors con URL dinámica desde SecureStore.
 - Deep link callback manejado por expo-linking.
-- URLs configurables sin modificar código fuente (`.env`).
 - Alcance APK configurado solo para Android en `mobile/app.json`.
 - EAS Build configurado en `mobile/eas.json` con perfil `preview` para APK instalable y `production` para AAB.
+- Build local solo como alternativa; el build oficial se realiza via EAS Cloud.
+- Para build local: usar `GRADLE_USER_HOME=..\.gradle-home` (dentro del proyecto, no en C:\tmp).
 - El login mobile muestra estado de carga, errores de autenticación y pantalla "Ingresaste de forma correcta" cuando existe JWT válido.
 - El JWT se decodifica como base64url para evitar fallos con tokens reales en APK.
+- Hermes JS Engine obligatorio (incompatible JSC con newArchEnabled=true en RN 0.81).
+- Entry point debe ser `expo/AppEntry` (no cambiar a `App.js` directo).
+- La URL del API se configura en runtime via SecureStore, no via `EXPO_PUBLIC_*`.
 
 ---
 
