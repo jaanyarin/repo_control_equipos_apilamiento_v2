@@ -4,7 +4,7 @@ import * as SecureStore from 'expo-secure-store'
 const TOKEN_KEY = 'accessToken'
 const API_URL_KEY = 'apiUrl'
 
-const DEFAULT_API_URL = 'http://10.13.18.115:8080/api/v1'
+const DEFAULT_API_URL = 'http://10.13.18.115/api/v1'
 
 export async function loadApiUrl() {
   const stored = await SecureStore.getItemAsync(API_URL_KEY)
