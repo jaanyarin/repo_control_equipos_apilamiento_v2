@@ -2,16 +2,28 @@ import axios from 'axios'
 import * as SecureStore from 'expo-secure-store'
 
 const TOKEN_KEY = 'accessToken'
+const API_URL_KEY = 'apiUrl'
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:8080/api/v1'
+const DEFAULT_API_URL = 'http://10.0.2.2:8080/api/v1'
+
+export async function loadApiUrl() {
+  const stored = await SecureStore.getItemAsync(API_URL_KEY)
+  return stored || DEFAULT_API_URL
+}
+
+export async function setApiUrl(url) {
+  await SecureStore.setItemAsync(API_URL_KEY, url)
+}
 
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: DEFAULT_API_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 15000,
 })
 
 api.interceptors.request.use(async (config) => {
+  const storedUrl = await SecureStore.getItemAsync(API_URL_KEY)
+  if (storedUrl) config.baseURL = storedUrl
   const token = await SecureStore.getItemAsync(TOKEN_KEY)
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
@@ -63,7 +75,5 @@ function decodeJwtPayload(token) {
   const bytes = Array.from(decoded, (char) => `%${char.charCodeAt(0).toString(16).padStart(2, '0')}`)
   return decodeURIComponent(bytes.join(''))
 }
-
-export { API_BASE }
 
 export default api

@@ -3,10 +3,8 @@ import { View, StyleSheet, ImageBackground } from 'react-native'
 import { Button, Text, Surface, Avatar, ActivityIndicator } from 'react-native-paper'
 import * as WebBrowser from 'expo-web-browser'
 import * as Linking from 'expo-linking'
-import { setToken, removeToken, API_BASE } from './api'
+import { setToken, removeToken, loadApiUrl } from './api'
 import { useAuth } from './AuthContext'
-
-const AUTH_URL = `${API_BASE}/auth/login`
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -20,9 +18,11 @@ export default function LoginScreen() {
     setError('')
 
     try {
+      const apiUrl = await loadApiUrl()
+      const authUrl = `${apiUrl}/auth/login`
       const redirectUri = Linking.createURL('callback')
       const result = await WebBrowser.openAuthSessionAsync(
-        `${AUTH_URL}?redirect_uri=${encodeURIComponent(redirectUri)}`,
+        `${authUrl}?redirect_uri=${encodeURIComponent(redirectUri)}`,
         redirectUri
       )
 

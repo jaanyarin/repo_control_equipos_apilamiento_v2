@@ -9,26 +9,17 @@
         "buildType": "apk",
         "developmentClient": true,
         "distribution": "internal"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "http://192.168.18.229:8080/api/v1"
       }
     },
     "preview": {
       "android": {
         "buildType": "apk"
       },
-      "distribution": "internal",
-      "env": {
-        "EXPO_PUBLIC_API_URL": "http://192.168.18.229:8080/api/v1"
-      }
+      "distribution": "internal"
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.example.com/api/v1"
       }
     }
   },
