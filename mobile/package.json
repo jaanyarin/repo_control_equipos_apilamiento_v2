@@ -1,7 +1,7 @@
 {
   "name": "apilamiento-mobile",
   "version": "1.0.0",
-  "main": "App.js",
+  "main": "expo/AppEntry",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -12,7 +12,7 @@
     "prebuild:android": "npx expo prebuild --platform android",
     "build:android:local:debug": "npm run prebuild:android && cd android && set GRADLE_USER_HOME=..\\.gradle-home&& gradlew.bat assembleDebug --no-daemon --no-parallel -Dorg.gradle.workers.max=1",
     "build:android:local:release": "npm run prebuild:android && cd android && set GRADLE_USER_HOME=..\\.gradle-home&& gradlew.bat assembleRelease --no-daemon --no-parallel -Dorg.gradle.workers.max=1",
-    "clean:gradle": "if (Test-Path mobile/android/.gradle) { Remove-Item -Recurse -Force mobile/android/.gradle }; if (Test-Path mobile/.gradle-home) { Remove-Item -Recurse -Force mobile/.gradle-home }",
+    "clean:gradle": "if exist android\\.gradle rmdir /s /q android\\.gradle & if exist .gradle-home rmdir /s /q .gradle-home",
     "ios": "expo run:ios"
   },
   "dependencies": {
