@@ -59,22 +59,20 @@ public class AuthResource {
     }
 
     @GET
-    @Path("/authorize-url")
-    public Response getAuthorizeUrl(@QueryParam("redirect_uri") String redirectUri) {
+    @Path("/mobile-login")
+    public Response mobileLogin(@QueryParam("redirect_uri") String redirectUri) {
         if (redirectUri == null || redirectUri.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("{\"message\":\"redirect_uri requerido\"}").build();
         }
         String authUrl = authService.generateMobileAuthorizeUrl(redirectUri);
-        return Response.ok(Map.of("authorizeUrl", authUrl)).build();
+        return Response.temporaryRedirect(URI.create(authUrl)).build();
     }
 
-    @POST
-    @Path("/exchange-code")
-    public Response exchangeCode(Map<String, String> body) {
-        String code = body != null ? body.get("code") : null;
-        String redirectUri = body != null ? body.get("redirect_uri") : null;
-
+    @GET
+    @Path("/exchange-redirect")
+    public Response exchangeRedirect(@QueryParam("code") String code,
+                                     @QueryParam("redirect_uri") String redirectUri) {
         if (code == null || code.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("{\"message\":\"Código de autorización requerido\"}").build();
@@ -86,10 +84,13 @@ public class AuthResource {
 
         try {
             String jwt = authService.handleMobileCallback(code, redirectUri);
-            return Response.ok(Map.of("token", jwt)).build();
+            String redirectTarget = authService.buildMobileRedirectUrl(redirectUri, jwt);
+            return Response.seeOther(URI.create(redirectTarget)).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity("{\"message\":\"" + e.getMessage() + "\"}").build();
+            String base = redirectUri.endsWith("/") ? redirectUri.substring(0, redirectUri.length() - 1) : redirectUri;
+            return Response.seeOther(
+                    URI.create(base + "/login?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8))
+            ).build();
         }
     }
 }

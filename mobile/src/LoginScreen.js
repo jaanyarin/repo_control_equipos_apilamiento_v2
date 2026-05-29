@@ -21,52 +21,54 @@ export default function LoginScreen() {
       const apiUrl = await loadApiUrl()
       const redirectUri = Linking.createURL('callback')
 
-      const authUrlResp = await fetch(`${apiUrl}/auth/authorize-url?redirect_uri=${encodeURIComponent(redirectUri)}`)
-      if (!authUrlResp.ok) {
-        throw new Error('Error al obtener URL de autorizacion')
+      const loginUrl = `${apiUrl}/auth/mobile-login?redirect_uri=${encodeURIComponent(redirectUri)}`
+      const result = await WebBrowser.openAuthSessionAsync(loginUrl, redirectUri)
+
+      if (result.type !== 'success' || !result.url) {
+        if (result.type !== 'cancel') {
+          setError('No se pudo completar el inicio de sesion.')
+        }
+        return
       }
-      const { authorizeUrl } = await authUrlResp.json()
 
-      const result = await WebBrowser.openAuthSessionAsync(authorizeUrl, redirectUri)
+      const { queryParams } = Linking.parse(result.url)
+      const code = queryParams?.code
+      const authError = queryParams?.error
 
-      if (result.type === 'success' && result.url) {
-        const { queryParams } = Linking.parse(result.url)
-        const code = queryParams?.code
-        const authError = queryParams?.error
+      if (authError) {
+        setError(String(authError))
+        return
+      }
 
-        if (authError) {
-          setError(String(authError))
-          return
-        }
+      if (!code) {
+        setError('No se recibio codigo de autorizacion.')
+        return
+      }
 
-        if (!code) {
-          setError('No se recibio codigo de autorizacion.')
-          return
-        }
+      const exchangeUrl = `${apiUrl}/auth/exchange-redirect?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`
+      const result2 = await WebBrowser.openAuthSessionAsync(exchangeUrl, redirectUri)
 
-        const tokenResp = await fetch(`${apiUrl}/auth/exchange-code`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, redirect_uri: redirectUri }),
-        })
+      if (result2.type !== 'success' || !result2.url) {
+        setError('Error al obtener token de autenticacion.')
+        return
+      }
 
-        if (!tokenResp.ok) {
-          const errBody = await tokenResp.json().catch(() => ({}))
-          throw new Error(errBody.message || 'Error al intercambiar codigo')
-        }
+      const { queryParams: params2 } = Linking.parse(result2.url)
+      const token = params2?.token
+      const tokenError = params2?.error
 
-        const { token } = await tokenResp.json()
+      if (tokenError) {
+        setError(String(tokenError))
+        return
+      }
 
-        if (token) {
-          await setToken(String(token))
-          await refreshUser()
-          return
-        }
-
+      if (!token) {
         setError('No se recibio token de autenticacion.')
-      } else if (result.type !== 'cancel') {
-        setError('No se pudo completar el inicio de sesion.')
+        return
       }
+
+      await setToken(String(token))
+      await refreshUser()
     } catch (e) {
       setError(e.message || 'No se pudo conectar con Microsoft. Verifica la conexion y la URL del backend.')
     } finally {

@@ -100,6 +100,11 @@ public class AuthService {
         return processGraphUser(accessToken);
     }
 
+    public String buildMobileRedirectUrl(String mobileRedirectUri, String jwt) {
+        String base = mobileRedirectUri.endsWith("/") ? mobileRedirectUri.substring(0, mobileRedirectUri.length() - 1) : mobileRedirectUri;
+        return base + "/auth/callback?token=" + jwt;
+    }
+
     @Transactional
     public String handleCallback(String code) throws Exception {
         String accessToken = exchangeCodeForToken(code, redirectUri);
