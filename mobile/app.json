@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "jsEngine": "jsc",
+    "name": "Control de Equipos",
+    "slug": "apilamiento-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "com.apilamiento",
+    "platforms": ["android"],
+    "android": {
+      "package": "com.apilamiento.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1565C0"
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "com.apilamiento",
+              "host": "callback",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
+  }
+}
