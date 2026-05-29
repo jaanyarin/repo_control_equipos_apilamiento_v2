@@ -77,3 +77,29 @@ Si el login no retorna al APK, revisar que Microsoft Entra ID tenga registrado e
 ```text
 com.apilamiento://callback/
 ```
+
+---
+
+## 5. Build Local en Windows
+
+El equipo local tiene Java 17, Android SDK, build-tools, platform-tools, NDK y `keytool`, por lo que puede compilar Android localmente.
+
+Limitacion practica:
+
+- `eas build --local` en Windows debe ejecutarse desde WSL.
+- En Windows nativo, usar `expo prebuild` + Gradle.
+
+Comandos disponibles:
+
+```bash
+cd mobile
+npm run build:android:local:debug
+```
+
+El APK debug queda normalmente en:
+
+```text
+mobile/android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Este APK sirve para validar instalacion y login en celular. Para APK/AAB de distribucion con firma formal, usar EAS Build o configurar keystore Android propio.

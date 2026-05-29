@@ -31,5 +31,12 @@ Thumbs.db
 *.keystore
 credentials.json
 
+# Expo / React Native prebuild
+mobile/android/
+mobile/ios/
+
+# Gradle local cache (Windows lock workaround)
+mobile/.gradle-home/
+
 # Docker volumes
 postgres-data/

@@ -6,7 +6,9 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "com.apilamiento",
-    "platforms": ["android"],
+    "platforms": [
+      "android"
+    ],
     "android": {
       "package": "com.apilamiento.mobile",
       "versionCode": 1,
@@ -24,12 +26,23 @@
               "pathPrefix": "/"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
     "plugins": [
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      "expo-asset",
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "09f4869d-8a0b-483e-b95b-c899fac76db1"
+      }
+    }
   }
 }
