@@ -9,6 +9,7 @@ node_modules/
 dist/
 dist-test/
 .expo/
+eas-inspect/
 
 # IDE
 .idea/
@@ -24,6 +25,11 @@ Thumbs.db
 .env
 .env.local
 *.log
+
+# Android signing
+*.jks
+*.keystore
+credentials.json
 
 # Docker volumes
 postgres-data/

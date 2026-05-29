@@ -9,6 +9,7 @@
     "platforms": ["android"],
     "android": {
       "package": "com.apilamiento.mobile",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1565C0"

@@ -317,6 +317,7 @@ npx expo start
 - Deep link callback manejado por expo-linking.
 - URLs configurables sin modificar código fuente (`.env`).
 - Alcance APK configurado solo para Android en `mobile/app.json`.
+- EAS Build configurado en `mobile/eas.json` con perfil `preview` para APK instalable y `production` para AAB.
 - El login mobile muestra estado de carga, errores de autenticación y pantalla "Ingresaste de forma correcta" cuando existe JWT válido.
 - El JWT se decodifica como base64url para evitar fallos con tokens reales en APK.
 

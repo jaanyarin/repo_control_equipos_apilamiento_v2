@@ -26,6 +26,7 @@ La base es viable: backend Quarkus compila, frontend web compila, Expo genera bu
 | Backend | Dependencias REST actualizadas a `quarkus-rest` y `quarkus-rest-jackson` |
 | Backend | Version explicita `maven-compiler-plugin` 3.13.0 |
 | Mobile | `app.json` limitado a Android |
+| Mobile | Configuracion EAS agregada para APK interno y AAB productivo |
 | Mobile | Login con carga, errores y pantalla de ingreso correcto |
 | Mobile | JWT decodificado como base64url |
 
@@ -39,6 +40,7 @@ La base es viable: backend Quarkus compila, frontend web compila, Expo genera bu
 | `mvn clean package -DskipTests` en `backend/` | Correcto |
 | `docker compose build backend` | Correcto |
 | `npx expo config --type public` en `mobile/` | Correcto |
+| `npx eas-cli build:inspect --platform android --profile preview --stage archive` | Correcto |
 | `npx expo export --platform android --output-dir dist-test` | Correcto |
 | `docker compose config` | Correcto, usando valores de `.env` local |
 | `http://localhost/` | HTTP 200 |
@@ -54,7 +56,7 @@ La base es viable: backend Quarkus compila, frontend web compila, Expo genera bu
 |---|---|---|
 | Alta | La carpeta no contiene `.git` | Inicializar o clonar como repositorio Git antes de nuevos hitos |
 | Alta | Secretos reales estuvieron presentes en archivos versionables | Rotar secretos si fueron compartidos o subidos |
-| Media | APK final aun no esta configurado con EAS Build/firma | Definir flujo de build Android firmado |
+| Media | APK firmado requiere cuenta Expo y decision de credenciales | Ejecutar EAS con credenciales gestionadas por Expo o keystore propio |
 | Media | No existen pruebas automatizadas backend/frontend/mobile | Agregar pruebas al avanzar en modulos operativos |
 | Baja | Vite advierte bundle mayor a 500 KB | Evaluar code-splitting cuando crezca el frontend |
 
@@ -67,6 +69,6 @@ La base HDT-001 queda estabilizada para continuar con HDT-002 sin modificar los 
 Proximo foco recomendado:
 
 1. Configurar repositorio Git real.
-2. Preparar EAS Build Android.
+2. Ejecutar EAS Build Android con credenciales gestionadas por Expo o keystore propio.
 3. Desarrollar pantallas operativas mobile siguiendo contratos backend existentes.
 4. Mantener documentacion por hito al cerrar cada modulo funcional.

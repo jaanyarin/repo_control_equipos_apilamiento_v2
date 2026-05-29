@@ -5,8 +5,10 @@
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:android:apk": "npx eas-cli build --platform android --profile preview",
+    "build:android:aab": "npx eas-cli build --platform android --profile production",
+    "credentials:android": "npx eas-cli credentials --platform android"
   },
   "dependencies": {
     "@react-navigation/native": "^7.0.0",
