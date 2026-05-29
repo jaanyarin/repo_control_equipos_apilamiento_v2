@@ -60,17 +60,19 @@ public class AuthResource {
 
     @GET
     @Path("/mobile-login")
+    @Produces(MediaType.TEXT_HTML)
     public Response mobileLogin(@QueryParam("redirect_uri") String redirectUri) {
         if (redirectUri == null || redirectUri.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("{\"message\":\"redirect_uri requerido\"}").build();
         }
         String authUrl = authService.generateMobileAuthorizeUrl(redirectUri);
-        return Response.temporaryRedirect(URI.create(authUrl)).build();
+        return buildHtmlRedirect(authUrl);
     }
 
     @GET
     @Path("/exchange-redirect")
+    @Produces(MediaType.TEXT_HTML)
     public Response exchangeRedirect(@QueryParam("code") String code,
                                      @QueryParam("redirect_uri") String redirectUri) {
         if (code == null || code.isBlank()) {
@@ -85,12 +87,20 @@ public class AuthResource {
         try {
             String jwt = authService.handleMobileCallback(code, redirectUri);
             String redirectTarget = authService.buildMobileRedirectUrl(redirectUri, jwt);
-            return Response.seeOther(URI.create(redirectTarget)).build();
+            return buildHtmlRedirect(redirectTarget);
         } catch (Exception e) {
             String base = redirectUri.endsWith("/") ? redirectUri.substring(0, redirectUri.length() - 1) : redirectUri;
-            return Response.seeOther(
-                    URI.create(base + "/login?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8))
-            ).build();
+            return buildHtmlRedirect(base + "/login?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
         }
+    }
+
+    private Response buildHtmlRedirect(String targetUrl) {
+        String htmlEscaped = targetUrl.replace("&", "&amp;").replace("\"", "&quot;");
+        String jsEscaped = targetUrl.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
+        String html = "<!DOCTYPE html><html><head>"
+                + "<meta http-equiv=\"refresh\" content=\"0;url=" + htmlEscaped + "\">"
+                + "<script>window.location.href=\"" + jsEscaped + "\";</script>"
+                + "</head><body><p>Redirigiendo...</p></body></html>";
+        return Response.ok(html).build();
     }
 }
