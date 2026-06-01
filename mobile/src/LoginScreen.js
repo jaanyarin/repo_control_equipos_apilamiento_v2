@@ -1,17 +1,46 @@
 import React, { useState } from 'react'
 import { View, StyleSheet, ImageBackground } from 'react-native'
 import { Button, Text, Surface, Avatar, ActivityIndicator } from 'react-native-paper'
-import * as WebBrowser from 'expo-web-browser'
 import * as Linking from 'expo-linking'
 import api, { setToken, removeToken, loadApiUrl } from './api'
 import { useAuth } from './AuthContext'
-
-WebBrowser.maybeCompleteAuthSession()
 
 export default function LoginScreen() {
   const { user, refreshUser, logout } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const waitForRedirect = (expectedPrefix, timeoutMs = 120000) => {
+    return new Promise((resolve, reject) => {
+      let finished = false
+      let subscription
+      const timeoutId = setTimeout(() => {
+        cleanup()
+        reject(new Error('Tiempo de espera agotado esperando la redireccion.'))
+      }, timeoutMs)
+
+      const cleanup = () => {
+        if (finished) return
+        finished = true
+        clearTimeout(timeoutId)
+        if (subscription) {
+          subscription.remove()
+        }
+      }
+
+      subscription = Linking.addEventListener('url', ({ url }) => {
+        if (!url || !url.startsWith(expectedPrefix)) return
+        cleanup()
+        resolve(url)
+      })
+    })
+  }
+
+  const openUrlAndWait = async (targetUrl, expectedPrefix) => {
+    const redirectPromise = waitForRedirect(expectedPrefix)
+    await Linking.openURL(targetUrl)
+    return redirectPromise
+  }
 
   const handleLogin = async () => {
     setLoading(true)
@@ -30,16 +59,8 @@ export default function LoginScreen() {
         return
       }
 
-      const result = await WebBrowser.openAuthSessionAsync(loginUrl, redirectUri)
-
-      if (result.type !== 'success' || !result.url) {
-        if (result.type !== 'cancel') {
-          setError('No se pudo completar el inicio de sesion.')
-        }
-        return
-      }
-
-      const { queryParams } = Linking.parse(result.url)
+      const loginResultUrl = await openUrlAndWait(loginUrl, redirectUri)
+      const { queryParams } = Linking.parse(loginResultUrl)
       const code = queryParams?.code
       const authError = queryParams?.error
 
@@ -54,14 +75,8 @@ export default function LoginScreen() {
       }
 
       const exchangeUrl = `${apiUrl}/auth/exchange-redirect?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`
-      const result2 = await WebBrowser.openAuthSessionAsync(exchangeUrl, redirectUri)
-
-      if (result2.type !== 'success' || !result2.url) {
-        setError('Error al obtener token de autenticacion.')
-        return
-      }
-
-      const { queryParams: params2 } = Linking.parse(result2.url)
+      const tokenResultUrl = await openUrlAndWait(exchangeUrl, redirectUri)
+      const { queryParams: params2 } = Linking.parse(tokenResultUrl)
       const token = params2?.token
       const tokenError = params2?.error
 
