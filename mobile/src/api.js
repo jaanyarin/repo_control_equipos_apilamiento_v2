@@ -4,26 +4,47 @@ import * as SecureStore from 'expo-secure-store'
 const TOKEN_KEY = 'accessToken'
 const API_URL_KEY = 'apiUrl'
 
-const DEFAULT_API_URL = 'http://10.13.18.115/api/v1'
+const FALLBACK_API_URL = 'http://192.168.18.229:8080/api/v1'
+const BUILT_IN_API_URL = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL || FALLBACK_API_URL)
+
+function normalizeApiUrl(url) {
+  return String(url || '').trim().replace(/\/+$/, '')
+}
+
+function isLegacyApiUrl(url) {
+  return typeof url === 'string' && url.includes('10.13.18.115')
+}
 
 export async function loadApiUrl() {
   const stored = await SecureStore.getItemAsync(API_URL_KEY)
-  return stored || DEFAULT_API_URL
+  if (stored && !isLegacyApiUrl(stored)) {
+    return normalizeApiUrl(stored)
+  }
+
+  if (stored && isLegacyApiUrl(stored)) {
+    await SecureStore.setItemAsync(API_URL_KEY, BUILT_IN_API_URL)
+  }
+
+  return BUILT_IN_API_URL
 }
 
 export async function setApiUrl(url) {
-  await SecureStore.setItemAsync(API_URL_KEY, url)
+  await SecureStore.setItemAsync(API_URL_KEY, normalizeApiUrl(url))
 }
 
 const api = axios.create({
-  baseURL: DEFAULT_API_URL,
+  baseURL: BUILT_IN_API_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 15000,
 })
 
 api.interceptors.request.use(async (config) => {
   const storedUrl = await SecureStore.getItemAsync(API_URL_KEY)
-  if (storedUrl) config.baseURL = storedUrl
+  if (storedUrl && !isLegacyApiUrl(storedUrl)) {
+    config.baseURL = normalizeApiUrl(storedUrl)
+  } else if (storedUrl && isLegacyApiUrl(storedUrl)) {
+    config.baseURL = BUILT_IN_API_URL
+  }
   const token = await SecureStore.getItemAsync(TOKEN_KEY)
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config

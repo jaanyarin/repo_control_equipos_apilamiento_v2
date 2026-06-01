@@ -3,7 +3,7 @@ import { View, StyleSheet, ImageBackground } from 'react-native'
 import { Button, Text, Surface, Avatar, ActivityIndicator } from 'react-native-paper'
 import * as WebBrowser from 'expo-web-browser'
 import * as Linking from 'expo-linking'
-import { setToken, removeToken, loadApiUrl } from './api'
+import api, { setToken, removeToken, loadApiUrl } from './api'
 import { useAuth } from './AuthContext'
 
 WebBrowser.maybeCompleteAuthSession()
@@ -19,9 +19,17 @@ export default function LoginScreen() {
 
     try {
       const apiUrl = await loadApiUrl()
-      const redirectUri = Linking.createURL('callback')
+      const redirectUri = Linking.createURL('callback/')
 
-      const loginUrl = `${apiUrl}/auth/mobile-login?redirect_uri=${encodeURIComponent(redirectUri)}`
+      const { data } = await api.get('/auth/mobile-login-url', {
+        params: { redirect_uri: redirectUri },
+      })
+      const loginUrl = data?.authUrl
+      if (!loginUrl) {
+        setError('No se pudo obtener la URL de Microsoft.')
+        return
+      }
+
       const result = await WebBrowser.openAuthSessionAsync(loginUrl, redirectUri)
 
       if (result.type !== 'success' || !result.url) {

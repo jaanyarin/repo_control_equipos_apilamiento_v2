@@ -54,7 +54,10 @@ El build se realiza mediante **EAS Cloud** (servidores Expo), no localmente, deb
 ### 4.1 Requisitos
 - Celular en misma red WiFi o conectado por USB Tethering al servidor backend
 - Sesión iniciada en Expo: `npx eas-cli login`
-- Backend corriendo en `http://IP_DEL_SERVIDOR:8080/api/v1`
+- Backend accesible desde el celular en una de estas URLs:
+  - Directo al backend: `http://192.168.18.229:8080/api/v1`
+  - Vía Nginx del stack: `http://192.168.18.229/api/v1`
+- Para este repo, usar la misma URL en `EXPO_PUBLIC_API_URL` y en `SecureStore`
 
 ### 4.2 Ejecutar build
 
@@ -86,7 +89,13 @@ Si la IP del servidor cambió, la URL se actualiza desde la app mediante SecureS
 
 ```js
 import { setApiUrl } from './api'
-await setApiUrl('http://NUEVA_IP:8080/api/v1')
+await setApiUrl('http://192.168.18.229:8080/api/v1')
+```
+
+Si el host publica el proxy Nginx en `80`, usar en su lugar:
+
+```js
+await setApiUrl('http://192.168.18.229/api/v1')
 ```
 
 Esto no requiere rebuild del APK.
@@ -103,7 +112,7 @@ Esto no requiere rebuild del APK.
 
 Si el login no retorna al APK, verificar:
 - El redirect URI `com.apilamiento://callback/` registrado en Microsoft Entra ID
-- El celular alcanza la IP del backend (`http://IP:8080/api/v1/auth/login`)
+- El celular alcanza la URL configurada en la app (`http://192.168.18.229:8080/api/v1/auth/login` o `http://192.168.18.229/api/v1/auth/login`)
 
 ---
 
@@ -145,7 +154,7 @@ mobile/android/app/build/outputs/apk/debug/app-debug.apk
 | `AppRegistry.registerComponent wasn't called` | `main: App.js` no registra componente | Cambiar a `main: expo/AppEntry` |
 | App se cierra sin error visible | Error JS en bundle | Revisar logs con `adb logcat` |
 | Could not move temporary workspace | Antivirus bloquea rename Gradle | Usar EAS Cloud en vez de build local |
-| Login no retorna al APK | Redirect URI no registrado | Registrar `com.apilamiento://callback/` en Azure |
+| Login no retorna al APK | Redirect URI no registrado o backend inaccesible | Registrar `com.apilamiento://callback/` en Azure y validar la URL configurada en la app |
 
 ---
 

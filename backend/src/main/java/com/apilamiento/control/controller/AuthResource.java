@@ -67,7 +67,17 @@ public class AuthResource {
                     .entity("{\"message\":\"redirect_uri requerido\"}").build();
         }
         String authUrl = authService.generateMobileAuthorizeUrl(redirectUri);
-        return buildHtmlRedirect(authUrl);
+        return Response.temporaryRedirect(URI.create(authUrl)).build();
+    }
+
+    @GET
+    @Path("/mobile-login-url")
+    public Response mobileLoginUrl(@QueryParam("redirect_uri") String redirectUri) {
+        if (redirectUri == null || redirectUri.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("message", "redirect_uri requerido")).build();
+        }
+        return Response.ok(Map.of("authUrl", authService.generateMobileAuthorizeUrl(redirectUri))).build();
     }
 
     @GET
@@ -87,20 +97,10 @@ public class AuthResource {
         try {
             String jwt = authService.handleMobileCallback(code, redirectUri);
             String redirectTarget = authService.buildMobileRedirectUrl(redirectUri, jwt);
-            return buildHtmlRedirect(redirectTarget);
+            return Response.temporaryRedirect(URI.create(redirectTarget)).build();
         } catch (Exception e) {
             String base = redirectUri.endsWith("/") ? redirectUri.substring(0, redirectUri.length() - 1) : redirectUri;
-            return buildHtmlRedirect(base + "/login?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
+            return Response.temporaryRedirect(URI.create(base + "/login?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8))).build();
         }
-    }
-
-    private Response buildHtmlRedirect(String targetUrl) {
-        String htmlEscaped = targetUrl.replace("&", "&amp;").replace("\"", "&quot;");
-        String jsEscaped = targetUrl.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
-        String html = "<!DOCTYPE html><html><head>"
-                + "<meta http-equiv=\"refresh\" content=\"0;url=" + htmlEscaped + "\">"
-                + "<script>window.location.href=\"" + jsEscaped + "\";</script>"
-                + "</head><body><p>Redirigiendo...</p></body></html>";
-        return Response.ok(html).build();
     }
 }
