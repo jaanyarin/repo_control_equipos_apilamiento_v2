@@ -1,66 +1,45 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { View, StyleSheet, ImageBackground } from 'react-native'
 import { Button, Text, Surface, Avatar, ActivityIndicator } from 'react-native-paper'
+import { buildCodeAsync } from 'expo-auth-session/build/PKCE'
 import * as Linking from 'expo-linking'
-import api, { setToken, removeToken, loadApiUrl } from './api'
+import * as WebBrowser from 'expo-web-browser'
+import api, { setToken, removeToken } from './api'
 import { useAuth } from './AuthContext'
+
+function resolveRedirectUri() {
+  return 'com.apilamiento://callback/'
+}
 
 export default function LoginScreen() {
   const { user, refreshUser, logout } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const loginInProgress = useRef(false)
+  const redirectHandled = useRef(false)
+  const pkceRef = useRef(null)
+  const redirectUri = resolveRedirectUri()
 
-  const waitForRedirect = (expectedPrefix, timeoutMs = 120000) => {
-    return new Promise((resolve, reject) => {
-      let finished = false
-      let subscription
-      const timeoutId = setTimeout(() => {
-        cleanup()
-        reject(new Error('Tiempo de espera agotado esperando la redireccion.'))
-      }, timeoutMs)
-
-      const cleanup = () => {
-        if (finished) return
-        finished = true
-        clearTimeout(timeoutId)
-        if (subscription) {
-          subscription.remove()
-        }
+  useEffect(() => {
+    Linking.getInitialURL().then(url => {
+      if (url && !redirectHandled.current) {
+        redirectHandled.current = true
+        handleRedirectUrl(url)
       }
-
-      subscription = Linking.addEventListener('url', ({ url }) => {
-        if (!url || !url.startsWith(expectedPrefix)) return
-        cleanup()
-        resolve(url)
-      })
     })
-  }
 
-  const openUrlAndWait = async (targetUrl, expectedPrefix) => {
-    const redirectPromise = waitForRedirect(expectedPrefix)
-    await Linking.openURL(targetUrl)
-    return redirectPromise
-  }
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      if (!url || redirectHandled.current) return
+      redirectHandled.current = true
+      handleRedirectUrl(url)
+    })
+    return () => subscription.remove()
+  }, [])
 
-  const handleLogin = async () => {
-    setLoading(true)
-    setError('')
-
+  const handleRedirectUrl = async (url) => {
     try {
-      const apiUrl = await loadApiUrl()
-      const redirectUri = Linking.createURL('callback/')
-
-      const { data } = await api.get('/auth/mobile-login-url', {
-        params: { redirect_uri: redirectUri },
-      })
-      const loginUrl = data?.authUrl
-      if (!loginUrl) {
-        setError('No se pudo obtener la URL de Microsoft.')
-        return
-      }
-
-      const loginResultUrl = await openUrlAndWait(loginUrl, redirectUri)
-      const { queryParams } = Linking.parse(loginResultUrl)
+      const { queryParams } = Linking.parse(url)
+      const token = queryParams?.token
       const code = queryParams?.code
       const authError = queryParams?.error
 
@@ -69,33 +48,88 @@ export default function LoginScreen() {
         return
       }
 
+      if (token) {
+        await setToken(String(token))
+        await refreshUser()
+        return
+      }
+
       if (!code) {
         setError('No se recibio codigo de autorizacion.')
         return
       }
 
-      const exchangeUrl = `${apiUrl}/auth/exchange-redirect?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirectUri)}`
-      const tokenResultUrl = await openUrlAndWait(exchangeUrl, redirectUri)
-      const { queryParams: params2 } = Linking.parse(tokenResultUrl)
-      const token = params2?.token
-      const tokenError = params2?.error
-
-      if (tokenError) {
-        setError(String(tokenError))
+      const codeVerifier = pkceRef.current?.codeVerifier
+      if (!codeVerifier) {
+        setError('No se pudo validar la sesion de autenticacion.')
         return
       }
 
-      if (!token) {
+      const { data: tokenData } = await api.post('/auth/mobile-token', {
+        code,
+        redirectUri,
+        codeVerifier,
+      })
+
+      if (tokenData?.error) {
+        setError(String(tokenData.error))
+        return
+      }
+
+      if (!tokenData?.token) {
         setError('No se recibio token de autenticacion.')
         return
       }
 
-      await setToken(String(token))
+      await setToken(String(tokenData.token))
       await refreshUser()
     } catch (e) {
-      setError(e.message || 'No se pudo conectar con Microsoft. Verifica la conexion y la URL del backend.')
+      setError(e.response?.data?.error || e.message || 'Error al procesar la autenticacion.')
     } finally {
       setLoading(false)
+      loginInProgress.current = false
+    }
+  }
+
+  const handleLogin = async () => {
+    if (loginInProgress.current) return
+    loginInProgress.current = true
+    redirectHandled.current = false
+    setLoading(true)
+    setError('')
+
+    try {
+      pkceRef.current = await buildCodeAsync()
+      const { data } = await api.get('/auth/mobile-login-url', {
+        params: {
+          redirect_uri: redirectUri,
+          code_challenge: pkceRef.current.codeChallenge,
+          code_challenge_method: 'S256',
+        },
+      })
+      const loginUrl = data?.authUrl
+      if (!loginUrl) {
+        setError('No se pudo obtener la URL de Microsoft.')
+        return
+      }
+
+      const result = await WebBrowser.openAuthSessionAsync(loginUrl, redirectUri)
+      if (result.type === 'success') {
+        if (result.url) {
+          await handleRedirectUrl(result.url)
+        } else {
+          setError('No se recibio URL de redireccion.')
+        }
+      } else if (result.type === 'cancel') {
+        setError('Autenticacion cancelada.')
+      } else {
+        setError('Error en la autenticacion.')
+      }
+    } catch (e) {
+      setError(e.response?.data?.error || e.message || 'No se pudo conectar con Microsoft.')
+    } finally {
+      setLoading(false)
+      loginInProgress.current = false
     }
   }
 
@@ -146,10 +180,10 @@ export default function LoginScreen() {
       <View style={styles.overlay}>
         <Surface style={styles.card}>
           <Text variant="headlineSmall" style={styles.title}>
-            Control de Equipos
+            Control de Equipos de Apilamiento Packing
           </Text>
           <Text variant="bodyMedium" style={styles.subtitle}>
-            Sistema de Apilamiento
+            Aplicativo Android
           </Text>
 
           {error ? (
@@ -194,7 +228,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 10,
+    textAlign: 'center',
   },
   subtitle: {
     opacity: 0.6,

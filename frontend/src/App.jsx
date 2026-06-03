@@ -1,5 +1,8 @@
+import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { Box, CircularProgress } from '@mui/material'
 import { useApp } from './store'
+import api from './api'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import AuthCallback from './pages/AuthCallback'
@@ -11,8 +14,35 @@ import Campanas from './pages/Campanas'
 import ThemePreview from './pages/ThemePreview'
 
 function PrivateRoute({ children }) {
-  const { user } = useApp()
+  const { user, logout } = useApp()
+  const [verifying, setVerifying] = useState(true)
+
+  useEffect(() => {
+    if (!user) {
+      setVerifying(false)
+      return
+    }
+    let cancelled = false
+    api.get('/auth/me').then((res) => {
+      if (cancelled) return
+      if (!res.data?.estadoActivo) {
+        logout()
+      }
+    }).catch(() => {
+      if (cancelled) return
+      logout()
+    }).finally(() => {
+      if (!cancelled) setVerifying(false)
+    })
+    return () => { cancelled = true }
+  }, [user, logout])
+
   if (!user) return <Navigate to="/login" replace />
+  if (verifying) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <CircularProgress />
+    </Box>
+  )
   return children
 }
 

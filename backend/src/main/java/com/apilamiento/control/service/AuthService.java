@@ -83,7 +83,7 @@ public class AuthService {
         return authorizeUrlBase + "&state=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8);
     }
 
-    public String generateMobileAuthorizeUrl(String mobileRedirectUri) {
+    public String generateMobileAuthorizeUrl(String mobileRedirectUri, String codeChallenge, String codeChallengeMethod) {
         return "https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/authorize"
                 + "?client_id=" + clientId
                 + "&response_type=code"
@@ -91,12 +91,18 @@ public class AuthService {
                 + "&response_mode=query"
                 + "&scope=" + URLEncoder.encode("openid email profile User.Read", StandardCharsets.UTF_8)
                 + "&prompt=select_account"
-                + "&state=" + URLEncoder.encode(mobileRedirectUri, StandardCharsets.UTF_8);
+                + "&state=" + URLEncoder.encode(mobileRedirectUri, StandardCharsets.UTF_8)
+                + (codeChallenge != null && !codeChallenge.isBlank()
+                    ? "&code_challenge=" + URLEncoder.encode(codeChallenge, StandardCharsets.UTF_8)
+                    : "")
+                + (codeChallengeMethod != null && !codeChallengeMethod.isBlank()
+                    ? "&code_challenge_method=" + URLEncoder.encode(codeChallengeMethod, StandardCharsets.UTF_8)
+                    : "");
     }
 
     @Transactional
-    public String handleMobileCallback(String code, String mobileRedirectUri) throws Exception {
-        String accessToken = exchangeCodeForToken(code, mobileRedirectUri);
+    public String handleMobileCallback(String code, String mobileRedirectUri, String codeVerifier) throws Exception {
+        String accessToken = exchangeCodeForToken(code, mobileRedirectUri, false, codeVerifier);
         return processGraphUser(accessToken);
     }
 
@@ -107,23 +113,27 @@ public class AuthService {
 
     @Transactional
     public String handleCallback(String code) throws Exception {
-        String accessToken = exchangeCodeForToken(code, redirectUri);
+        String accessToken = exchangeCodeForToken(code, redirectUri, true, null);
         return processGraphUser(accessToken);
     }
 
-    private String exchangeCodeForToken(String code, String redirectUri) throws Exception {
-        String body = new StringJoiner("&")
+    private String exchangeCodeForToken(String code, String redirectUri, boolean includeClientSecret, String codeVerifier) throws Exception {
+        StringJoiner body = new StringJoiner("&")
                 .add("client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8))
-                .add("client_secret=" + URLEncoder.encode(clientSecret, StandardCharsets.UTF_8))
                 .add("code=" + URLEncoder.encode(code, StandardCharsets.UTF_8))
                 .add("redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8))
-                .add("grant_type=authorization_code")
-                .toString();
+                .add("grant_type=authorization_code");
+
+        if (includeClientSecret && clientSecret != null && !clientSecret.isBlank()) {
+            body.add("client_secret=" + URLEncoder.encode(clientSecret, StandardCharsets.UTF_8));
+        } else if (codeVerifier != null && !codeVerifier.isBlank()) {
+            body.add("code_verifier=" + URLEncoder.encode(codeVerifier, StandardCharsets.UTF_8));
+        }
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(tokenUrl))
                 .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -160,7 +170,8 @@ public class AuthService {
             throw new RuntimeException("Usuario no registrado para el uso del app");
         }
 
-        if (!user.getEstadoActivo()) {
+        if (!Boolean.TRUE.equals(user.getEstadoActivo())) {
+            log.warn("Login blocked: usuario {} no activo (estadoActivo={})", email, user.getEstadoActivo());
             throw new RuntimeException("Usuario no activo en el app");
         }
 
@@ -173,10 +184,10 @@ public class AuthService {
 
         user.setIdMicrosoft(msId);
         if (nombre != null) user.setNombre(nombre);
-        user.setPuesto(puesto);
-        user.setEmpresa(empresa);
-        user.setDepartamento(departamento);
-        user.setUbicacion(ubicacion);
+        if (puesto != null) user.setPuesto(puesto);
+        if (empresa != null) user.setEmpresa(empresa);
+        if (departamento != null) user.setDepartamento(departamento);
+        if (ubicacion != null) user.setUbicacion(ubicacion);
         user.setUltimoAcceso(OffsetDateTime.now(ZoneId.of("America/Lima")));
         user.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
         usuarioRepository.persist(user);

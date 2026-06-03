@@ -41,8 +41,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "09f4869d-8a0b-483e-b95b-c899fac76db1"
+        "projectId": "1a97d867-b89d-4b9f-be89-528dd6c1d583"
       }
-    }
+    },
+    "owner": "janyarin_2026"
   }
 }

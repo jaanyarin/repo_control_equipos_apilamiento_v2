@@ -307,12 +307,12 @@ La URL del backend se almacena en `SecureStore` del dispositivo. Se puede cambia
 
 ```js
 import { setApiUrl } from './api'
-await setApiUrl('http://192.168.18.229:8080/api/v1')
+await setApiUrl('http://192.168.18.229:8082/api/v1')
 ```
 
 Valor por defecto en `src/api.js`:
 ```js
-const FALLBACK_API_URL = 'http://192.168.18.229:8080/api/v1'
+const FALLBACK_API_URL = 'http://192.168.18.229:8082/api/v1'
 ```
 
 **ADVERTENCIA**: No cambiar el entry point `"main": "expo/AppEntry"` en `package.json`.
@@ -334,7 +334,7 @@ No cambiar `hermesEnabled=true` ni `newArchEnabled=true` en `gradle.properties`.
 - Build local solo como alternativa; el build oficial se realiza via EAS Cloud.
 - Para build local: usar `GRADLE_USER_HOME=..\.gradle-home` (dentro del proyecto, no en C:\tmp).
 - El login mobile muestra estado de carga, errores de autenticación y pantalla "Ingresaste de forma correcta" cuando existe JWT válido.
-- El mobile obtiene la URL de Microsoft desde `/api/v1/auth/mobile-login-url` y la abre con `Linking.openURL`, escuchando el deep link de retorno.
+- El mobile calcula el `redirectUri` con `expo-auth-session` según el entorno (`Expo Go` vs `APK`), obtiene la URL de Microsoft desde `/api/v1/auth/mobile-login-url` y la abre con `Linking.openURL`, escuchando el deep link de retorno.
 - El JWT se decodifica como base64url para evitar fallos con tokens reales en APK.
 - Hermes JS Engine obligatorio (incompatible JSC con newArchEnabled=true en RN 0.81).
 - Entry point debe ser `expo/AppEntry` (no cambiar a `App.js` directo).

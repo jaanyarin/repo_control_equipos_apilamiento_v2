@@ -66,18 +66,20 @@ public class AuthResource {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("{\"message\":\"redirect_uri requerido\"}").build();
         }
-        String authUrl = authService.generateMobileAuthorizeUrl(redirectUri);
+        String authUrl = authService.generateMobileAuthorizeUrl(redirectUri, null, null);
         return Response.temporaryRedirect(URI.create(authUrl)).build();
     }
 
     @GET
     @Path("/mobile-login-url")
-    public Response mobileLoginUrl(@QueryParam("redirect_uri") String redirectUri) {
+    public Response mobileLoginUrl(@QueryParam("redirect_uri") String redirectUri,
+                                   @QueryParam("code_challenge") String codeChallenge,
+                                   @QueryParam("code_challenge_method") String codeChallengeMethod) {
         if (redirectUri == null || redirectUri.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(Map.of("message", "redirect_uri requerido")).build();
         }
-        return Response.ok(Map.of("authUrl", authService.generateMobileAuthorizeUrl(redirectUri))).build();
+        return Response.ok(Map.of("authUrl", authService.generateMobileAuthorizeUrl(redirectUri, codeChallenge, codeChallengeMethod))).build();
     }
 
     @GET
@@ -95,12 +97,44 @@ public class AuthResource {
         }
 
         try {
-            String jwt = authService.handleMobileCallback(code, redirectUri);
+            String jwt = authService.handleMobileCallback(code, redirectUri, null);
             String redirectTarget = authService.buildMobileRedirectUrl(redirectUri, jwt);
             return Response.temporaryRedirect(URI.create(redirectTarget)).build();
         } catch (Exception e) {
             String base = redirectUri.endsWith("/") ? redirectUri.substring(0, redirectUri.length() - 1) : redirectUri;
             return Response.temporaryRedirect(URI.create(base + "/login?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8))).build();
+        }
+    }
+
+    @POST
+    @Path("/mobile-token")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response mobileToken(Map<String, String> body) {
+        String code = body.get("code");
+        String redirectUri = body.get("redirectUri");
+        String codeVerifier = body.get("codeVerifier");
+
+        if (code == null || code.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "Código de autorización requerido")).build();
+        }
+
+        if (redirectUri == null || redirectUri.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "redirectUri requerido")).build();
+        }
+        if (codeVerifier == null || codeVerifier.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "codeVerifier requerido")).build();
+        }
+
+        try {
+            String jwt = authService.handleMobileCallback(code, redirectUri, codeVerifier);
+            return Response.ok(Map.of("token", jwt)).build();
+        } catch (Exception e) {
+            return Response.serverError()
+                    .entity(Map.of("error", e.getMessage())).build();
         }
     }
 }

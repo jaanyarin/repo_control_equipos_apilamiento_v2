@@ -6,6 +6,8 @@ import com.apilamiento.control.mapper.UsuarioMapper;
 import com.apilamiento.control.repository.UsuarioRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @ApplicationScoped
@@ -64,6 +66,7 @@ public class UsuarioService {
         if (dto.getRolId() != null) entity.setRolId(dto.getRolId());
         if (dto.getSitioId() != null) entity.setSitioId(dto.getSitioId());
         if (dto.getEstadoActivo() != null) entity.setEstadoActivo(dto.getEstadoActivo());
+        entity.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
         entity.setUsuarioActualizacion(dto.getUsuarioActualizacion() != null ? dto.getUsuarioActualizacion() : 1L);
         return mapper.toDTO(entity);
     }

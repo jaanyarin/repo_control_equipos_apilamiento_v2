@@ -55,7 +55,7 @@ El build se realiza mediante **EAS Cloud** (servidores Expo), no localmente, deb
 - Celular en misma red WiFi o conectado por USB Tethering al servidor backend
 - Sesión iniciada en Expo: `npx eas-cli login`
 - Backend accesible desde el celular en una de estas URLs:
-  - Directo al backend: `http://192.168.18.229:8080/api/v1`
+  - Directo al backend expuesto por Docker: `http://192.168.18.229:8082/api/v1`
   - Vía Nginx del stack: `http://192.168.18.229/api/v1`
 - Para este repo, usar la misma URL en `EXPO_PUBLIC_API_URL` y en `SecureStore`
 
@@ -89,7 +89,7 @@ Si la IP del servidor cambió, la URL se actualiza desde la app mediante SecureS
 
 ```js
 import { setApiUrl } from './api'
-await setApiUrl('http://192.168.18.229:8080/api/v1')
+await setApiUrl('http://192.168.18.229:8082/api/v1')
 ```
 
 Si el host publica el proxy Nginx en `80`, usar en su lugar:
@@ -111,8 +111,10 @@ Esto no requiere rebuild del APK.
 5. Confirmar pantalla: **"Ingresaste de forma correcta"** con nombre y correo.
 
 Si el login no retorna al APK, verificar:
-- El redirect URI `com.apilamiento://callback/` registrado en Microsoft Entra ID
-- El celular alcanza la URL configurada en la app (`http://192.168.18.229:8080/api/v1/auth/login` o `http://192.168.18.229/api/v1/auth/login`)
+- En Expo Go, registrar el redirect URI que genere tu sesión actual de `npx expo start` (puede variar entre `8081` o `8082` según el puerto libre)
+- En APK instalado, registrar `com.apilamiento://callback/` en Microsoft Entra ID
+- En la app registration, habilitar `Allow public client flows` para el flujo móvil sin `client_secret`
+- El celular alcanza la URL configurada en la app (`http://192.168.18.229:8082/api/v1/auth/login` o `http://192.168.18.229/api/v1/auth/login`)
 
 ---
 
