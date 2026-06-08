@@ -1,71 +1,34 @@
-﻿# SOFTWARE DEVELOPMENT DOCUMENT (SDD)
+# SOFTWARE DEVELOPMENT DOCUMENT (SDD)
 # 03_TASKS.md
 
 ---
 
 # 1. Objetivo del Documento
 
-El presente documento tiene como finalidad definir la estructura de tareas técnicas, operativas y organizacionales necesarias para la construcción del sistema de control operativo de equipos de apilamiento.
+Este documento define la estructura de tareas técnicas, operativas y organizacionales necesarias para continuar la construcción del sistema de control operativo de equipos de apilamiento.
 
-Este documento permitirá:
-- organizar el desarrollo,
-- controlar avances,
-- gestionar prioridades,
-- establecer dependencias técnicas,
-- mantener trazabilidad del proyecto,
-- facilitar mantenibilidad y escalabilidad futura.
-
-La estructura de tareas estará alineada a la arquitectura modular definida en los documentos de especificación y planificación.
+La planificación queda sincronizada con el repositorio actual y con la decisión oficial de usar PostgreSQL 18 como base de datos del proyecto.
 
 ---
 
-# 2. Estrategia General de Desarrollo
+# 2. Decisión Técnica Oficial
 
-El desarrollo del proyecto será ejecutado mediante una estrategia incremental y modular, priorizando inicialmente los componentes críticos para garantizar la construcción de un MVP funcional y estable.
+| Decisión | Valor |
+|---|---|
+| Base de datos oficial | PostgreSQL 18 |
+| Backend | Quarkus Java 3.14.4 |
+| Persistencia | Hibernate ORM Panache |
+| Migraciones | Flyway |
+| Frontend web | React 18 + Vite + MUI |
+| Mobile | Expo React Native SDK 54 |
+| Autenticación | Microsoft Entra ID + JWT propio |
+| Infraestructura | Docker Compose + Nginx |
 
-La implementación estará orientada a:
-- desacoplamiento de componentes,
-- mantenibilidad,
-- escalabilidad,
-- reutilización,
-- estabilidad operacional.
-
-El desarrollo se dividirá en:
-- infraestructura,
-- backend,
-- frontend móvil,
-- frontend web,
-- seguridad,
-- auditoría,
-- analítica,
-- despliegue,
-- pruebas.
-
-Cada módulo deberá completarse de manera progresiva y validarse antes de continuar con dependencias posteriores.
+No se usará MySQL en este proyecto.
 
 ---
 
-# 3. Estructura de Gestión de Tareas
-
-Las tareas estarán organizadas mediante:
-- módulos funcionales,
-- componentes técnicos,
-- prioridades,
-- dependencias,
-- estados operativos.
-
-Cada tarea deberá contener:
-- identificador único,
-- descripción,
-- prioridad,
-- dependencia,
-- responsable,
-- estado,
-- observaciones técnicas.
-
----
-
-# 4. Estados de Tareas
+# 3. Estados de Tareas
 
 | Estado | Descripción |
 |---|---|
@@ -78,400 +41,217 @@ Cada tarea deberá contener:
 
 ---
 
-# 5. Prioridades de Desarrollo
+# 4. Roadmap General Actualizado
 
-| Prioridad | Descripción |
-|---|---|
-| Crítica | Bloquea arquitectura o desarrollo |
-| Alta | Necesaria para MVP |
-| Media | Complementaria |
-| Baja | Mejora futura |
-
----
-
-# 6. Roadmap General de Desarrollo
-
-| Orden | Componente |
-|---|---|
-| 1 | Infraestructura Base |
-| 2 | Backend Base |
-| 3 | Autenticación |
-| 4 | Usuarios |
-| 5 | Sedes |
-| 6 | Campañas |
-| 7 | Tipos de Equipos |
-| 8 | Proveedores |
-| 9 | PSR / OSR |
-| 10 | Equipos |
-| 11 | Averías |
-| 12 | Evidencias Fotográficas |
-| 13 | Dashboard KPI |
-| 14 | Reportes PDF |
-| 15 | Auditoría |
-| 16 | Configuración |
-| 17 | QA Integral |
-| 18 | Despliegue Producción |
-
----
-
-# 7. Tareas de Infraestructura
-
-## Objetivo
-
-Implementar la base técnica necesaria para soportar el desarrollo, despliegue y operación del sistema.
-
----
-
-## Tareas
-
-| ID | Tarea | Prioridad |
+| Orden | Componente | Estado |
 |---|---|---|
-| INF-001 | Crear estructura inicial del repositorio | Crítica |
-| INF-002 | Configurar ramas GitHub | Alta |
-| INF-003 | Configurar Docker Backend | Crítica |
-| INF-004 | Configurar Docker Frontend Web | Crítica |
-| INF-005 | Configurar Docker Base de Datos | Crítica |
-| INF-006 | Configurar Docker Compose | Crítica |
-| INF-007 | Configurar variables de entorno | Alta |
-| INF-008 | Configurar Nginx Reverse Proxy | Alta |
-| INF-009 | Configurar ambientes Desarrollo / QA / Producción | Alta |
-| INF-010 | Configurar GitHub Actions CI/CD | Alta |
-| INF-011 | Configurar políticas de despliegue | Media |
-| INF-012 | Configurar backups iniciales | Media |
-| INF-013 | Configurar healthchecks | Alta |
-| INF-014 | Configurar monitoreo básico | Media |
-| INF-015 | Definir política backups | Alta |
-| INF-016 | Configurar restauración backups | Alta |
-| INF-017 | Configurar gestión centralizada variables entorno | Alta |
-| INF-018 | Definir estándares desarrollo | Media |
-| INF-019 | Configurar lint frontend | Media |
-| INF-020 | Configurar formateo código | Media |
+| 1 | Infraestructura Docker | Completado |
+| 2 | PostgreSQL 18 | Completado |
+| 3 | Backend Quarkus base | Completado |
+| 4 | Nginx reverse proxy | Completado |
+| 5 | Frontend web base | Completado |
+| 6 | Autenticación Microsoft + JWT | Completado |
+| 7 | Microsoft Graph API | Completado |
+| 8 | Usuarios | Completado |
+| 9 | Roles | Completado |
+| 10 | Sedes | Completado |
+| 11 | Campañas | Completado |
+| 12 | Mobile login + APK inicial | Validado |
+| 13 | Tipos de Equipos | Pendiente inmediato |
+| 14 | Proveedores | Pendiente inmediato |
+| 15 | Marcas | Pendiente inmediato |
+| 16 | Equipos | Pendiente crítico |
+| 17 | PSR / OSR | Pendiente crítico |
+| 18 | Averías | Pendiente crítico |
+| 19 | Evidencias Fotográficas | Pendiente |
+| 20 | Dashboard KPI | Pendiente |
+| 21 | Reportes PDF | Pendiente |
+| 22 | Auditoría | Pendiente |
+| 23 | Configuración | Pendiente |
+| 24 | QA Integral | Pendiente |
+| 25 | Despliegue Producción | Pendiente |
 
 ---
 
-# 8. Tareas Base de Datos
+# 5. Tareas de Infraestructura
 
-## Objetivo
-
-Diseñar e implementar la estructura relacional del sistema.
-
----
-
-## Tareas
-
-| ID | Tarea | Prioridad |
-|---|---|---|
-| DB-001 | Diseñar modelo relacional inicial | Crítica |
-| DB-002 | Diseñar tablas de usuarios | Crítica |
-| DB-003 | Diseñar tablas de campañas | Alta |
-| DB-004 | Diseñar tablas de sedes | Alta |
-| DB-005 | Diseñar tablas PSR / OSR | Crítica |
-| DB-006 | Diseñar tablas de equipos | Crítica |
-| DB-007 | Diseñar tablas de averías | Alta |
-| DB-008 | Diseñar tablas de fotografías | Alta |
-| DB-009 | Diseñar tablas auditoría | Alta |
-| DB-010 | Configurar índices y relaciones | Alta |
-| DB-011 | Configurar restricciones de integridad | Alta |
-| DB-012 | Configurar migraciones iniciales | Alta |
+| ID | Tarea | Prioridad | Estado |
+|---|---|---|---|
+| INF-001 | Crear estructura inicial del repositorio | Crítica | ✅ |
+| INF-002 | Configurar Docker Backend | Crítica | ✅ |
+| INF-003 | Configurar Docker Frontend Web | Crítica | ✅ |
+| INF-004 | Configurar Docker PostgreSQL 18 | Crítica | ✅ |
+| INF-005 | Configurar Docker Compose | Crítica | ✅ |
+| INF-006 | Configurar variables de entorno | Alta | ✅ |
+| INF-007 | Configurar Nginx reverse proxy | Alta | ✅ |
+| INF-008 | Configurar timezone America/Lima | Alta | ✅ |
+| INF-009 | Configurar healthchecks | Alta | ✅ |
+| INF-010 | Configurar GitHub Actions CI/CD | Alta | ⏳ |
+| INF-011 | Configurar backups PostgreSQL | Alta | ⏳ |
+| INF-012 | Configurar restauración backups PostgreSQL | Alta | ⏳ |
+| INF-013 | Configurar ambientes Desarrollo / QA / Producción | Alta | ⏳ |
 
 ---
 
-# 9. Tareas Backend
+# 6. Tareas Base de Datos PostgreSQL
 
-## Objetivo
-
-Desarrollar las APIs REST y lógica de negocio del sistema.
+| ID | Tarea | Prioridad | Estado |
+|---|---|---|---|
+| DB-001 | Definir PostgreSQL 18 como motor oficial | Crítica | ✅ |
+| DB-002 | Configurar conexión PostgreSQL en Quarkus | Crítica | ✅ |
+| DB-003 | Configurar Flyway | Alta | ✅ |
+| DB-004 | Crear tablas base roles / usuarios / sedes | Crítica | ✅ |
+| DB-005 | Crear tabla campañas | Alta | ✅ |
+| DB-006 | Diseñar modelo operativo HDT-002 | Crítica | ⏳ |
+| DB-007 | Crear migración `dim_tipos_equipo` | Crítica | ⏳ |
+| DB-008 | Crear migración `dim_proveedores` | Crítica | ⏳ |
+| DB-009 | Crear migración `dim_marcas` | Alta | ⏳ |
+| DB-010 | Crear migración `fac_equipos` | Crítica | ⏳ |
+| DB-011 | Crear migración `fac_psr` | Crítica | ⏳ |
+| DB-012 | Crear migración `fac_osr` | Crítica | ⏳ |
+| DB-013 | Crear migración `fac_averias` | Alta | ⏳ |
+| DB-014 | Crear migración `fac_evidencias` | Alta | ⏳ |
+| DB-015 | Crear migración `auditoria_eventos` | Alta | ⏳ |
+| DB-016 | Configurar índices y relaciones | Alta | ⏳ |
+| DB-017 | Configurar restricciones de integridad | Alta | ⏳ |
 
 ---
 
-## Tareas
+# 7. Tareas Backend
 
 | ID | Tarea | Prioridad | Estado |
 |---|---|---|---|
 | BE-001 | Inicializar proyecto Quarkus | Crítica | ✅ |
 | BE-002 | Configurar conexión PostgreSQL | Crítica | ✅ |
-| BE-003 | Configurar arquitectura modular (controller/service/repository/dto/mapper) | Crítica | ✅ |
-| BE-004 | Configurar autenticación Microsoft OIDC (Httpclient manual) | Crítica | ✅ |
-| BE-005 | Configurar JWT (SmallRye JWT Build) | Crítica | ✅ |
-| BE-006 | Implementar módulo usuarios (CRUD) | Alta | ✅ |
-| BE-007 | Implementar módulo roles (CRUD) | Alta | ✅ |
-| BE-008 | Implementar validación login 3 condiciones (registrado, activo tenant, activo app) | Alta | ✅ |
-| BE-009 | Implementar módulo sedes | Alta | ⏳ |
-| BE-010 | Implementar módulo campañas | Alta | ⏳ |
+| BE-003 | Configurar arquitectura modular | Crítica | ✅ |
+| BE-004 | Configurar autenticación Microsoft OIDC manual | Crítica | ✅ |
+| BE-005 | Configurar JWT propio | Crítica | ✅ |
+| BE-006 | Implementar módulo usuarios | Alta | ✅ |
+| BE-007 | Implementar módulo roles | Alta | ✅ |
+| BE-008 | Implementar validación login: registrado, activo tenant, activo app | Alta | ✅ |
+| BE-009 | Implementar módulo sedes | Alta | ✅ |
+| BE-010 | Implementar módulo campañas | Alta | ✅ |
 | BE-011 | Implementar módulo tipos equipos | Alta | ⏳ |
 | BE-012 | Implementar módulo proveedores | Alta | ⏳ |
-| BE-013 | Implementar módulo PSR / OSR | Crítica | ⏳ |
+| BE-013 | Implementar módulo marcas | Alta | ⏳ |
 | BE-014 | Implementar módulo equipos | Crítica | ⏳ |
-| BE-015 | Implementar módulo averías | Alta | ⏳ |
-| BE-016 | Implementar módulo evidencias | Alta | ⏳ |
-| BE-017 | Implementar auditoría | Alta | ⏳ |
-| BE-018 | Implementar generación PDF | Media | ⏳ |
-| BE-019 | Implementar APIs dashboard KPI | Media | ⏳ |
-| BE-020 | Configurar manejo errores global (ManejadorGlobalExcepciones) | Alta | ✅ |
-| BE-021 | Configurar validaciones backend | Alta | ✅ |
-| BE-022 | Configurar logs backend | Alta | ✅ |
-| BE-023 | Configurar versionamiento APIs (/api/v1) | Alta | ✅ |
-| BE-024 | Configurar OpenAPI / Swagger UI | Media | ✅ |
-| BE-025 | Configurar Flyway migraciones (V1, V2) | Alta | ✅ |
-| BE-026 | Configurar Docker multi-stage build (JDK 21) | Alta | ✅ |
-| BE-027 | Forzar IPv4 en Docker (JAVA_TOOL_OPTIONS) | Alta | ✅ |
-| BE-028 | Implementar app-only token para Microsoft Graph API (client credentials flow + cache) | Alta | ✅ |
-| BE-029 | Implementar búsqueda de usuarios en Microsoft Graph por prefijo de correo (endpoint GET /usuarios/buscar-por-correo) | Alta | ✅ |
-| BE-030 | Normalizar correos a minúsculas en creación de usuario y en búsqueda Graph | Alta | ✅ |
-| BE-031 | Priorizar userPrincipalName sobre mail en callback de autenticación Graph | Alta | ✅ |
+| BE-015 | Implementar módulo PSR / OSR | Crítica | ⏳ |
+| BE-016 | Implementar módulo averías | Alta | ⏳ |
+| BE-017 | Implementar módulo evidencias | Alta | ⏳ |
+| BE-018 | Implementar auditoría operacional | Alta | ⏳ |
+| BE-019 | Implementar generación PDF | Media | ⏳ |
+| BE-020 | Implementar APIs dashboard KPI | Media | ⏳ |
+| BE-021 | Configurar manejo global de errores | Alta | ✅ |
+| BE-022 | Configurar validaciones backend | Alta | ✅ |
+| BE-023 | Configurar logs backend | Alta | ✅ |
+| BE-024 | Configurar versionamiento APIs `/api/v1` | Alta | ✅ |
+| BE-025 | Configurar OpenAPI / Swagger UI | Media | ✅ |
 
 ---
 
-# 10. Tareas Frontend Mobile (Expo React Native)
+# 8. Tareas Frontend Web
 
-## Objetivo
-
-Desarrollar la aplicación móvil operativa.
+| ID | Tarea | Prioridad | Estado |
+|---|---|---|---|
+| WEB-001 | Inicializar React SPA | Crítica | ✅ |
+| WEB-002 | Configurar Vite | Alta | ✅ |
+| WEB-003 | Configurar MUI | Alta | ✅ |
+| WEB-004 | Implementar layout base | Alta | ✅ |
+| WEB-005 | Implementar login Microsoft | Crítica | ✅ |
+| WEB-006 | Implementar usuarios | Alta | ✅ |
+| WEB-007 | Implementar roles | Alta | ✅ |
+| WEB-008 | Implementar sedes | Alta | ✅ |
+| WEB-009 | Implementar campañas | Alta | ✅ |
+| WEB-010 | Implementar tipos de equipo | Alta | ⏳ |
+| WEB-011 | Implementar proveedores | Alta | ⏳ |
+| WEB-012 | Implementar marcas | Alta | ⏳ |
+| WEB-013 | Implementar equipos | Crítica | ⏳ |
+| WEB-014 | Implementar PSR / OSR | Crítica | ⏳ |
+| WEB-015 | Implementar averías | Alta | ⏳ |
+| WEB-016 | Implementar evidencias | Alta | ⏳ |
+| WEB-017 | Implementar dashboard KPI | Media | ⏳ |
+| WEB-018 | Implementar reportes PDF | Media | ⏳ |
 
 ---
 
-## Tareas
+# 9. Tareas Frontend Mobile
 
 | ID | Tarea | Prioridad | Estado |
 |---|---|---|---|
 | AND-001 | Inicializar proyecto Expo React Native | Crítica | ✅ |
-| AND-002 | Configurar navegación principal | Alta | ⏳ |
-| AND-003 | Implementar login Microsoft (Entra ID con validación JWT real) | Crítica | ✅ |
-| AND-004 | Implementar control sesión (refresh token, interceptor 401) | Alta | ⏳ |
-| AND-005 | Implementar gestión usuarios | Media | ⏳ |
-| AND-006 | Implementar gestión campañas (lista + detalle + activar/cerrar) | Alta | ⏳ |
-| AND-007 | Implementar gestión PSR / OSR (lista + detalle + aprobar/rechazar/cerrar) | Crítica | ⏳ |
-| AND-008 | Implementar gestión equipos (lista + detalle + paginación) | Crítica | ⏳ |
-| AND-009 | Implementar gestión averías (lista + detalle + cerrar) | Alta | ⏳ |
-| AND-010 | Implementar captura fotografías (vision-camera + upload) | Alta | ⏳ |
-| AND-011 | Implementar consumo APIs REST | Crítica | ⏳ |
-| AND-012 | Implementar manejo errores UI (try/catch + toast) | Alta | ⏳ |
-| AND-013 | Implementar validaciones formularios | Alta | ⏳ |
-| AND-014 | Implementar visualización PDFs | Media | ⏳ |
-| AND-015 | Implementar notificaciones visuales (Toast con Animated API) | Alta | ⏳ |
-| AND-016 | Configurar manejo global errores (ErrorBoundary) | Alta | ⏳ |
-
-> **Nota:** El frontend mobile (Expo React Native) cuenta con login Microsoft OIDC, persistencia JWT en SecureStore, recuperación de sesión y pantalla de ingreso satisfactorio. Aún no cuenta con pantallas operativas de equipos, averías, PSR/OSR o evidencias.
+| AND-002 | Configurar Expo SDK 54 | Crítica | ✅ |
+| AND-003 | Implementar login Microsoft | Crítica | ✅ |
+| AND-004 | Persistir JWT en SecureStore | Alta | ✅ |
+| AND-005 | Recuperar sesión al abrir app | Alta | ✅ |
+| AND-006 | Compilar APK inicial con EAS Cloud | Alta | ✅ |
+| AND-007 | Validar APK en dispositivo físico | Alta | ✅ |
+| AND-008 | Configurar navegación operativa | Alta | ⏳ |
+| AND-009 | Implementar listado de equipos | Crítica | ⏳ |
+| AND-010 | Implementar registro de averías | Alta | ⏳ |
+| AND-011 | Implementar atención de averías | Alta | ⏳ |
+| AND-012 | Implementar captura de fotografías | Alta | ⏳ |
+| AND-013 | Implementar consumo de APIs operativas | Crítica | ⏳ |
+| AND-014 | Implementar manejo global de errores | Alta | ⏳ |
+| AND-015 | Implementar visualización de PDF | Media | ⏳ |
 
 ---
 
-# 11. Tareas Frontend Web
+# 10. HDT-002 — Siguiente Hito Crítico
+
+El siguiente hito crítico es HDT-002.
 
 ## Objetivo
 
-Desarrollar la plataforma web analítica y administrativa como SPA moderna con React 18, Vite 5 y MUI 6.
+Construir el núcleo operativo mínimo del sistema sobre PostgreSQL, backend Quarkus y frontend web.
 
----
+## Alcance HDT-002
 
-## Tareas
-
-| ID | Tarea | Prioridad | Estado |
-|---|---|---|---|
-| WEB-001 | Inicializar proyecto React 18 + Vite 5 + MUI 6 | Crítica | ✅ |
-| WEB-002 | Configurar routing (React Router v6) | Alta | ✅ |
-| WEB-003 | Implementar login Microsoft OIDC | Alta | ✅ |
-| WEB-004 | Implementar autenticación JWT | Alta | ✅ |
-| WEB-005 | Implementar layout con sidebar y toolbar (MUI) | Alta | ✅ |
-| WEB-006 | Implementar CRUD usuarios | Alta | ✅ |
-| WEB-007 | Implementar CRUD roles | Alta | ✅ |
-| WEB-008 | Implementar consumo APIs REST (Axios) | Crítica | ✅ |
-| WEB-009 | Implementar control permisos por rol (Super Admin, Admin, Usuario) | Alta | ✅ |
-| WEB-010 | Implementar manejo de errores UI con notificaciones | Alta | ✅ |
-| WEB-011 | Implementar dashboard KPI | Media | ⏳ |
-| WEB-012 | Configurar build Vite (salida → frontend/dist/) | Alta | ✅ |
-| WEB-013 | Implementar validación 3 condiciones login | Alta | ✅ |
-| WEB-014 | Implementar autocomplete con debounce en campo correo de creación de usuarios (conexión a endpoint buscar-por-correo) | Alta | ✅ |
-
----
-
-# 12. Tareas Seguridad
-
-## Objetivo
-
-Garantizar protección de acceso y control operacional.
-
----
-
-## Tareas
-
-| ID | Tarea | Prioridad |
+| Orden | Componente | Justificación |
 |---|---|---|
-| SEC-001 | Configurar autenticación Microsoft | Crítica |
-| SEC-002 | Configurar JWT | Crítica |
-| SEC-003 | Configurar expiración sesiones | Alta |
-| SEC-004 | Configurar control roles | Alta |
-| SEC-005 | Configurar validación APIs | Alta |
-| SEC-006 | Configurar protección endpoints | Alta |
-| SEC-007 | Configurar HTTPS | Alta |
-| SEC-008 | Configurar logs seguridad | Media |
-| SEC-009 | Configurar app-only token para Microsoft Graph API (client credentials flow) | Alta |
-| SEC-010 | Configurar permiso User.Read.All en Azure AD con consentimiento de administrador | Alta |
+| 1 | `dim_tipos_equipo` | Catálogo base para registrar equipos |
+| 2 | `dim_proveedores` | Catálogo obligatorio para equipos |
+| 3 | `dim_marcas` | Catálogo auxiliar de equipos |
+| 4 | `fac_equipos` | Entidad central del negocio |
+| 5 | `fac_psr` | Documento operativo de solicitud |
+| 6 | `fac_osr` | Documento operativo asociado a PSR/equipo |
+| 7 | `fac_averias` | Control de inactividad y reparaciones |
+
+## Criterio de finalización
+
+HDT-002 se considera terminado cuando existan:
+
+- migraciones PostgreSQL/Flyway,
+- entidades backend,
+- repositorios,
+- servicios,
+- resources REST,
+- DTOs,
+- validaciones,
+- pantallas web CRUD,
+- endpoints protegidos por JWT,
+- pruebas manuales básicas,
+- actualización documental del hito.
 
 ---
 
-# 13. Tareas Auditoría
+# 11. Secuencia Recomendada de Implementación
 
-## Objetivo
-
-Mantener trazabilidad operacional completa.
-
----
-
-## Tareas
-
-| ID | Tarea | Prioridad |
-|---|---|---|
-| AUD-001 | Registrar login/logout | Alta |
-| AUD-002 | Registrar creación registros | Alta |
-| AUD-003 | Registrar actualizaciones | Alta |
-| AUD-004 | Registrar eliminaciones lógicas | Alta |
-| AUD-005 | Registrar errores críticos | Media |
-| AUD-006 | Registrar eventos seguridad | Media |
+1. Diseñar ERD operativo PostgreSQL.
+2. Crear migraciones Flyway para catálogos.
+3. Implementar backend de tipos de equipo.
+4. Implementar backend de proveedores.
+5. Implementar backend de marcas.
+6. Implementar pantallas web de catálogos.
+7. Crear migración de equipos.
+8. Implementar backend y web de equipos.
+9. Crear migraciones PSR/OSR.
+10. Implementar backend y web PSR/OSR.
+11. Crear migración averías.
+12. Implementar backend y web de averías.
+13. Documentar HDT-002.
 
 ---
 
-# 14. Tareas Evidencias Fotográficas
+# 12. Cierre
 
-## Objetivo
-
-Gestionar almacenamiento y visualización de fotografías operativas.
-
----
-
-## Tareas
-
-| ID | Tarea | Prioridad |
-|---|---|---|
-| IMG-001 | Configurar almacenamiento fotografías | Alta |
-| IMG-002 | Configurar estructura directorios | Alta |
-| IMG-003 | Configurar upload imágenes | Alta |
-| IMG-004 | Configurar asociación registros | Alta |
-| IMG-005 | Configurar visualización imágenes | Media |
-| IMG-006 | Configurar optimización tamaño imágenes | Media |
-
----
-
-# 15. Tareas Dashboard KPI
-
-## Objetivo
-
-Desarrollar visualización analítica operacional.
-
----
-
-## Tareas
-
-| ID | Tarea | Prioridad |
-|---|---|---|
-| KPI-001 | Diseñar estructura KPIs | Alta |
-| KPI-002 | Diseñar consultas analíticas | Alta |
-| KPI-003 | Implementar filtros dashboard | Alta |
-| KPI-004 | Implementar métricas campañas | Alta |
-| KPI-005 | Implementar métricas equipos | Alta |
-| KPI-006 | Implementar métricas averías | Alta |
-| KPI-007 | Implementar gráficos operativos | Media |
-
----
-
-# 16. Tareas Reportes PDF
-
-## Objetivo
-
-Implementar generación de reportes operativos.
-
----
-
-## Tareas
-
-| ID | Tarea | Prioridad |
-|---|---|---|
-| PDF-001 | Configurar iText PDF | Alta |
-| PDF-002 | Diseñar plantillas PDF | Alta |
-| PDF-003 | Generar PDF equipos | Alta |
-| PDF-004 | Generar PDF PSR / OSR | Media |
-| PDF-005 | Generar PDF averías | Media |
-| PDF-006 | Configurar descarga PDFs | Media |
-
----
-
-# 17. Tareas QA y Testing
-
-## Objetivo
-
-Garantizar estabilidad y correcto funcionamiento del sistema.
-
----
-
-## Tareas
-
-| ID | Tarea | Prioridad |
-|---|---|---|
-| QA-001 | Ejecutar pruebas backend | Alta |
-| QA-002 | Ejecutar pruebas frontend web | Alta |
-| QA-003 | Ejecutar pruebas Android | Alta |
-| QA-004 | Validar APIs REST | Alta |
-| QA-005 | Validar seguridad | Alta |
-| QA-006 | Validar flujos operativos | Crítica |
-| QA-007 | Validar dashboards | Media |
-| QA-008 | Validar generación PDF | Media |
-
----
-
-# 18. Tareas Despliegue
-
-## Objetivo
-
-Preparar publicación y operación del sistema.
-
----
-
-## Tareas
-
-| ID | Tarea | Prioridad |
-|---|---|---|
-| DEP-001 | Configurar VPS Linux | Alta |
-| DEP-002 | Configurar Docker producción | Alta |
-| DEP-003 | Configurar Nginx producción | Alta |
-| DEP-004 | Configurar dominios | Media |
-| DEP-005 | Configurar HTTPS SSL | Alta |
-| DEP-006 | Configurar pipelines despliegue | Alta |
-| DEP-007 | Ejecutar despliegue QA | Alta |
-| DEP-008 | Ejecutar despliegue producción | Crítica |
-| DEP-009 | Validar estabilidad producción | Crítica |
-
----
-
-# 19. Dependencias Técnicas
-
-| Componente | Dependencia |
-|---|---|
-| Usuarios | Autenticación |
-| Campañas | Usuarios |
-| PSR / OSR | Campañas |
-| Equipos | PSR / OSR |
-| Averías | Equipos |
-| Evidencias | Equipos / Averías |
-| Dashboard | APIs operativas |
-| PDFs | Datos operativos |
-| Auditoría | Todos los módulos |
-
----
-
-# 20. Riesgos Técnicos
-
-| Riesgo | Impacto |
-|---|---|
-| Cambios funcionales tardíos | Alto |
-| Problemas integración Microsoft | Alto |
-| Crecimiento no controlado módulos | Medio |
-| Manejo incorrecto fotografías | Medio |
-| Problemas despliegue Docker | Medio |
-| Dependencias externas | Medio |
-
----
-
-# 21. Consideraciones Finales
-
-La estructura de tareas definida permitirá mantener control operativo y técnico del proyecto, asegurando una implementación ordenada, escalable y mantenible.
-
-La estrategia modular facilitará futuras ampliaciones y permitirá mantener separación clara entre componentes funcionales y técnicos del sistema.
+Este documento queda sincronizado con el estado actual del repositorio y con PostgreSQL 18 como motor oficial del sistema.
