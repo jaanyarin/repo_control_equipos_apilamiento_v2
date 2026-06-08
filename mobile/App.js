@@ -3,7 +3,7 @@ import { PaperProvider, MD3LightTheme } from 'react-native-paper'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { AuthProvider } from './src/AuthContext'
-import LoginScreen from './src/LoginScreen'
+import AppNavigator from './src/navigation/AppNavigator'
 
 const theme = {
   ...MD3LightTheme,
@@ -19,7 +19,7 @@ export default function App() {
     <SafeAreaProvider>
       <PaperProvider theme={theme}>
         <AuthProvider>
-          <LoginScreen />
+          <AppNavigator />
           <StatusBar style="light" />
         </AuthProvider>
       </PaperProvider>

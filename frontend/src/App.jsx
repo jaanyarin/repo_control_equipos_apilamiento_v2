@@ -11,6 +11,11 @@ import Usuarios from './pages/Usuarios'
 import Roles from './pages/Roles'
 import Sedes from './pages/Sedes'
 import Campanas from './pages/Campanas'
+import TiposEquipo from './pages/TiposEquipo'
+import Proveedores from './pages/Proveedores'
+import Marcas from './pages/Marcas'
+import Equipos from './pages/Equipos'
+import Averias from './pages/Averias'
 import ThemePreview from './pages/ThemePreview'
 
 function PrivateRoute({ children }) {
@@ -67,6 +72,11 @@ export default function App() {
         <Route path="roles" element={<Roles />} />
         <Route path="sedes" element={<Sedes />} />
         <Route path="campanas" element={<Campanas />} />
+        <Route path="tipos-equipo" element={<TiposEquipo />} />
+        <Route path="proveedores" element={<Proveedores />} />
+        <Route path="marcas" element={<Marcas />} />
+        <Route path="equipos" element={<Equipos />} />
+        <Route path="averias" element={<Averias />} />
         <Route path="theme-preview" element={<ThemePreview />} />
       </Route>
       <Route path="*" element={<Navigate to={user ? '/dashboard' : '/login'} replace />} />

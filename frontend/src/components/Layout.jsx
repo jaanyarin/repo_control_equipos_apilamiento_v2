@@ -8,6 +8,11 @@ import PeopleIcon from '@mui/icons-material/People'
 import LockIcon from '@mui/icons-material/Lock'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import CampaignIcon from '@mui/icons-material/Campaign'
+import CategoryIcon from '@mui/icons-material/Category'
+import BusinessIcon from '@mui/icons-material/Business'
+import LocalOfferIcon from '@mui/icons-material/LocalOffer'
+import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing'
+import BugReportIcon from '@mui/icons-material/BugReport'
 import LogoutIcon from '@mui/icons-material/Logout'
 import SecurityIcon from '@mui/icons-material/Security'
 import PaletteIcon from '@mui/icons-material/Palette'
@@ -21,6 +26,11 @@ const menuItems = [
   { label: 'Roles', path: '/roles', icon: <LockIcon /> },
   { label: 'Sedes', path: '/sedes', icon: <LocationOnIcon /> },
   { label: 'Campañas', path: '/campanas', icon: <CampaignIcon /> },
+  { label: 'Tipos Equipo', path: '/tipos-equipo', icon: <CategoryIcon /> },
+  { label: 'Proveedores', path: '/proveedores', icon: <BusinessIcon /> },
+  { label: 'Marcas', path: '/marcas', icon: <LocalOfferIcon /> },
+  { label: 'Equipos', path: '/equipos', icon: <PrecisionManufacturingIcon /> },
+  { label: 'Averías', path: '/averias', icon: <BugReportIcon /> },
 ]
 
 const devItems = [
