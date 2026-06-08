@@ -1,176 +1,70 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { View, StyleSheet, ImageBackground } from 'react-native'
-import { Button, Text, Surface, Avatar, ActivityIndicator } from 'react-native-paper'
-import { buildCodeAsync } from 'expo-auth-session/build/PKCE'
-import * as Linking from 'expo-linking'
-import * as WebBrowser from 'expo-web-browser'
-WebBrowser.maybeCompleteAuthSession()
-import api, { setToken, removeToken } from './api'
+import React, { useState, useEffect } from 'react'
+import { View, ScrollView, StyleSheet, ImageBackground } from 'react-native'
+import { Button, Text, Surface, TextInput, ActivityIndicator, Menu, Divider } from 'react-native-paper'
+import api, { setToken, parseToken } from './api'
 import { useAuth } from './AuthContext'
 
-function resolveRedirectUri() {
-  return 'com.apilamiento://callback/'
-}
-
 export default function LoginScreen() {
-  const { user, refreshUser, logout } = useAuth()
+  const { refreshUser } = useAuth()
+  const [roles, setRoles] = useState([])
+  const [usuarios, setUsuarios] = useState([])
+  const [selectedRolId, setSelectedRolId] = useState(null)
+  const [selectedUsuarioId, setSelectedUsuarioId] = useState(null)
+  const [selectedUsuarioLabel, setSelectedUsuarioLabel] = useState('')
+  const [password, setPassword] = useState('12345')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const loginInProgress = useRef(false)
-  const redirectHandled = useRef(false)
-  const pkceRef = useRef(null)
-  const redirectUri = resolveRedirectUri()
+  const [showRolMenu, setShowRolMenu] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [step, setStep] = useState('roles')
 
   useEffect(() => {
-    Linking.getInitialURL().then(url => {
-      if (url && !redirectHandled.current) {
-        redirectHandled.current = true
-        handleRedirectUrl(url)
-      }
-    })
-
-    const subscription = Linking.addEventListener('url', ({ url }) => {
-      if (!url || redirectHandled.current) return
-      redirectHandled.current = true
-      handleRedirectUrl(url)
-    })
-    return () => subscription.remove()
+    api.get('/auth/roles')
+      .then(r => setRoles(r.data))
+      .catch(e => setError('Error al cargar roles'))
   }, [])
 
-  const handleRedirectUrl = async (url) => {
-    try {
-      const { queryParams } = Linking.parse(url)
-      const token = queryParams?.token
-      const code = queryParams?.code
-      const authError = queryParams?.error
-
-      if (authError) {
-        setError(String(authError))
-        return
-      }
-
-      if (token) {
-        await setToken(String(token))
-        await refreshUser()
-        return
-      }
-
-      if (!code) {
-        setError('No se recibio codigo de autorizacion.')
-        return
-      }
-
-      const codeVerifier = pkceRef.current?.codeVerifier
-      if (!codeVerifier) {
-        setError('No se pudo validar la sesion de autenticacion.')
-        return
-      }
-
-      const { data: tokenData } = await api.post('/auth/mobile-token', {
-        code,
-        redirectUri,
-        codeVerifier,
-      })
-
-      if (tokenData?.error) {
-        setError(String(tokenData.error))
-        return
-      }
-
-      if (!tokenData?.token) {
-        setError('No se recibio token de autenticacion.')
-        return
-      }
-
-      await setToken(String(tokenData.token))
-      await refreshUser()
-    } catch (e) {
-      setError(e.response?.data?.error || e.message || 'Error al procesar la autenticacion.')
-    } finally {
-      setLoading(false)
-      loginInProgress.current = false
+  useEffect(() => {
+    if (selectedRolId) {
+      setStep('usuarios')
+      setSelectedUsuarioId(null)
+      setSelectedUsuarioLabel('')
+      api.get(`/auth/usuarios-by-rol/${selectedRolId}`)
+        .then(r => setUsuarios(r.data))
+        .catch(e => setError('Error al cargar usuarios'))
     }
-  }
+  }, [selectedRolId])
+
+  useEffect(() => {
+    if (selectedUsuarioId) setStep('password')
+  }, [selectedUsuarioId])
 
   const handleLogin = async () => {
-    if (loginInProgress.current) return
-    loginInProgress.current = true
-    redirectHandled.current = false
+    if (!selectedUsuarioId || !password) return
     setLoading(true)
     setError('')
-
     try {
-      pkceRef.current = await buildCodeAsync()
-      const { data } = await api.get('/auth/mobile-login-url', {
-        params: {
-          redirect_uri: redirectUri,
-          code_challenge: pkceRef.current.codeChallenge,
-          code_challenge_method: 'S256',
-        },
+      const { data } = await api.post('/auth/local-login', {
+        usuarioId: selectedUsuarioId,
+        password,
       })
-      const loginUrl = data?.authUrl
-      if (!loginUrl) {
-        setError('No se pudo obtener la URL de Microsoft.')
-        return
-      }
-
-      const result = await WebBrowser.openAuthSessionAsync(loginUrl, redirectUri)
-      if (result.type === 'success') {
-        if (result.url) {
-          await handleRedirectUrl(result.url)
-        } else {
-          setError('No se recibio URL de redireccion.')
-        }
-      } else if (result.type === 'cancel') {
-        setError('Autenticacion cancelada.')
+      await setToken(data.token)
+      const parsed = parseToken(data.token)
+      if (parsed?.passwordResetRequired) {
+        refreshUser()
       } else {
-        setError('Error en la autenticacion.')
+        await refreshUser()
       }
     } catch (e) {
-      setError(e.response?.data?.error || e.message || 'No se pudo conectar con Microsoft.')
+      setError(e.response?.data?.error || 'Error al iniciar sesión')
     } finally {
       setLoading(false)
-      loginInProgress.current = false
     }
   }
 
-  const handleLogout = async () => {
-    await removeToken()
-    await logout()
-  }
-
-  if (user) {
-    return (
-      <ImageBackground
-        source={require('../assets/fondo_login.png')}
-        style={styles.background}
-        resizeMode="cover"
-      >
-        <View style={styles.overlay}>
-          <Surface style={styles.card}>
-            <Avatar.Icon size={64} icon="check-circle" color="#fff" style={styles.successIcon} />
-            <Text variant="titleLarge" style={styles.successTitle}>
-              Ingresaste de forma correcta
-            </Text>
-            <Text variant="bodyLarge" style={styles.userName}>
-              {user.nombre}
-            </Text>
-            <Text variant="bodySmall" style={styles.userEmail}>
-              {user.correo}
-            </Text>
-            <Button
-              mode="outlined"
-              onPress={handleLogout}
-              style={styles.logoutButton}
-              textColor="#d32f2f"
-            >
-              Cerrar sesion
-            </Button>
-          </Surface>
-        </View>
-      </ImageBackground>
-    )
-  }
+  const selectedRolName = selectedRolId
+    ? roles.find(r => r.id === selectedRolId)?.nombre || ''
+    : ''
 
   return (
     <ImageBackground
@@ -187,21 +81,82 @@ export default function LoginScreen() {
             Aplicativo Android
           </Text>
 
-          {error ? (
-            <Text variant="bodySmall" style={styles.errorText}>
-              {error}
-            </Text>
-          ) : null}
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-          <Button
-            mode="contained"
-            onPress={handleLogin}
-            style={styles.button}
-            contentStyle={{ height: 48 }}
-            disabled={loading}
+          <Menu
+            visible={showRolMenu}
+            onDismiss={() => setShowRolMenu(false)}
+            anchor={
+              <Button
+                mode="outlined"
+                onPress={() => setShowRolMenu(true)}
+                style={styles.dropdown}
+              >
+                {selectedRolName || 'Seleccionar Perfil'}
+              </Button>
+            }
           >
-            {loading ? <ActivityIndicator color="#fff" /> : 'Iniciar sesion con Microsoft'}
-          </Button>
+            {roles.map(r => (
+              <Menu.Item
+                key={r.id}
+                title={r.nombre}
+                onPress={() => { setSelectedRolId(r.id); setShowRolMenu(false) }}
+              />
+            ))}
+          </Menu>
+
+          {step !== 'roles' && (
+            <Menu
+              visible={showUserMenu}
+              onDismiss={() => setShowUserMenu(false)}
+              anchor={
+                <Button
+                  mode="outlined"
+                  onPress={() => setShowUserMenu(true)}
+                  style={styles.dropdown}
+                >
+                  {selectedUsuarioLabel || 'Seleccionar Usuario'}
+                </Button>
+              }
+            >
+              {usuarios.map(u => (
+                <Menu.Item
+                  key={u.id}
+                  title={`${u.nombre}${u.area ? ` (${u.area})` : ''}`}
+                  onPress={() => { setSelectedUsuarioId(u.id); setSelectedUsuarioLabel(`${u.nombre}${u.area ? ` (${u.area})` : ''}`); setShowUserMenu(false) }}
+                />
+              ))}
+            </Menu>
+          )}
+
+          {step === 'password' && (
+            <>
+              <TextInput
+                label="Contraseña"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                mode="outlined"
+                style={styles.input}
+              />
+              <Button
+                mode="contained"
+                onPress={handleLogin}
+                style={styles.button}
+                contentStyle={{ height: 48 }}
+                disabled={loading}
+              >
+                {loading ? <ActivityIndicator color="#fff" /> : 'Iniciar sesión'}
+              </Button>
+              <Button
+                mode="text"
+                onPress={() => { setSelectedRolId(null); setStep('roles') }}
+                style={styles.resetButton}
+              >
+                Cambiar usuario
+              </Button>
+            </>
+          )}
         </Surface>
       </View>
     </ImageBackground>
@@ -209,63 +164,20 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
+  background: { flex: 1 },
   overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    padding: 24,
+    flex: 1, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)', padding: 24,
   },
   card: {
-    width: '100%',
-    maxWidth: 360,
-    padding: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    elevation: 4,
+    width: '100%', maxWidth: 360, padding: 32, borderRadius: 16,
+    alignItems: 'center', elevation: 4,
   },
-  title: {
-    fontWeight: '700',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  subtitle: {
-    opacity: 0.6,
-    marginBottom: 24,
-  },
-  button: {
-    width: '100%',
-    borderRadius: 8,
-  },
-  errorText: {
-    width: '100%',
-    color: '#d32f2f',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  successIcon: {
-    backgroundColor: '#2e7d32',
-    marginBottom: 16,
-  },
-  successTitle: {
-    fontWeight: '700',
-    color: '#2e7d32',
-    marginBottom: 8,
-  },
-  userName: {
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  userEmail: {
-    opacity: 0.6,
-    marginBottom: 24,
-  },
-  logoutButton: {
-    width: '100%',
-    borderRadius: 8,
-    borderColor: '#d32f2f',
-  },
+  title: { fontWeight: '700', marginBottom: 10, textAlign: 'center' },
+  subtitle: { opacity: 0.6, marginBottom: 24 },
+  dropdown: { width: '100%', marginBottom: 12 },
+  input: { width: '100%', marginBottom: 12 },
+  button: { width: '100%', borderRadius: 8, marginBottom: 8 },
+  resetButton: { width: '100%' },
+  errorText: { width: '100%', color: '#d32f2f', textAlign: 'center', marginBottom: 16 },
 })

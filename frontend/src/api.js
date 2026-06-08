@@ -37,8 +37,12 @@ export function parseToken() {
       nombre: payload.nombre || 'Usuario',
       correo: payload.correo || payload.upn || '',
       rol: (payload.groups || [])[0] || '',
+      rolNombre: (payload.groups || [])[0] || '',
       rolId: payload.rolId || null,
       sub: payload.sub || null,
+      area: payload.area || '',
+      dni: payload.dni || '',
+      passwordResetRequired: payload.passwordResetRequired !== false,
     }
   } catch {
     return null

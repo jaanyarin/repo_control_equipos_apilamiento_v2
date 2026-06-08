@@ -10,7 +10,7 @@
 | Documento | 04_IMPLEMENTATION.md |
 | Proyecto | Sistema de Control Operativo de Equipos de Apilamiento |
 | Estado | En desarrollo sincronizado con repositorio |
-| Versión | 1.2 |
+| Versión | 1.3 |
 | Fecha | 2026-06-08 |
 | Responsable | Jose Anyarin |
 | Base de Datos Oficial | PostgreSQL 18 |
@@ -42,7 +42,7 @@ No se usará MySQL en este proyecto.
 | Frontend Mobile | Expo React Native SDK 54 |
 | Backend | Quarkus Java 3.14.4 |
 | API | REST versionada en /api/v1 |
-| Seguridad | Microsoft Entra ID y JWT propio |
+| Seguridad | JWT propio + BCrypt |
 | Base de Datos | PostgreSQL 18 |
 | Migraciones | Flyway |
 | Proxy | Nginx |
@@ -54,17 +54,18 @@ No se usará MySQL en este proyecto.
 
 | Módulo | Estado |
 |---|---|
-| Autenticación Microsoft | Validado |
+| Autenticación local BCrypt | Validado |
 | JWT propio | Validado |
-| Microsoft Graph API | Validado |
-| Usuarios | Validado |
+| Usuarios (seed local) | Validado |
 | Roles | Validado |
 | Sedes | Validado |
 | Campañas | Validado |
 | Frontend web base | Validado |
-| Mobile login | Validado |
+| Mobile login local | Validado |
 | APK inicial | Validado |
 | Docker + PostgreSQL + Nginx | Validado |
+| Migración V8: login_local | Validado |
+| Migración V9: seed_usuarios_local | Validado |
 
 ---
 
@@ -108,7 +109,39 @@ Tablas esperadas para el núcleo operativo:
 
 ---
 
-# 7. HDT-002 — Siguiente Hito
+# 7. Flujo de Autenticación Local
+
+## 7.1 Login
+
+1. El usuario selecciona su perfil en un dropdown (Super Admin / Admin / Usuario).
+2. El sistema filtra y muestra los usuarios según el perfil seleccionado.
+3. El usuario selecciona su nombre.
+4. El usuario ingresa su contraseña (por defecto "12345").
+5. El backend valida la contraseña contra el hash BCrypt almacenado.
+6. Si es correcto, retorna un JWT + indicador `passwordResetRequired`.
+
+## 7.2 Cambio de Contraseña Obligatorio
+
+1. Si `passwordResetRequired = true`, se redirige a la pantalla de cambio de contraseña.
+2. El usuario debe ingresar su DNI como nueva contraseña (mínimo 6 caracteres).
+3. El backend hashea la nueva contraseña con BCrypt y actualiza el registro.
+4. Se genera un nuevo JWT con `passwordResetRequired = false`.
+
+## 7.3 Menú Principal Post-Login
+
+Según el perfil del usuario, se muestran hasta 5 botones:
+
+| Botón | Perfiles |
+|---|---|
+| Ingreso de PSR y OSR | Super Admin, Admin |
+| Ingreso de Equipo | Super Admin, Admin, Usuario |
+| Registro de Avería | Super Admin, Admin, Usuario |
+| Detalles de Equipo | Super Admin, Admin, Usuario |
+| Finalización del Servicio | Super Admin, Admin, Usuario |
+
+---
+
+# 8. HDT-002 — Siguiente Hito
 
 El siguiente hito debe construir el núcleo operativo mínimo del sistema.
 
@@ -127,7 +160,7 @@ Orden recomendado:
 
 ---
 
-# 8. Criterios de Implementación
+# 9. Criterios de Implementación
 
 Cada módulo debe incluir:
 
@@ -144,6 +177,6 @@ Cada módulo debe incluir:
 
 ---
 
-# 9. Cierre
+# 10. Cierre
 
 Este documento queda sincronizado con PostgreSQL 18 como base oficial y con HDT-002 como siguiente punto crítico de desarrollo.

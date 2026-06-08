@@ -14,11 +14,14 @@ public class JwtService {
     public String generateToken(Usuario user) {
         return Jwt.issuer("https://apilamiento.internal")
                 .subject(String.valueOf(user.getId()))
-                .upn(user.getCorreo())
+                .upn(user.getCorreo() != null ? user.getCorreo() : user.getNombre())
                 .groups(Set.of(user.getRol() != null ? user.getRol().getNombre() : "Usuario"))
                 .claim("nombre", user.getNombre())
-                .claim("correo", user.getCorreo())
+                .claim("correo", user.getCorreo() != null ? user.getCorreo() : "")
                 .claim("rolId", user.getRolId())
+                .claim("area", user.getArea() != null ? user.getArea() : "")
+                .claim("dni", user.getDni() != null ? user.getDni() : "")
+                .claim("passwordResetRequired", user.getPasswordResetRequired() != null ? user.getPasswordResetRequired() : true)
                 .expiresIn(EXPIRATION)
                 .sign();
     }

@@ -87,6 +87,13 @@
             <artifactId>quarkus-arc</artifactId>
         </dependency>
 
+        <!-- Security / BCrypt -->
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.4</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>io.quarkus</groupId>

@@ -20,7 +20,7 @@ El proyecto contempla el desarrollo de:
 - Aplicación móvil Android para operación de campo.
 - Backend centralizado basado en APIs REST.
 - Plataforma web para administración y visualización de indicadores operativos.
-- Gestión de autenticación corporativa Microsoft.
+- Gestión de autenticación local con BCrypt (login por perfil + usuario + contraseña).
 - Gestión de usuarios y roles.
 - Gestión de sedes.
 - Gestión de campañas operativas.
@@ -81,7 +81,7 @@ La arquitectura del sistema estará basada en componentes desacoplados distribui
 - Plataforma web administrativa y analítica.
 - Backend API REST centralizado.
 - Base de datos relacional PostgreSQL 18.
-- Servicio de autenticación Microsoft Entra ID.
+- Servicio de autenticación local con BCrypt + JWT.
 - Servicio de generación PDF.
 - Servicio de almacenamiento multimedia basado en filesystem con rutas persistidas en PostgreSQL.
 
@@ -99,9 +99,8 @@ La comunicación entre clientes y backend se realizará mediante HTTPS utilizand
 | Frontend Web | React 18 SPA, Vite 5, MUI 6 | ✅ Implementado |
 | Base de Datos | PostgreSQL 18 | ✅ Oficial / Implementado |
 | Migraciones | Flyway | ✅ Implementado |
-| Autenticación | Microsoft Entra ID OIDC + JWT propio | ✅ Implementado |
-| Microsoft Graph | App-only token, client credentials flow | ✅ Implementado |
-| Seguridad | SmallRye JWT / JWT Build | ✅ Implementado |
+| Autenticación | Login local BCrypt + JWT propio | ✅ Implementado |
+| Seguridad | SmallRye JWT / JWT Build / jBCrypt | ✅ Implementado |
 | APIs | REST /api/v1 | ✅ Implementado |
 | Reverse Proxy | Nginx | ✅ Implementado |
 | Contenedorización | Docker | ✅ Implementado |
@@ -132,7 +131,7 @@ No se usará MySQL en este proyecto.
 
 | Código | Módulo | Estado Actual |
 |---|---|---|
-| MOD-01 | Autenticación | ✅ Validado |
+| MOD-01 | Autenticación | ✅ Validado (local BCrypt) |
 | MOD-02 | Usuarios | ✅ Validado |
 | MOD-03 | Sedes | ✅ Validado |
 | MOD-04 | Campañas | ✅ Validado |
@@ -147,7 +146,7 @@ No se usará MySQL en este proyecto.
 | MOD-13 | Auditoría | ⏳ Pendiente |
 | MOD-14 | Catálogos | ⏳ Parcial |
 | MOD-15 | Configuración | ⏳ Pendiente |
-| MOD-16 | Mobile App | ✅ Login validado / pantallas operativas pendientes |
+| MOD-16 | Mobile App | ✅ Login local validado / pantallas operativas pendientes |
 
 ---
 
@@ -161,12 +160,13 @@ No se usará MySQL en este proyecto.
 | Fase 4 | Backend base + autenticación + usuarios + sedes + campañas | ✅ Completado |
 | Fase 5 | Frontend web administrativo base | ✅ Completado |
 | Fase 6 | Mobile login + APK inicial | ✅ Validado |
-| Fase 7 | Módulos operativos núcleo | ⏳ Pendiente crítico |
-| Fase 8 | Evidencias, PDF, dashboard y auditoría | ⏳ Pendiente |
-| Fase 9 | Integración general | ⏳ Pendiente |
-| Fase 10 | QA y pruebas operativas | ⏳ Pendiente |
-| Fase 11 | Despliegue controlado | ⏳ Pendiente |
-| Fase 12 | Estabilización y soporte inicial | ⏳ Pendiente |
+| Fase 7 | Migración a autenticación local BCrypt | ✅ Completado |
+| Fase 8 | Módulos operativos núcleo | ⏳ Pendiente crítico |
+| Fase 9 | Evidencias, PDF, dashboard y auditoría | ⏳ Pendiente |
+| Fase 10 | Integración general | ⏳ Pendiente |
+| Fase 11 | QA y pruebas operativas | ⏳ Pendiente |
+| Fase 12 | Despliegue controlado | ⏳ Pendiente |
+| Fase 13 | Estabilización y soporte inicial | ⏳ Pendiente |
 
 ---
 
@@ -178,13 +178,13 @@ No se usará MySQL en este proyecto.
 | 2 | PostgreSQL 18 | ✅ Completado |
 | 3 | Backend API REST Quarkus | ✅ Completado base |
 | 4 | Frontend Web SPA | ✅ Completado base |
-| 5 | Autenticación Microsoft OIDC + JWT | ✅ Completado |
-| 6 | Microsoft Graph API | ✅ Completado |
-| 7 | Usuarios | ✅ Completado |
-| 8 | Roles | ✅ Completado |
-| 9 | Sedes | ✅ Completado |
-| 10 | Campañas | ✅ Completado |
-| 11 | Mobile login + APK inicial | ✅ Validado |
+| 5 | Autenticación local BCrypt + JWT | ✅ Completado |
+| 6 | Usuarios (seed local) | ✅ Completado |
+| 7 | Roles | ✅ Completado |
+| 8 | Sedes | ✅ Completado |
+| 9 | Campañas | ✅ Completado |
+| 10 | Mobile login local | ✅ Validado |
+| 11 | APK inicial | ✅ Validado |
 | 12 | Tipos de Equipos | ⏳ Pendiente inmediato |
 | 13 | Proveedores | ⏳ Pendiente inmediato |
 | 14 | Equipos | ⏳ Pendiente crítico |
@@ -217,15 +217,15 @@ Cada ambiente deberá mantener configuraciones independientes y controladas.
 
 La seguridad del sistema está basada en:
 
-- Autenticación corporativa Microsoft.
+- Autenticación local con contraseñas hasheadas (BCrypt).
 - Control de acceso mediante JWT.
 - Roles y permisos internos.
-- Expiración automática de sesiones.
+- Expiración automática de sesiones (8 horas).
+- Cambio de contraseña obligatorio en primer ingreso.
 - Uso obligatorio de HTTPS en ambientes controlados.
 - Protección de APIs REST.
 - Auditoría de eventos críticos.
 - Restricción de acceso por usuarios autorizados.
-- Integración con Microsoft Graph API para búsqueda y validación de usuarios del tenant corporativo.
 
 El acceso al sistema solo será permitido para usuarios previamente registrados y habilitados dentro de la plataforma.
 
@@ -361,7 +361,6 @@ La secuencia recomendada es:
 |---|---|---|
 | Cambios operativos no documentados | Alto | Validación por hito |
 | Crecimiento no controlado de requerimientos | Alto | Backlog cerrado por MVP |
-| Dependencia de servicios Microsoft | Medio | Manejo de errores y fallback controlado |
 | Conectividad limitada en operación | Medio | Validación previa de red en campo |
 | Cambios organizacionales | Medio | Roles configurables |
 | Incremento futuro de módulos | Medio | Arquitectura modular |
@@ -374,7 +373,6 @@ La secuencia recomendada es:
 El proyecto depende de:
 
 - Infraestructura tecnológica.
-- Servicios Microsoft.
 - Accesos corporativos.
 - Disponibilidad de usuarios operativos.
 - Validaciones funcionales.

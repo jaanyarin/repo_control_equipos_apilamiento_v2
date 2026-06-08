@@ -5,6 +5,7 @@ import { useApp } from './store'
 import api from './api'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import PasswordChange from './pages/PasswordChange'
 import AuthCallback from './pages/AuthCallback'
 import Dashboard from './pages/Dashboard'
 import Usuarios from './pages/Usuarios'
@@ -57,6 +58,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+      <Route path="/cambiar-contrasena" element={<PasswordChange />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route
         path="/"

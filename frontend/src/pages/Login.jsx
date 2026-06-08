@@ -1,110 +1,70 @@
-import { useEffect, useState } from 'react'
-import { Box, Button, CircularProgress, Typography, Alert } from '@mui/material'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  Box, Typography, FormControl, InputLabel, Select, MenuItem,
+  TextField, Button, CircularProgress, Alert,
+} from '@mui/material'
+import api from '../api'
 
 export default function Login() {
-  const [state, setState] = useState('loading')
+  const navigate = useNavigate()
+  const [roles, setRoles] = useState([])
+  const [usuarios, setUsuarios] = useState([])
+  const [selectedRolId, setSelectedRolId] = useState('')
+  const [selectedUsuarioId, setSelectedUsuarioId] = useState('')
+  const [password, setPassword] = useState('12345')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [step, setStep] = useState('roles')
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('logout') === '1') {
-      setState('logout')
-      return
-    }
-    const error = params.get('error')
-    if (error) {
-      setState('error')
-      return
-    }
-    window.location.href = `/api/v1/auth/login?redirect_uri=${encodeURIComponent(window.location.origin)}`
+    api.get('/auth/roles')
+      .then(r => setRoles(r.data))
+      .catch(e => setError('Error al cargar roles'))
   }, [])
 
-  const handleLogin = () => {
-    window.location.href = `/api/v1/auth/login?redirect_uri=${encodeURIComponent(window.location.origin)}`
+  useEffect(() => {
+    if (selectedRolId) {
+      setStep('usuarios')
+      setSelectedUsuarioId('')
+      api.get(`/auth/usuarios-by-rol/${selectedRolId}`)
+        .then(r => setUsuarios(r.data))
+        .catch(e => setError('Error al cargar usuarios'))
+    }
+  }, [selectedRolId])
+
+  useEffect(() => {
+    if (selectedUsuarioId) setStep('password')
+  }, [selectedUsuarioId])
+
+  const handleLogin = async () => {
+    if (!selectedUsuarioId || !password) return
+    setLoading(true)
+    setError('')
+    try {
+      const { data } = await api.post('/auth/local-login', {
+        usuarioId: selectedUsuarioId,
+        password,
+      })
+      localStorage.setItem('accessToken', data.token)
+      if (data.passwordResetRequired) {
+        navigate('/cambiar-contrasena', { replace: true })
+      } else {
+        navigate('/dashboard', { replace: true })
+      }
+    } catch (e) {
+      setError(e.response?.data?.error || 'Error al iniciar sesión')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  if (state === 'logout') {
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundImage: 'url(/images/fondo_login.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 3,
-            bgcolor: 'rgba(255,255,255,0.9)',
-            p: 5,
-            borderRadius: 3,
-            boxShadow: 3,
-            maxWidth: 380,
-          }}
-        >
-          <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
-            Sesión cerrada
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ fontSize: 14, textAlign: 'center' }}>
-            Has cerrado sesión correctamente.
-          </Typography>
-          <Button variant="contained" size="large" onClick={handleLogin} sx={{ mt: 1 }}>
-            Iniciar sesión
-          </Button>
-        </Box>
-      </Box>
-    )
-  }
-
-  if (state === 'error') {
-    const params = new URLSearchParams(window.location.search)
-    const errorMsg = params.get('error') || 'Error desconocido'
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundImage: 'url(/images/fondo_login.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 3,
-            bgcolor: 'rgba(255,255,255,0.9)',
-            p: 5,
-            borderRadius: 3,
-            boxShadow: 3,
-            maxWidth: 400,
-          }}
-        >
-          <Typography variant="h5" sx={{ fontWeight: 600, color: 'error.main' }}>
-            Error de autenticación
-          </Typography>
-          <Alert severity="error" sx={{ width: '100%' }}>
-            {errorMsg}
-          </Alert>
-          <Typography variant="body2" color="text.secondary" sx={{ fontSize: 13, textAlign: 'center' }}>
-            Si el problema persiste, contacta al administrador del sistema.
-          </Typography>
-          <Button variant="contained" size="large" onClick={handleLogin} sx={{ mt: 1 }}>
-            Intentar de nuevo
-          </Button>
-        </Box>
-      </Box>
-    )
+  const handleReset = () => {
+    setSelectedRolId('')
+    setSelectedUsuarioId('')
+    setPassword('12345')
+    setError('')
+    setStep('roles')
   }
 
   return (
@@ -124,18 +84,75 @@ export default function Login() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 2,
-          bgcolor: 'rgba(255,255,255,0.85)',
+          gap: 2.5,
+          bgcolor: 'rgba(255,255,255,0.9)',
           p: 5,
           borderRadius: 3,
           boxShadow: 3,
-          maxWidth: 380,
+          maxWidth: 400,
+          width: '100%',
         }}
       >
-        <CircularProgress size={36} />
-        <Typography variant="body1" color="text.secondary" sx={{ fontSize: 14 }}>
-          Redirigiendo a Microsoft...
+        <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+          Control de Equipos de Apilamiento
         </Typography>
+
+        {error && <Alert severity="error" sx={{ width: '100%' }}>{error}</Alert>}
+
+        <FormControl fullWidth>
+          <InputLabel>Perfil</InputLabel>
+          <Select
+            value={selectedRolId}
+            label="Perfil"
+            onChange={e => { setSelectedRolId(e.target.value); setStep('usuarios') }}
+          >
+            {roles.map(r => (
+              <MenuItem key={r.id} value={r.id}>{r.nombre}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {step !== 'roles' && (
+          <FormControl fullWidth>
+            <InputLabel>Usuario</InputLabel>
+            <Select
+              value={selectedUsuarioId}
+              label="Usuario"
+              onChange={e => { setSelectedUsuarioId(e.target.value); setStep('password') }}
+            >
+              {usuarios.map(u => (
+                <MenuItem key={u.id} value={u.id}>
+                  {u.nombre} {u.area ? `(${u.area})` : ''}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+
+        {step === 'password' && (
+          <>
+            <TextField
+              fullWidth
+              label="Contraseña"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+            <Button
+              variant="contained"
+              size="large"
+              fullWidth
+              onClick={handleLogin}
+              disabled={loading}
+              sx={{ mt: 1 }}
+            >
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Iniciar sesión'}
+            </Button>
+            <Button variant="text" size="small" onClick={handleReset}>
+              Cambiar usuario
+            </Button>
+          </>
+        )}
       </Box>
     </Box>
   )

@@ -12,10 +12,10 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "id_microsoft", nullable = false, unique = true, length = 255)
+    @Column(name = "id_microsoft", unique = true, length = 255)
     private String idMicrosoft;
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(unique = true, length = 255)
     private String correo;
 
     @Column(nullable = false, length = 255)
@@ -35,6 +35,15 @@ public class Usuario {
 
     @Column(length = 255)
     private String ubicacion;
+
+    @Column(length = 255)
+    private String dni;
+
+    @Column(name = "password_hash", length = 255)
+    private String passwordHash;
+
+    @Column(name = "password_reset_required", nullable = false)
+    private Boolean passwordResetRequired = true;
 
     @Column(name = "rol_id", nullable = false)
     private Long rolId;
@@ -88,6 +97,12 @@ public class Usuario {
     public void setDepartamento(String departamento) { this.departamento = departamento; }
     public String getUbicacion() { return ubicacion; }
     public void setUbicacion(String ubicacion) { this.ubicacion = ubicacion; }
+    public String getDni() { return dni; }
+    public void setDni(String dni) { this.dni = dni; }
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public Boolean getPasswordResetRequired() { return passwordResetRequired; }
+    public void setPasswordResetRequired(Boolean passwordResetRequired) { this.passwordResetRequired = passwordResetRequired; }
     public Long getRolId() { return rolId; }
     public void setRolId(Long rolId) { this.rolId = rolId; }
     public Long getSitioId() { return sitioId; }

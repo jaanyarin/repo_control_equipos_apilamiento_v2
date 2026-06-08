@@ -1,6 +1,7 @@
 package com.apilamiento.control.controller;
 
 import com.apilamiento.control.service.AuthService;
+import com.apilamiento.control.service.LocalAuthService;
 import jakarta.annotation.security.PermitAll;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -17,10 +18,84 @@ import java.util.Map;
 public class AuthResource {
 
     private final AuthService authService;
+    private final LocalAuthService localAuthService;
 
-    public AuthResource(AuthService authService) {
+    public AuthResource(AuthService authService, LocalAuthService localAuthService) {
         this.authService = authService;
+        this.localAuthService = localAuthService;
     }
+
+    // --- Endpoints de autenticación local ---
+
+    @GET
+    @Path("/roles")
+    public Response getRoles() {
+        return Response.ok(localAuthService.getRolesActivos()).build();
+    }
+
+    @GET
+    @Path("/usuarios-by-rol/{rolId}")
+    public Response getUsuariosByRol(@PathParam("rolId") Long rolId) {
+        return Response.ok(localAuthService.getUsuariosByRol(rolId)).build();
+    }
+
+    @POST
+    @Path("/local-login")
+    public Response localLogin(Map<String, String> body) {
+        String usuarioIdStr = body.get("usuarioId");
+        String password = body.get("password");
+
+        if (usuarioIdStr == null || password == null || password.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "usuarioId y password requeridos")).build();
+        }
+
+        Long usuarioId;
+        try {
+            usuarioId = Long.parseLong(usuarioIdStr);
+        } catch (NumberFormatException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "usuarioId inválido")).build();
+        }
+
+        try {
+            Map<String, Object> result = localAuthService.loginLocal(usuarioId, password);
+            return Response.ok(result).build();
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("error", e.getMessage())).build();
+        }
+    }
+
+    @POST
+    @Path("/change-password")
+    public Response changePassword(Map<String, String> body) {
+        String usuarioIdStr = body.get("usuarioId");
+        String newPassword = body.get("newPassword");
+
+        if (usuarioIdStr == null || newPassword == null || newPassword.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "usuarioId y newPassword requeridos")).build();
+        }
+
+        Long usuarioId;
+        try {
+            usuarioId = Long.parseLong(usuarioIdStr);
+        } catch (NumberFormatException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "usuarioId inválido")).build();
+        }
+
+        try {
+            Map<String, Object> result = localAuthService.changePassword(usuarioId, newPassword);
+            return Response.ok(result).build();
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage())).build();
+        }
+    }
+
+    // --- Endpoints Microsoft OIDC (mantenidos por compatibilidad) ---
 
     @GET
     @Path("/login")

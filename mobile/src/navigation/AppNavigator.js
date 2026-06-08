@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { ActivityIndicator, View } from 'react-native'
 import { useAuth } from '../AuthContext'
 import LoginScreen from '../LoginScreen'
+import PasswordChangeScreen from '../screens/PasswordChangeScreen'
 import HomeScreen from '../screens/HomeScreen'
 import EquiposListScreen from '../screens/EquiposListScreen'
 import EquipoDetailScreen from '../screens/EquipoDetailScreen'
@@ -68,6 +69,7 @@ function AuthNavigator() {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="PasswordChange" component={PasswordChangeScreen} />
     </AuthStack.Navigator>
   )
 }
@@ -85,7 +87,15 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer>
-      {user ? <MainNavigator /> : <AuthNavigator />}
+      {user ? (
+        user.passwordResetRequired ? (
+          <AuthNavigator initialRouteName="PasswordChange" />
+        ) : (
+          <MainNavigator />
+        )
+      ) : (
+        <AuthNavigator />
+      )}
     </NavigationContainer>
   )
 }

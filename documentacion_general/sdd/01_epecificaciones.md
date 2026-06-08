@@ -12,7 +12,7 @@
 | Plataforma | Web SPA + Android APK |
 | Backend | Quarkus Java |
 | Base de Datos Oficial | PostgreSQL 18 |
-| Versión Documento | 1.3 |
+| Versión Documento | 1.4 |
 | Estado | En desarrollo sincronizado con repositorio |
 | Fecha | 2026-06-08 |
 | Responsable | Jose Anyarin |
@@ -33,8 +33,8 @@ Desarrollar una plataforma digital empresarial para el control operativo de equi
 - Plataforma web para administración y gestión operativa.
 - Backend API REST centralizado.
 - Base de datos PostgreSQL 18.
-- Gestión de usuarios y autenticación mediante cuenta Microsoft corporativa.
-- Gestión de roles y permisos.
+- Gestión de usuarios y autenticación local con contraseña hasheada (BCrypt).
+- Gestión de roles y permisos (Super Admin, Admin, Usuario).
 - Gestión de sedes operativas.
 - Gestión de campañas operativas.
 - Registro manual de PSR y OSR.
@@ -112,7 +112,7 @@ No se usará MySQL en este proyecto.
 
 | Código | Módulo | Descripción | Estado Actual |
 |---|---|---|---|
-| MOD-01 | Autenticación | Microsoft Entra ID, JWT y control de acceso | Validado |
+| MOD-01 | Autenticación | Login local con selección de perfil, usuario y contraseña + cambio de contraseña obligatorio en primer ingreso | Validado |
 | MOD-02 | Usuarios | Administración de usuarios, roles y accesos | Validado |
 | MOD-03 | Sedes | Gestión de sedes operativas | Validado |
 | MOD-04 | Campañas | Gestión de campañas operativas | Validado |
@@ -127,7 +127,7 @@ No se usará MySQL en este proyecto.
 | MOD-13 | Auditoría | Trazabilidad de eventos | Pendiente |
 | MOD-14 | Catálogos | Datos maestros auxiliares | Parcial |
 | MOD-15 | Configuración | Parámetros generales | Pendiente |
-| MOD-16 | Mobile App | Aplicación Android operativa | Login validado / operación pendiente |
+| MOD-16 | Mobile App | Aplicación Android operativa | Login local validado / operación pendiente |
 
 ---
 
@@ -140,15 +140,16 @@ No se usará MySQL en este proyecto.
 - Backend Quarkus base.
 - Nginx reverse proxy.
 - Frontend web base.
-- Autenticación Microsoft Entra ID.
+- Autenticación local con BCrypt (login por selección de perfil → usuario → contraseña).
+- Cambio de contraseña obligatorio en primer ingreso (password por defecto → DNI).
 - JWT propio.
-- Microsoft Graph API para validación y búsqueda de usuarios.
 - Roles.
-- Usuarios.
+- Usuarios (seed local con datos de prueba).
 - Sedes.
 - Campañas.
-- Mobile login.
+- Mobile login local.
 - APK inicial validado.
+- Menú principal post-login con 5 botones según perfil.
 
 ## Pendiente crítico
 
@@ -190,9 +191,10 @@ No se usará MySQL en este proyecto.
 
 # 10. Reglas de Negocio Principales
 
-- El acceso se realiza únicamente mediante cuenta Microsoft corporativa.
+- El acceso se realiza mediante autenticación local con selección de perfil y usuario.
 - El usuario debe estar registrado y activo en la plataforma.
-- El usuario debe existir y estar activo en Microsoft Entra ID.
+- La contraseña por defecto es "12345" y debe cambiarse en el primer ingreso.
+- La nueva contraseña debe ser el número de DNI del usuario.
 - Solo una campaña puede estar activa a la vez.
 - PSR y OSR se registran manualmente tomando como referencia la información proveniente de NISIRA.
 - No existe integración directa con NISIRA.
@@ -211,23 +213,25 @@ No se usará MySQL en este proyecto.
 
 # 11. Flujos Operativos Objetivo
 
-1. Login Microsoft.
-2. Validación de usuario autorizado.
-3. Gestión de campaña activa.
-4. Registro de PSR.
-5. Registro de OSR.
-6. Registro de proveedor, marca y tipo de equipo.
-7. Registro de equipo.
-8. Asociación equipo con PSR/OSR.
-9. Registro de evidencias de ingreso.
-10. Registro de avería.
-11. Atención de avería.
-12. Cálculo de tiempo inactivo.
-13. Finalización del servicio.
-14. Registro de evidencias de devolución.
-15. Consulta de historial.
-16. Generación de PDF.
-17. Visualización de indicadores.
+1. Login local (seleccionar perfil → seleccionar usuario → ingresar contraseña).
+2. Si es primer ingreso (password por defecto), forzar cambio de contraseña (DNI).
+3. Validación de usuario autorizado.
+4. Menú principal con 5 botones según perfil.
+5. Gestión de campaña activa.
+6. Registro de PSR.
+7. Registro de OSR.
+8. Registro de proveedor, marca y tipo de equipo.
+9. Registro de equipo.
+10. Asociación equipo con PSR/OSR.
+11. Registro de evidencias de ingreso.
+12. Registro de avería.
+13. Atención de avería.
+14. Cálculo de tiempo inactivo.
+15. Finalización del servicio.
+16. Registro de evidencias de devolución.
+17. Consulta de historial.
+18. Generación de PDF.
+19. Visualización de indicadores.
 
 ---
 
@@ -252,7 +256,7 @@ La implementación debe iniciar por el modelo de datos operativo en PostgreSQL m
 - Base de datos: PostgreSQL 18.
 - Persistencia: Hibernate ORM Panache.
 - Migraciones: Flyway.
-- Seguridad: JWT + Microsoft Entra ID.
+- Seguridad: JWT propio + BCrypt para hash de contraseñas.
 - Frontend web: React + Vite + MUI.
 - Mobile: Expo React Native.
 - Proxy: Nginx.

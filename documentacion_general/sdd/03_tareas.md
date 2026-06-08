@@ -21,7 +21,7 @@ La planificación queda sincronizada con el repositorio actual y con la decisió
 | Migraciones | Flyway |
 | Frontend web | React 18 + Vite + MUI |
 | Mobile | Expo React Native SDK 54 |
-| Autenticación | Microsoft Entra ID + JWT propio |
+| Autenticación | Local BCrypt + JWT propio |
 | Infraestructura | Docker Compose + Nginx |
 
 No se usará MySQL en este proyecto.
@@ -50,13 +50,13 @@ No se usará MySQL en este proyecto.
 | 3 | Backend Quarkus base | Completado |
 | 4 | Nginx reverse proxy | Completado |
 | 5 | Frontend web base | Completado |
-| 6 | Autenticación Microsoft + JWT | Completado |
-| 7 | Microsoft Graph API | Completado |
-| 8 | Usuarios | Completado |
-| 9 | Roles | Completado |
-| 10 | Sedes | Completado |
-| 11 | Campañas | Completado |
-| 12 | Mobile login + APK inicial | Validado |
+| 6 | Autenticación local BCrypt + JWT | Completado |
+| 7 | Usuarios (seed local) | Completado |
+| 8 | Roles | Completado |
+| 9 | Sedes | Completado |
+| 10 | Campañas | Completado |
+| 11 | Mobile login local + menú perfil | Validado |
+| 12 | APK inicial | Validado |
 | 13 | Tipos de Equipos | Pendiente inmediato |
 | 14 | Proveedores | Pendiente inmediato |
 | 15 | Marcas | Pendiente inmediato |
@@ -103,17 +103,19 @@ No se usará MySQL en este proyecto.
 | DB-004 | Crear tablas base roles / usuarios / sedes | Crítica | ✅ |
 | DB-005 | Crear tabla campañas | Alta | ✅ |
 | DB-006 | Diseñar modelo operativo HDT-002 | Crítica | ⏳ |
-| DB-007 | Crear migración `dim_tipos_equipo` | Crítica | ⏳ |
-| DB-008 | Crear migración `dim_proveedores` | Crítica | ⏳ |
-| DB-009 | Crear migración `dim_marcas` | Alta | ⏳ |
-| DB-010 | Crear migración `fac_equipos` | Crítica | ⏳ |
-| DB-011 | Crear migración `fac_psr` | Crítica | ⏳ |
-| DB-012 | Crear migración `fac_osr` | Crítica | ⏳ |
-| DB-013 | Crear migración `fac_averias` | Alta | ⏳ |
-| DB-014 | Crear migración `fac_evidencias` | Alta | ⏳ |
-| DB-015 | Crear migración `auditoria_eventos` | Alta | ⏳ |
-| DB-016 | Configurar índices y relaciones | Alta | ⏳ |
-| DB-017 | Configurar restricciones de integridad | Alta | ⏳ |
+| DB-007 | V8 login_local: password_hash, dni, password_reset_required | Crítica | ✅ |
+| DB-008 | V9 seed_usuarios_local: datos de prueba | Crítica | ✅ |
+| DB-009 | Crear migración `dim_tipos_equipo` | Crítica | ⏳ |
+| DB-010 | Crear migración `dim_proveedores` | Crítica | ⏳ |
+| DB-011 | Crear migración `dim_marcas` | Alta | ⏳ |
+| DB-012 | Crear migración `fac_equipos` | Crítica | ⏳ |
+| DB-013 | Crear migración `fac_psr` | Crítica | ⏳ |
+| DB-014 | Crear migración `fac_osr` | Crítica | ⏳ |
+| DB-015 | Crear migración `fac_averias` | Alta | ⏳ |
+| DB-016 | Crear migración `fac_evidencias` | Alta | ⏳ |
+| DB-017 | Crear migración `auditoria_eventos` (V10) | Alta | ⏳ |
+| DB-018 | Configurar índices y relaciones | Alta | ⏳ |
+| DB-019 | Configurar restricciones de integridad | Alta | ⏳ |
 
 ---
 
@@ -124,28 +126,30 @@ No se usará MySQL en este proyecto.
 | BE-001 | Inicializar proyecto Quarkus | Crítica | ✅ |
 | BE-002 | Configurar conexión PostgreSQL | Crítica | ✅ |
 | BE-003 | Configurar arquitectura modular | Crítica | ✅ |
-| BE-004 | Configurar autenticación Microsoft OIDC manual | Crítica | ✅ |
+| BE-004 | Configurar autenticación local BCrypt | Crítica | ✅ |
 | BE-005 | Configurar JWT propio | Crítica | ✅ |
 | BE-006 | Implementar módulo usuarios | Alta | ✅ |
 | BE-007 | Implementar módulo roles | Alta | ✅ |
-| BE-008 | Implementar validación login: registrado, activo tenant, activo app | Alta | ✅ |
+| BE-008 | Implementar validación login local + cambio contraseña | Alta | ✅ |
 | BE-009 | Implementar módulo sedes | Alta | ✅ |
 | BE-010 | Implementar módulo campañas | Alta | ✅ |
-| BE-011 | Implementar módulo tipos equipos | Alta | ⏳ |
-| BE-012 | Implementar módulo proveedores | Alta | ⏳ |
-| BE-013 | Implementar módulo marcas | Alta | ⏳ |
-| BE-014 | Implementar módulo equipos | Crítica | ⏳ |
-| BE-015 | Implementar módulo PSR / OSR | Crítica | ⏳ |
-| BE-016 | Implementar módulo averías | Alta | ⏳ |
-| BE-017 | Implementar módulo evidencias | Alta | ⏳ |
-| BE-018 | Implementar auditoría operacional | Alta | ⏳ |
-| BE-019 | Implementar generación PDF | Media | ⏳ |
-| BE-020 | Implementar APIs dashboard KPI | Media | ⏳ |
-| BE-021 | Configurar manejo global de errores | Alta | ✅ |
-| BE-022 | Configurar validaciones backend | Alta | ✅ |
-| BE-023 | Configurar logs backend | Alta | ✅ |
-| BE-024 | Configurar versionamiento APIs `/api/v1` | Alta | ✅ |
-| BE-025 | Configurar OpenAPI / Swagger UI | Media | ✅ |
+| BE-011 | Implementar LocalAuthService | Alta | ✅ |
+| BE-012 | Endpoints: /auth/roles, /auth/usuarios-by-rol, /auth/local-login, /auth/change-password | Alta | ✅ |
+| BE-013 | Implementar módulo tipos equipos | Alta | ⏳ |
+| BE-014 | Implementar módulo proveedores | Alta | ⏳ |
+| BE-015 | Implementar módulo marcas | Alta | ⏳ |
+| BE-016 | Implementar módulo equipos | Crítica | ⏳ |
+| BE-017 | Implementar módulo PSR / OSR | Crítica | ⏳ |
+| BE-018 | Implementar módulo averías | Alta | ⏳ |
+| BE-019 | Implementar módulo evidencias | Alta | ⏳ |
+| BE-020 | Implementar auditoría operacional | Alta | ⏳ |
+| BE-021 | Implementar generación PDF | Media | ⏳ |
+| BE-022 | Implementar APIs dashboard KPI | Media | ⏳ |
+| BE-023 | Configurar manejo global de errores | Alta | ✅ |
+| BE-024 | Configurar validaciones backend | Alta | ✅ |
+| BE-025 | Configurar logs backend | Alta | ✅ |
+| BE-026 | Configurar versionamiento APIs `/api/v1` | Alta | ✅ |
+| BE-027 | Configurar OpenAPI / Swagger UI | Media | ✅ |
 
 ---
 
@@ -157,20 +161,22 @@ No se usará MySQL en este proyecto.
 | WEB-002 | Configurar Vite | Alta | ✅ |
 | WEB-003 | Configurar MUI | Alta | ✅ |
 | WEB-004 | Implementar layout base | Alta | ✅ |
-| WEB-005 | Implementar login Microsoft | Crítica | ✅ |
-| WEB-006 | Implementar usuarios | Alta | ✅ |
-| WEB-007 | Implementar roles | Alta | ✅ |
-| WEB-008 | Implementar sedes | Alta | ✅ |
-| WEB-009 | Implementar campañas | Alta | ✅ |
-| WEB-010 | Implementar tipos de equipo | Alta | ⏳ |
-| WEB-011 | Implementar proveedores | Alta | ⏳ |
-| WEB-012 | Implementar marcas | Alta | ⏳ |
-| WEB-013 | Implementar equipos | Crítica | ⏳ |
-| WEB-014 | Implementar PSR / OSR | Crítica | ⏳ |
-| WEB-015 | Implementar averías | Alta | ⏳ |
-| WEB-016 | Implementar evidencias | Alta | ⏳ |
-| WEB-017 | Implementar dashboard KPI | Media | ⏳ |
-| WEB-018 | Implementar reportes PDF | Media | ⏳ |
+| WEB-005 | Implementar login local (select perfil → select usuario → password) | Crítica | ✅ |
+| WEB-006 | Implementar cambio de contraseña obligatorio | Alta | ✅ |
+| WEB-007 | Implementar menú principal con 5 botones según perfil | Alta | ✅ |
+| WEB-008 | Implementar usuarios | Alta | ✅ |
+| WEB-009 | Implementar roles | Alta | ✅ |
+| WEB-010 | Implementar sedes | Alta | ✅ |
+| WEB-011 | Implementar campañas | Alta | ✅ |
+| WEB-012 | Implementar tipos de equipo | Alta | ⏳ |
+| WEB-013 | Implementar proveedores | Alta | ⏳ |
+| WEB-014 | Implementar marcas | Alta | ⏳ |
+| WEB-015 | Implementar equipos | Crítica | ⏳ |
+| WEB-016 | Implementar PSR / OSR | Crítica | ⏳ |
+| WEB-017 | Implementar averías | Alta | ⏳ |
+| WEB-018 | Implementar evidencias | Alta | ⏳ |
+| WEB-019 | Implementar dashboard KPI | Media | ⏳ |
+| WEB-020 | Implementar reportes PDF | Media | ⏳ |
 
 ---
 
@@ -180,19 +186,21 @@ No se usará MySQL en este proyecto.
 |---|---|---|---|
 | AND-001 | Inicializar proyecto Expo React Native | Crítica | ✅ |
 | AND-002 | Configurar Expo SDK 54 | Crítica | ✅ |
-| AND-003 | Implementar login Microsoft | Crítica | ✅ |
-| AND-004 | Persistir JWT en SecureStore | Alta | ✅ |
-| AND-005 | Recuperar sesión al abrir app | Alta | ✅ |
-| AND-006 | Compilar APK inicial con EAS Cloud | Alta | ✅ |
-| AND-007 | Validar APK en dispositivo físico | Alta | ✅ |
-| AND-008 | Configurar navegación operativa | Alta | ⏳ |
-| AND-009 | Implementar listado de equipos | Crítica | ⏳ |
-| AND-010 | Implementar registro de averías | Alta | ⏳ |
-| AND-011 | Implementar atención de averías | Alta | ⏳ |
-| AND-012 | Implementar captura de fotografías | Alta | ⏳ |
-| AND-013 | Implementar consumo de APIs operativas | Crítica | ⏳ |
-| AND-014 | Implementar manejo global de errores | Alta | ⏳ |
-| AND-015 | Implementar visualización de PDF | Media | ⏳ |
+| AND-003 | Implementar login local (select perfil → select usuario → password) | Crítica | ✅ |
+| AND-004 | Implementar cambio de contraseña obligatorio | Alta | ✅ |
+| AND-005 | Implementar menú principal con 5 botones según perfil | Alta | ✅ |
+| AND-006 | Persistir JWT en SecureStore | Alta | ✅ |
+| AND-007 | Recuperar sesión al abrir app | Alta | ✅ |
+| AND-008 | Compilar APK inicial con EAS Cloud | Alta | ✅ |
+| AND-009 | Validar APK en dispositivo físico | Alta | ✅ |
+| AND-010 | Configurar navegación operativa | Alta | ⏳ |
+| AND-011 | Implementar listado de equipos | Crítica | ⏳ |
+| AND-012 | Implementar registro de averías | Alta | ⏳ |
+| AND-013 | Implementar atención de averías | Alta | ⏳ |
+| AND-014 | Implementar captura de fotografías | Alta | ⏳ |
+| AND-015 | Implementar consumo de APIs operativas | Crítica | ⏳ |
+| AND-016 | Implementar manejo global de errores | Alta | ⏳ |
+| AND-017 | Implementar visualización de PDF | Media | ⏳ |
 
 ---
 
