@@ -4,6 +4,7 @@ import { Button, Text, Surface, Avatar, ActivityIndicator } from 'react-native-p
 import { buildCodeAsync } from 'expo-auth-session/build/PKCE'
 import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
+WebBrowser.maybeCompleteAuthSession()
 import api, { setToken, removeToken } from './api'
 import { useAuth } from './AuthContext'
 
