@@ -65,9 +65,9 @@ function MainNavigator() {
   )
 }
 
-function AuthNavigator() {
+function AuthNavigator({ initialRouteName }) {
   return (
-    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRouteName}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="PasswordChange" component={PasswordChangeScreen} />
     </AuthStack.Navigator>
@@ -94,7 +94,7 @@ export default function AppNavigator() {
           <MainNavigator />
         )
       ) : (
-        <AuthNavigator />
+        <AuthNavigator initialRouteName="Login" />
       )}
     </NavigationContainer>
   )

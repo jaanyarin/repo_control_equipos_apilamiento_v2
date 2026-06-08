@@ -20,8 +20,13 @@ export default function LoginScreen() {
 
   useEffect(() => {
     api.get('/auth/roles')
-      .then(r => setRoles(r.data))
-      .catch(e => setError('Error al cargar roles'))
+      .then(r => {
+        const data = Array.isArray(r.data) ? r.data : (r.data?.data || [])
+        setRoles(data)
+      })
+      .catch(e => {
+        setError('Error al cargar roles: ' + (e.message || 'red'))
+      })
   }, [])
 
   useEffect(() => {
@@ -30,7 +35,10 @@ export default function LoginScreen() {
       setSelectedUsuarioId(null)
       setSelectedUsuarioLabel('')
       api.get(`/auth/usuarios-by-rol/${selectedRolId}`)
-        .then(r => setUsuarios(r.data))
+        .then(r => {
+          const data = Array.isArray(r.data) ? r.data : (r.data?.data || [])
+          setUsuarios(data)
+        })
         .catch(e => setError('Error al cargar usuarios'))
     }
   }, [selectedRolId])
@@ -62,7 +70,7 @@ export default function LoginScreen() {
     }
   }
 
-  const selectedRolName = selectedRolId
+  const selectedRolName = selectedRolId && Array.isArray(roles)
     ? roles.find(r => r.id === selectedRolId)?.nombre || ''
     : ''
 
@@ -96,7 +104,7 @@ export default function LoginScreen() {
               </Button>
             }
           >
-            {roles.map(r => (
+            {(roles || []).map(r => (
               <Menu.Item
                 key={r.id}
                 title={r.nombre}
@@ -119,7 +127,7 @@ export default function LoginScreen() {
                 </Button>
               }
             >
-              {usuarios.map(u => (
+              {(usuarios || []).map(u => (
                 <Menu.Item
                   key={u.id}
                   title={`${u.nombre}${u.area ? ` (${u.area})` : ''}`}

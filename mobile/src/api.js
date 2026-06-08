@@ -3,42 +3,46 @@ import * as SecureStore from 'expo-secure-store'
 
 const TOKEN_KEY = 'accessToken'
 const API_URL_KEY = 'apiUrl'
-const FALLBACK_API_URL = 'http://192.168.18.229:8082/api/v1'
+//const FALLBACK_API_URL = 'http://192.168.18.229:8082/api/v1'
+const FALLBACK_API_URL = 'http://10.13.18.134:8081/api/v1'
 const BUILT_IN_API_URL = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL || FALLBACK_API_URL)
-const BUILT_IN_ORIGIN = extractOrigin(BUILT_IN_API_URL)
 
-function extractOrigin(url) {
-  try { return new URL(url).origin } catch { return '' }
-}
+let _cachedApiUrl = null
+let _cachedToken = null
 
 function normalizeApiUrl(url) {
   return String(url || '').trim().replace(/\/+$/, '')
 }
 
-function isLegacyApiUrl(url) {
-  return typeof url === 'string' && ['10.13.18.115', '10.13.18.144:8082', '192.168.18.229:8080'].some(ip => url.includes(ip))
-}
-
-function originChanged(storedUrl) {
-  if (!storedUrl) return true
-  return extractOrigin(storedUrl) !== BUILT_IN_ORIGIN
-}
-
-async function resolveApiUrl() {
-  const stored = await SecureStore.getItemAsync(API_URL_KEY)
-  if (!stored || isLegacyApiUrl(stored) || originChanged(stored)) {
-    await SecureStore.setItemAsync(API_URL_KEY, BUILT_IN_API_URL)
-    return BUILT_IN_API_URL
-  }
-  return normalizeApiUrl(stored)
-}
-
 export async function loadApiUrl() {
-  return resolveApiUrl()
+  if (!_cachedApiUrl) {
+    const stored = await SecureStore.getItemAsync(API_URL_KEY)
+    _cachedApiUrl = normalizeApiUrl(stored || BUILT_IN_API_URL)
+  }
+  return _cachedApiUrl
 }
 
 export async function setApiUrl(url) {
-  await SecureStore.setItemAsync(API_URL_KEY, normalizeApiUrl(url))
+  const normalized = normalizeApiUrl(url)
+  await SecureStore.setItemAsync(API_URL_KEY, normalized)
+  _cachedApiUrl = normalized
+}
+
+export async function getToken() {
+  if (!_cachedToken) {
+    _cachedToken = await SecureStore.getItemAsync(TOKEN_KEY)
+  }
+  return _cachedToken
+}
+
+export async function setToken(token) {
+  await SecureStore.setItemAsync(TOKEN_KEY, token)
+  _cachedToken = token
+}
+
+export async function removeToken() {
+  await SecureStore.deleteItemAsync(TOKEN_KEY)
+  _cachedToken = null
 }
 
 const api = axios.create({
@@ -47,34 +51,26 @@ const api = axios.create({
   timeout: 15000,
 })
 
-api.interceptors.request.use(async (config) => {
-  config.baseURL = await resolveApiUrl()
-  const token = await SecureStore.getItemAsync(TOKEN_KEY)
-  if (token) config.headers.Authorization = `Bearer ${token}`
+api.interceptors.request.use((config) => {
+  if (_cachedApiUrl) config.baseURL = _cachedApiUrl
+  if (_cachedToken) config.headers.Authorization = `Bearer ${_cachedToken}`
   return config
 })
 
 api.interceptors.response.use(
   (res) => res,
-  async (error) => {
+  (error) => {
     if (error.response?.status === 401) {
-      await SecureStore.deleteItemAsync(TOKEN_KEY)
+      _cachedToken = null
+      SecureStore.deleteItemAsync(TOKEN_KEY)
     }
     return Promise.reject(error)
   }
 )
 
-export async function getToken() {
-  return SecureStore.getItemAsync(TOKEN_KEY)
-}
-
-export async function setToken(token) {
-  await SecureStore.setItemAsync(TOKEN_KEY, token)
-}
-
-export async function removeToken() {
-  await SecureStore.deleteItemAsync(TOKEN_KEY)
-}
+// Pre-load cached values on first import
+loadApiUrl()
+getToken()
 
 export function parseToken(token) {
   if (!token) return null
