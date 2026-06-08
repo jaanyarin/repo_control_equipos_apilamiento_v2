@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { View, StyleSheet, ImageBackground } from 'react-native'
 import { Button, Text, Surface, TextInput, ActivityIndicator, Alert } from 'react-native-paper'
-import api, { setToken, parseToken, getToken } from './api'
-import { useAuth } from './AuthContext'
+import api, { setToken, parseToken, getToken } from '../api'
+import { useAuth } from '../AuthContext'
 
 export default function PasswordChangeScreen({ navigation }) {
   const { user, refreshUser } = useAuth()
