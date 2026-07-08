@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { View, StyleSheet, ImageBackground } from 'react-native'
-import { Button, Text, Surface, TextInput, ActivityIndicator, Alert } from 'react-native-paper'
+import { Button, Text, Surface, TextInput, ActivityIndicator } from 'react-native-paper'
 import api, { setToken, parseToken, getToken } from '../api'
 import { useAuth } from '../AuthContext'
 

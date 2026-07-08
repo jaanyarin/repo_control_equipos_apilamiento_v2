@@ -1,10 +1,17 @@
 package com.apilamiento.control.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 
 public class ProveedorDTO {
     private Long id;
+
+    @NotBlank(message = "La razón social es obligatoria")
     private String razonSocial;
+
+    @NotBlank(message = "El RUC es obligatorio")
+    private String ruc;
     private String codigo;
     private String ruc;
     private Boolean estadoActivo;

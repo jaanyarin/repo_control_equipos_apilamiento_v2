@@ -1,10 +1,20 @@
 package com.apilamiento.control.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 
 public class CampanaDTO {
     private Long id;
+
+    @NotBlank(message = "El nombre de la campaña es obligatorio")
     private String nombre;
+
+    @NotNull(message = "La fecha de inicio es obligatoria")
+    private OffsetDateTime fechaInicio;
+
+    @NotNull(message = "La fecha de fin es obligatoria")
+    private OffsetDateTime fechaFin;
     private String codigo;
     private OffsetDateTime fechaInicio;
     private OffsetDateTime fechaFin;

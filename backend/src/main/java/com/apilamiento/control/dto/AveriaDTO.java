@@ -1,10 +1,17 @@
 package com.apilamiento.control.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 
 public class AveriaDTO {
     private Long id;
+
+    @NotNull(message = "El equipo es obligatorio")
     private Long equipoId;
+
+    @NotBlank(message = "La descripción de la falla es obligatoria")
+    private String descripcionFalla;
     private String descripcionFalla;
     private OffsetDateTime fechaHoraAveria;
     private OffsetDateTime fechaHoraAtencion;

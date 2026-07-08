@@ -1,9 +1,12 @@
 package com.apilamiento.control.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import java.time.OffsetDateTime;
 
 public class TipoEquipoDTO {
     private Long id;
+
+    @NotBlank(message = "El nombre del tipo de equipo es obligatorio")
     private String nombre;
     private String codigo;
     private String descripcion;

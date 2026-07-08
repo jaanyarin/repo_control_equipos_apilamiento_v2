@@ -22,7 +22,7 @@ Eres un **Arquitecto y Desarrollador Full Stack Senior Mobile/Web**. Trabajas ba
 | ORM | Hibernate ORM Panache | — |
 | Base de Datos | PostgreSQL | 18 |
 | Migraciones | Flyway | — |
-| Autenticación | Microsoft Entra ID + JWT propio | — |
+| Autenticación | BCrypt + JWT propio | — |
 | Contenedorización | Docker + Docker Compose | — |
 | Proxy | Nginx | — |
 | CI/CD | GitHub Actions | — |
@@ -143,6 +143,10 @@ mapper/EntidadMapper.java          → MapStruct mapper
 | V5__fac_equipos.sql | Tabla de equipos |
 | V6__fac_psr_osr.sql | Tablas PSR/OSR |
 | V7__fac_averias.sql | Tablas de averías y evidencias |
+| V8__login_local.sql | Tablas para autenticación local |
+| V9__seed_usuarios_local.sql | Datos semilla de usuarios locales |
+| V10__auditoria_eventos.sql | Tabla de auditoría de eventos |
+| V11__seed_auditoria_tipos.sql | Datos semilla de auditoría |
 
 ---
 
@@ -197,7 +201,7 @@ mapper/EntidadMapper.java          → MapStruct mapper
 | 9 | NO cambiar `jsEngine` de `hermes` a `jsc` | Rompe el APK |
 | 10 | NO cambiar `main` de `"expo/AppEntry"` a `"App.js"` | Rompe el registro de componentes |
 | 11 | NO modificar `eas.json`, `app.json`, `gradle.properties` (secciones congeladas) | Build validado |
-| 12 | NO crear componentes de clase en React | Solo functional components |
+| 12 | NO crear componentes de clase en React (excepto ErrorBoundary, que React requiere como clase) | Solo functional components; ErrorBoundary es la única excepción documentada por limitación de React |
 | 13 | NO poner lógica de negocio en Controllers (backend) | Violación de Clean Architecture |
 | 14 | NO hacer barrel imports desde `@mui/material` | Impacta rendimiento |
 | 15 | NO commitear archivos `.env` con secretos reales | Solo `.env.example` |
@@ -311,16 +315,22 @@ db: crear migración V8 para tabla de evidencias
 | Mobile: LoadingScreen, ErrorBoundary, EmptyState | ✅ |
 | Dependencias: react-hook-form + zod + bottom-tabs | ✅ |
 
-### HDT-003 — Calidad, Despliegue y Auditoría (EN PLANIFICACIÓN ⏳)
+### HDT-003 — Calidad, Despliegue y Auditoría (EN AUDITORÍA 🔍)
 
-| Módulo | Prioridad |
+| Módulo | Estado |
 |---|---|
-| Tests (backend + frontend + mobile) | Crítica |
-| Rebuild APK EAS Cloud | Crítica |
-| Completar módulo Rol (Service + DTO + Mapper) | Alta |
-| GitHub Actions CI/CD | Alta |
-| Firebase Crashlytics | Media |
-| Tabla auditoría V8 + backend | Media |
+| Tests backend (JUnit 5 + Mockito, 7 archivos) | ✅ |
+| Tests frontend web (Jest, 2 archivos + config) | ✅ |
+| Tests mobile (Jest + RNTL, 3 archivos + config) | ✅ |
+| Módulo Rol completo (Service + DTO + Mapper) | ✅ |
+| Paquete audit/ (entidad, repositorio, servicio, API) | ✅ |
+| Paquete config/ (CORS, AppConfig) | ✅ |
+| Paquete security/ (JwtFilter, SecurityUtil) | ✅ |
+| Migraciones V10 (auditoria_eventos) + V11 (seed) | ✅ |
+| GitHub Actions CI/CD | ✅ |
+| Modo claro/oscuro frontend | ✅ |
+| Rebuild APK EAS Cloud | ⏳ Pendiente |
+| Firebase Crashlytics | ⏳ Pendiente |
 
 ---
 
@@ -339,4 +349,4 @@ db: crear migración V8 para tabla de evidencias
 
 ---
 
-*Documento generado por AI Auditor. Versión 1.0 — 2026-06-08*
+*Documento generado por AI Auditor. Versión 2.0 — 2026-07-08*

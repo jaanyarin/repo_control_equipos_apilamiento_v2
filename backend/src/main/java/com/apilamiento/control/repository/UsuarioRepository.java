@@ -25,4 +25,8 @@ public class UsuarioRepository implements PanacheRepository<Usuario> {
     public List<Usuario> findAllActivos() {
         return list("estadoActivo", true);
     }
+
+    public List<Usuario> listAllWithRol() {
+        return list("SELECT DISTINCT u FROM Usuario u LEFT JOIN FETCH u.rol ORDER BY u.nombre");
+    }
 }

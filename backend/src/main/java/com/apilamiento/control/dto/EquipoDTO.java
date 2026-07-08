@@ -1,12 +1,24 @@
 package com.apilamiento.control.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 public class EquipoDTO {
     private Long id;
+
+    @NotNull(message = "El proveedor es obligatorio")
     private Long proveedorId;
+
+    @NotNull(message = "La marca es obligatoria")
     private Long marcaId;
+
+    @NotNull(message = "El tipo de equipo es obligatorio")
+    private Long tipoEquipoId;
+
+    @NotBlank(message = "El modelo es obligatorio")
+    private String modelo;
     private Long tipoEquipoId;
     private String modelo;
     private String codigo;

@@ -14,7 +14,15 @@ api.interceptors.request.use((config) => {
 })
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    if (res.data && typeof res.data === 'object' && 'success' in res.data) {
+      if (!res.data.success) {
+        return Promise.reject(new Error(res.data.message || 'Error del servidor'))
+      }
+      res.data = res.data.data
+    }
+    return res
+  },
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('accessToken')

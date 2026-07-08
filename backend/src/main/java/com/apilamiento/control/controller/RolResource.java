@@ -1,15 +1,13 @@
 package com.apilamiento.control.controller;
 
-import com.apilamiento.control.entity.Rol;
-import com.apilamiento.control.repository.RolRepository;
+import com.apilamiento.control.dto.ApiResponse;
+import com.apilamiento.control.dto.RolDTO;
+import com.apilamiento.control.service.RolService;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.util.List;
 
 @Path("/roles")
 @RolesAllowed({"Super Admin", "Admin", "Usuario"})
@@ -17,63 +15,54 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 public class RolResource {
 
-    private final RolRepository repository;
+    private final RolService service;
 
-    public RolResource(RolRepository repository) {
-        this.repository = repository;
+    public RolResource(RolService service) {
+        this.service = service;
     }
 
     @GET
-    @Transactional
-    public List<Rol> listar() {
-        return repository.listAll();
+    public Response listar() {
+        return Response.ok(ApiResponse.ok(service.listarTodos())).build();
     }
 
     @GET
     @Path("/{id}")
-    @Transactional
     public Response buscar(@PathParam("id") Long id) {
-        Rol rol = repository.findById(id);
-        if (rol == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+        RolDTO dto = service.buscarPorId(id);
+        if (dto == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error("Rol no encontrado", "NOT_FOUND")).build();
         }
-        return Response.ok(rol).build();
+        return Response.ok(ApiResponse.ok(dto)).build();
     }
 
     @POST
-    @Transactional
-    public Response crear(Rol rol) {
-        rol.setId(null);
-        rol.setFechaCreacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
-        repository.persist(rol);
-        return Response.status(Response.Status.CREATED).entity(rol).build();
+    public Response crear(@Valid RolDTO dto) {
+        RolDTO creado = service.crear(dto);
+        return Response.status(Response.Status.CREATED)
+                .entity(ApiResponse.ok("Rol creado correctamente", creado)).build();
     }
 
     @PUT
     @Path("/{id}")
-    @Transactional
-    public Response actualizar(@PathParam("id") Long id, Rol rol) {
-        Rol existente = repository.findById(id);
-        if (existente == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+    public Response actualizar(@PathParam("id") Long id, @Valid RolDTO dto) {
+        RolDTO actualizado = service.actualizar(id, dto);
+        if (actualizado == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error("Rol no encontrado", "NOT_FOUND")).build();
         }
-        existente.setNombre(rol.getNombre());
-        existente.setDescripcion(rol.getDescripcion());
-        existente.setEstadoActivo(rol.getEstadoActivo());
-        existente.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
-        existente.setUsuarioActualizacion(rol.getUsuarioActualizacion());
-        repository.persist(existente);
-        return Response.ok(existente).build();
+        return Response.ok(ApiResponse.ok("Rol actualizado correctamente", actualizado)).build();
     }
 
     @DELETE
     @Path("/{id}")
-    @Transactional
     public Response eliminar(@PathParam("id") Long id) {
-        boolean eliminado = repository.deleteById(id);
-        if (!eliminado) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+        boolean resultado = service.eliminar(id);
+        if (!resultado) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error("Rol no encontrado", "NOT_FOUND")).build();
         }
-        return Response.noContent().build();
+        return Response.ok(ApiResponse.ok("Rol eliminado correctamente", null)).build();
     }
 }

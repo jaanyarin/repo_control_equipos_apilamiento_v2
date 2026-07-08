@@ -1,8 +1,13 @@
 package com.apilamiento.control.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 
 public class MarcaDTO {
+
+    @NotBlank(message = "El nombre de la marca es obligatorio")
+    private String nombre;
     private Long id;
     private String nombre;
     private String codigo;

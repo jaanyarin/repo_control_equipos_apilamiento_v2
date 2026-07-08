@@ -22,7 +22,7 @@ public class UsuarioService {
     }
 
     public List<UsuarioDTO> listarTodos() {
-        return repository.listAll().stream()
+        return repository.listAllWithRol().stream()
                 .map(mapper::toDTO)
                 .toList();
     }

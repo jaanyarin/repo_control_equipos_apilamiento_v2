@@ -1,12 +1,13 @@
 package com.apilamiento.control.controller;
 
+import com.apilamiento.control.dto.ApiResponse;
 import com.apilamiento.control.dto.ProveedorDTO;
 import com.apilamiento.control.service.ProveedorService;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.util.List;
 
 @Path("/proveedores")
 @RolesAllowed({"Super Admin", "Admin", "Usuario"})
@@ -21,8 +22,8 @@ public class ProveedorResource {
     }
 
     @GET
-    public List<ProveedorDTO> listar() {
-        return service.listarTodos();
+    public Response listar() {
+        return Response.ok(ApiResponse.ok(service.listarTodos())).build();
     }
 
     @GET
@@ -30,25 +31,28 @@ public class ProveedorResource {
     public Response buscar(@PathParam("id") Long id) {
         ProveedorDTO dto = service.buscarPorId(id);
         if (dto == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error("Proveedor no encontrado", "NOT_FOUND")).build();
         }
-        return Response.ok(dto).build();
+        return Response.ok(ApiResponse.ok(dto)).build();
     }
 
     @POST
-    public Response crear(ProveedorDTO dto) {
+    public Response crear(@Valid ProveedorDTO dto) {
         ProveedorDTO creado = service.crear(dto);
-        return Response.status(Response.Status.CREATED).entity(creado).build();
+        return Response.status(Response.Status.CREATED)
+                .entity(ApiResponse.ok("Proveedor creado correctamente", creado)).build();
     }
 
     @PUT
     @Path("/{id}")
-    public Response actualizar(@PathParam("id") Long id, ProveedorDTO dto) {
+    public Response actualizar(@PathParam("id") Long id, @Valid ProveedorDTO dto) {
         ProveedorDTO actualizado = service.actualizar(id, dto);
         if (actualizado == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error("Proveedor no encontrado", "NOT_FOUND")).build();
         }
-        return Response.ok(actualizado).build();
+        return Response.ok(ApiResponse.ok("Proveedor actualizado correctamente", actualizado)).build();
     }
 
     @DELETE
@@ -56,8 +60,9 @@ public class ProveedorResource {
     public Response eliminar(@PathParam("id") Long id) {
         boolean resultado = service.eliminar(id);
         if (!resultado) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error("Proveedor no encontrado", "NOT_FOUND")).build();
         }
-        return Response.noContent().build();
+        return Response.ok(ApiResponse.ok("Proveedor eliminado correctamente", null)).build();
     }
 }

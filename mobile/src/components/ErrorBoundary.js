@@ -1,8 +1,8 @@
-import React from 'react'
+import { Component } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { Text, Button, IconButton } from 'react-native-paper'
 
-export default class ErrorBoundary extends React.Component {
+class ErrorBoundaryImpl extends Component {
   constructor(props) {
     super(props)
     this.state = { hasError: false, error: null }
@@ -35,6 +35,10 @@ export default class ErrorBoundary extends React.Component {
     }
     return this.props.children
   }
+}
+
+export default function ErrorBoundary({ children }) {
+  return <ErrorBoundaryImpl>{children}</ErrorBoundaryImpl>
 }
 
 const styles = StyleSheet.create({

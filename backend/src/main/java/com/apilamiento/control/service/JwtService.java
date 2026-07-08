@@ -2,6 +2,8 @@ package com.apilamiento.control.service;
 
 import com.apilamiento.control.entity.Usuario;
 import io.smallrye.jwt.build.Jwt;
+import io.smallrye.jwt.auth.principal.JWTParser;
+import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.time.Duration;
 import java.util.Set;
@@ -10,6 +12,12 @@ import java.util.Set;
 public class JwtService {
 
     private static final Duration EXPIRATION = Duration.ofHours(8);
+
+    private final JWTParser jwtParser;
+
+    public JwtService(JWTParser jwtParser) {
+        this.jwtParser = jwtParser;
+    }
 
     public String generateToken(Usuario user) {
         return Jwt.issuer("https://apilamiento.internal")
@@ -24,5 +32,9 @@ public class JwtService {
                 .claim("passwordResetRequired", user.getPasswordResetRequired() != null ? user.getPasswordResetRequired() : true)
                 .expiresIn(EXPIRATION)
                 .sign();
+    }
+
+    public void validarToken(String token) throws ParseException {
+        jwtParser.parse(token);
     }
 }

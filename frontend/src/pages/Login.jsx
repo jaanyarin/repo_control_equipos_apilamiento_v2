@@ -12,7 +12,7 @@ export default function Login() {
   const [usuarios, setUsuarios] = useState([])
   const [selectedRolId, setSelectedRolId] = useState('')
   const [selectedUsuarioId, setSelectedUsuarioId] = useState('')
-  const [password, setPassword] = useState('12345')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [step, setStep] = useState('roles')
@@ -62,7 +62,7 @@ export default function Login() {
   const handleReset = () => {
     setSelectedRolId('')
     setSelectedUsuarioId('')
-    setPassword('12345')
+    setPassword('')
     setError('')
     setStep('roles')
   }
