@@ -7,7 +7,7 @@ import LoadingScreen from '../components/LoadingScreen'
 import { useNavigation } from '@react-navigation/native'
 
 const menuActions = [
-  { label: 'Ingreso de PSR y OSR', icon: 'file-document', screen: 'EquiposList', roles: ['Super Admin', 'Admin'] },
+  { label: 'Ingreso de PSR y OSR', icon: 'file-document', screen: 'Campanas', roles: ['Super Admin', 'Admin'] },
   { label: 'Ingreso de Equipo', icon: 'warehouse', screen: 'EquiposList', roles: ['Super Admin', 'Admin', 'Usuario'] },
   { label: 'Registro de Avería', icon: 'alert', screen: 'RegistrarAveria', roles: ['Super Admin', 'Admin', 'Usuario'] },
   { label: 'Detalles de Equipo', icon: 'information', screen: 'EquiposList', roles: ['Super Admin', 'Admin', 'Usuario'] },

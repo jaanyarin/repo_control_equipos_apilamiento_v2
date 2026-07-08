@@ -1,8 +1,9 @@
 import React from 'react'
-import { NavigationContainer } from '@react-navigation/native'
+import { NavigationContainer, useNavigation } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import { ActivityIndicator, View } from 'react-native'
+import { ActivityIndicator, View, ScrollView } from 'react-native'
+import { IconButton, Text, Button } from 'react-native-paper'
 import { useAuth } from '../AuthContext'
 import LoginScreen from '../LoginScreen'
 import PasswordChangeScreen from '../screens/PasswordChangeScreen'
@@ -12,7 +13,50 @@ import EquipoDetailScreen from '../screens/EquipoDetailScreen'
 import RegistrarAveriaScreen from '../screens/RegistrarAveriaScreen'
 import AtenderAveriaScreen from '../screens/AtenderAveriaScreen'
 import PerfilScreen from '../screens/PerfilScreen'
-import { IconButton } from 'react-native-paper'
+import MarcasScreen from '../screens/MarcasScreen'
+import ProveedoresScreen from '../screens/ProveedoresScreen'
+import TiposEquipoScreen from '../screens/TiposEquipoScreen'
+import SedesScreen from '../screens/SedesScreen'
+import CampanasScreen from '../screens/CampanasScreen'
+import SettingsScreen from '../screens/SettingsScreen'
+import RolesScreen from '../screens/RolesScreen'
+import UsuariosScreen from '../screens/UsuariosScreen'
+import AuditoriaScreen from '../screens/AuditoriaScreen'
+
+function CatalogoTabScreen() {
+  const navigation = useNavigation()
+  const catalogItems = [
+    { label: 'Marcas', icon: 'trademark', screen: 'Marcas' },
+    { label: 'Proveedores', icon: 'truck', screen: 'Proveedores' },
+    { label: 'Tipos Equipo', icon: 'cog', screen: 'TiposEquipo' },
+    { label: 'Sedes', icon: 'map-marker', screen: 'Sedes' },
+    { label: 'Campañas', icon: 'calendar', screen: 'Campanas' },
+    { label: 'Roles', icon: 'shield-account', screen: 'Roles' },
+    { label: 'Usuarios', icon: 'account-group', screen: 'Usuarios' },
+    { label: 'Auditoría', icon: 'history', screen: 'Auditoria' },
+    { label: 'Configuración', icon: 'cog-outline', screen: 'Settings' },
+  ]
+  return (
+    <ScrollView style={{ flex: 1, backgroundColor: '#f5f5f5' }} contentContainerStyle={{ padding: 16 }}>
+      <Text variant="titleMedium" style={{ fontWeight: 700, marginBottom: 16 }}>Catálogos y Administración</Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+        {catalogItems.map(item => (
+          <Button
+            key={item.screen}
+            mode="contained"
+            icon={item.icon}
+            onPress={() => navigation.navigate(item.screen)}
+            style={{ borderRadius: 12, marginBottom: 4, minWidth: '45%', flex: 1 }}
+            contentStyle={{ height: 56 }}
+            labelStyle={{ fontSize: 13, fontWeight: 600 }}
+          >
+            {item.label}
+          </Button>
+        ))}
+      </View>
+    </ScrollView>
+  )
+}
 
 const AuthStack = createNativeStackNavigator()
 const MainStack = createNativeStackNavigator()
@@ -40,6 +84,11 @@ function MainTabs() {
         options={{ tabBarLabel: 'Equipos', tabBarIcon: ({ color, size }) => <IconButton icon="warehouse" size={size} iconColor={color} /> }}
       />
       <Tab.Screen
+        name="Catalogo"
+        component={CatalogoTabScreen}
+        options={{ tabBarLabel: 'Catálogos', tabBarIcon: ({ color, size }) => <IconButton icon="bookmark" size={size} iconColor={color} /> }}
+      />
+      <Tab.Screen
         name="Perfil"
         component={PerfilScreen}
         options={{ tabBarLabel: 'Perfil', tabBarIcon: ({ color, size }) => <IconButton icon="account" size={size} iconColor={color} /> }}
@@ -61,6 +110,15 @@ function MainNavigator() {
       <MainStack.Screen name="EquipoDetail" component={EquipoDetailScreen} options={{ title: 'Detalle de Equipo' }} />
       <MainStack.Screen name="RegistrarAveria" component={RegistrarAveriaScreen} options={{ title: 'Registrar Avería' }} />
       <MainStack.Screen name="AtenderAveria" component={AtenderAveriaScreen} options={{ title: 'Atender Avería' }} />
+      <MainStack.Screen name="Marcas" component={MarcasScreen} options={{ title: 'Marcas' }} />
+      <MainStack.Screen name="Proveedores" component={ProveedoresScreen} options={{ title: 'Proveedores' }} />
+      <MainStack.Screen name="TiposEquipo" component={TiposEquipoScreen} options={{ title: 'Tipos de Equipo' }} />
+      <MainStack.Screen name="Sedes" component={SedesScreen} options={{ title: 'Sedes' }} />
+      <MainStack.Screen name="Campanas" component={CampanasScreen} options={{ title: 'Campañas' }} />
+      <MainStack.Screen name="Roles" component={RolesScreen} options={{ title: 'Roles' }} />
+      <MainStack.Screen name="Usuarios" component={UsuariosScreen} options={{ title: 'Usuarios' }} />
+      <MainStack.Screen name="Auditoria" component={AuditoriaScreen} options={{ title: 'Auditoría' }} />
+      <MainStack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Configuración' }} />
     </MainStack.Navigator>
   )
 }

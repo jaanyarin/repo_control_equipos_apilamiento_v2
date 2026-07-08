@@ -3,9 +3,8 @@ import * as SecureStore from 'expo-secure-store'
 
 const TOKEN_KEY = 'accessToken'
 const API_URL_KEY = 'apiUrl'
-//const FALLBACK_API_URL = 'http://192.168.18.229:8082/api/v1'
 const FALLBACK_API_URL = 'http://10.13.18.134:8081/api/v1'
-const BUILT_IN_API_URL = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL || FALLBACK_API_URL)
+export const BUILT_IN_API_URL = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL || FALLBACK_API_URL)
 
 let _cachedApiUrl = null
 let _cachedToken = null
