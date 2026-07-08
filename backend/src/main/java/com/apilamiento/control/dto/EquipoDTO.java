@@ -19,8 +19,6 @@ public class EquipoDTO {
 
     @NotBlank(message = "El modelo es obligatorio")
     private String modelo;
-    private Long tipoEquipoId;
-    private String modelo;
     private String codigo;
     private String numeroSerie;
     private String capacidad;

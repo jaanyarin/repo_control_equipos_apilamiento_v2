@@ -6,6 +6,10 @@ import com.apilamiento.control.mapper.UsuarioMapper;
 import com.apilamiento.control.repository.UsuarioRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+import org.mindrot.jbcrypt.BCrypt;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -37,6 +41,12 @@ public class UsuarioService {
     public UsuarioDTO crear(UsuarioDTO dto) {
         Usuario entity = new Usuario();
         String correo = dto.getCorreo() != null ? dto.getCorreo().toLowerCase() : null;
+        if (correo == null || correo.isBlank()) {
+            throw new BadRequestException("El correo es obligatorio");
+        }
+        if (repository.findByCorreo(correo).isPresent()) {
+            throw new WebApplicationException("Ya existe un usuario con ese correo", Response.Status.CONFLICT);
+        }
         entity.setIdMicrosoft(dto.getIdMicrosoft() != null ? dto.getIdMicrosoft().toLowerCase() : correo);
         entity.setCorreo(correo);
         entity.setNombre(dto.getNombre() != null ? dto.getNombre() : (correo != null ? correo.split("@")[0] : "Usuario"));
@@ -48,6 +58,8 @@ public class UsuarioService {
         entity.setRolId(dto.getRolId());
         entity.setSitioId(dto.getSitioId());
         entity.setEstadoActivo(true);
+        entity.setPasswordHash(BCrypt.hashpw("00000000", BCrypt.gensalt()));
+        entity.setPasswordResetRequired(true);
         entity.setUsuarioCreacion(dto.getUsuarioCreacion() != null ? dto.getUsuarioCreacion() : 1L);
         repository.persist(entity);
         return mapper.toDTO(entity);

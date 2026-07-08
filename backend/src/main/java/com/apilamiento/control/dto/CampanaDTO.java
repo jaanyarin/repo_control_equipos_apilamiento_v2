@@ -16,8 +16,6 @@ public class CampanaDTO {
     @NotNull(message = "La fecha de fin es obligatoria")
     private OffsetDateTime fechaFin;
     private String codigo;
-    private OffsetDateTime fechaInicio;
-    private OffsetDateTime fechaFin;
     private Boolean estadoActivo;
     private Long usuarioCreacion;
     private Long usuarioActualizacion;

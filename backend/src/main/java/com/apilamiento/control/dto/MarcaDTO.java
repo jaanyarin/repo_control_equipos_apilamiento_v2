@@ -7,8 +7,8 @@ import java.time.OffsetDateTime;
 public class MarcaDTO {
 
     @NotBlank(message = "El nombre de la marca es obligatorio")
-    private String nombre;
     private Long id;
+    @NotBlank(message = "El nombre de la marca es obligatorio")
     private String nombre;
     private String codigo;
     private Boolean estadoActivo;

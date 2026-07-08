@@ -29,6 +29,15 @@ function filterRolesByUserRole(roles) {
   return roles.filter((r) => r.id === 3)
 }
 
+function buildNameFromEmail(email) {
+  const localPart = email.split('@')[0] || 'Usuario'
+  return localPart
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ') || 'Usuario'
+}
+
 export default function Usuarios() {
   const { user } = useApp()
   const [usuarios, setUsuarios] = useState([])
@@ -97,18 +106,29 @@ export default function Usuarios() {
 
   const handleSave = async () => {
     if (saving) return
+    const correo = formData.correo.trim().toLowerCase()
+    const rolId = Number(formData.rolId)
+    if (!editingUser && !correo) {
+      alert('Ingrese el correo del usuario')
+      return
+    }
+    if (!rolId) {
+      alert('Seleccione un rol')
+      return
+    }
     setSaving(true)
     try {
       if (editingUser) {
         await api.put(`/usuarios/${editingUser.id}`, {
-          rolId: Number(formData.rolId),
+          rolId,
           estadoActivo: formData.estadoActivo === 'true',
         })
       } else {
         await api.post('/usuarios', {
-          correo: formData.correo,
-          rolId: Number(formData.rolId),
-          idMicrosoft: formData.correo,
+          correo,
+          nombre: buildNameFromEmail(correo),
+          rolId,
+          idMicrosoft: correo,
           estadoActivo: true,
         })
       }

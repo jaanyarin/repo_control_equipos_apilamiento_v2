@@ -5,9 +5,11 @@ import {
   TextField, Button, CircularProgress, Alert,
 } from '@mui/material'
 import api from '../api'
+import { useApp } from '../store'
 
 export default function Login() {
   const navigate = useNavigate()
+  const { refreshUser } = useApp()
   const [roles, setRoles] = useState([])
   const [usuarios, setUsuarios] = useState([])
   const [selectedRolId, setSelectedRolId] = useState('')
@@ -47,6 +49,7 @@ export default function Login() {
         password,
       })
       localStorage.setItem('accessToken', data.token)
+      refreshUser()
       if (data.passwordResetRequired) {
         navigate('/cambiar-contrasena', { replace: true })
       } else {

@@ -11,7 +11,7 @@ export default function LoginScreen() {
   const [selectedRolId, setSelectedRolId] = useState(null)
   const [selectedUsuarioId, setSelectedUsuarioId] = useState(null)
   const [selectedUsuarioLabel, setSelectedUsuarioLabel] = useState('')
-  const [password, setPassword] = useState('12345')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showRolMenu, setShowRolMenu] = useState(false)

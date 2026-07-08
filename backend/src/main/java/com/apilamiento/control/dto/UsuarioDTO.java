@@ -1,12 +1,10 @@
 package com.apilamiento.control.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 
 public class UsuarioDTO {
 
-    @NotBlank(message = "El nombre de usuario es obligatorio")
     private String nombre;
 
     @NotNull(message = "El rol es obligatorio")
@@ -14,13 +12,11 @@ public class UsuarioDTO {
     private Long id;
     private String idMicrosoft;
     private String correo;
-    private String nombre;
     private String puesto;
     private String area;
     private String empresa;
     private String departamento;
     private String ubicacion;
-    private Long rolId;
     private String rolNombre;
     private Long sitioId;
     private OffsetDateTime ultimoAcceso;

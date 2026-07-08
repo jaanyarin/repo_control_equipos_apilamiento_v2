@@ -4,9 +4,11 @@ import {
   Box, Typography, TextField, Button, Alert, CircularProgress,
 } from '@mui/material'
 import api, { parseToken } from '../api'
+import { useApp } from '../store'
 
 export default function PasswordChange() {
   const navigate = useNavigate()
+  const { refreshUser, logout } = useApp()
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -37,6 +39,7 @@ export default function PasswordChange() {
         newPassword,
       })
       localStorage.setItem('accessToken', data.token)
+      refreshUser()
       setSuccess(true)
       setTimeout(() => {
         navigate('/login', { replace: true })
@@ -46,6 +49,11 @@ export default function PasswordChange() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleCancel = () => {
+    logout()
+    navigate('/login', { replace: true })
   }
 
   return (
@@ -114,6 +122,15 @@ export default function PasswordChange() {
           sx={{ mt: 1 }}
         >
           {loading ? <CircularProgress size={24} color="inherit" /> : 'Cambiar contraseña'}
+        </Button>
+        <Button
+          variant="outlined"
+          size="large"
+          fullWidth
+          onClick={handleCancel}
+          disabled={loading || success}
+        >
+          Cancelar
         </Button>
       </Box>
     </Box>

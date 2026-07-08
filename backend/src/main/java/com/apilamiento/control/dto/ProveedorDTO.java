@@ -11,8 +11,8 @@ public class ProveedorDTO {
     private String razonSocial;
 
     @NotBlank(message = "El RUC es obligatorio")
-    private String ruc;
     private String codigo;
+    @NotBlank(message = "El RUC es obligatorio")
     private String ruc;
     private Boolean estadoActivo;
     private Long usuarioCreacion;
