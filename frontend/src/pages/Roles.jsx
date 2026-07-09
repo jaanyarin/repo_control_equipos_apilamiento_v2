@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import {
-  Box, Typography, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Paper, CircularProgress, Alert,
+  Box, Typography, CircularProgress, Alert,
 } from '@mui/material'
 import api from '../api'
 import RoleChip from '../components/RoleChip'
+import DataTable from '../components/DataTable'
 
 export default function Roles() {
   const [roles, setRoles] = useState([])
@@ -26,39 +26,28 @@ export default function Roles() {
     })()
   }, [])
 
+  const columns = [
+    { field: 'id', label: 'ID' },
+    { field: 'nombre', label: 'Nombre', render: (row) => <RoleChip roleName={row.nombre} /> },
+    { field: 'descripcion', label: 'Descripción', render: (row) => row.descripcion || '-' },
+  ]
+
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>
   if (error) return <Alert severity="error">{error}</Alert>
 
   return (
     <Box>
       <Box sx={{ mb: 2.5 }}>
-        <Typography variant="h4" sx={{ fontWeight: 600, fontSize: 24 }}>Tabla de Roles</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 600, fontSize: { xs: 20, md: 24 } }}>Roles</Typography>
       </Box>
 
-      {roles.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>No hay roles registrados</Paper>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Nombre</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Descripción</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {roles.map((r) => (
-                <TableRow key={r.id} hover>
-                  <TableCell>{r.id}</TableCell>
-                  <TableCell><RoleChip roleName={r.nombre} /></TableCell>
-                  <TableCell>{r.descripcion || '-'}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      <DataTable
+        columns={columns}
+        data={roles}
+        loading={false}
+        error={null}
+        emptyMessage="No hay roles registrados"
+      />
     </Box>
   )
 }

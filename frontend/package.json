@@ -37,7 +37,9 @@
   },
   "jest": {
     "testEnvironment": "jsdom",
-    "setupFiles": ["./src/__tests__/setup.js"],
+    "setupFiles": [
+      "./src/__tests__/setup.js"
+    ],
     "moduleNameMapper": {
       "\\.(css|less|scss)$": "identity-obj-proxy"
     },
@@ -47,5 +49,8 @@
     "transformIgnorePatterns": [
       "node_modules/(?!(@mui|@emotion)/)"
     ]
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true
   }
 }

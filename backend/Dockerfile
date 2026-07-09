@@ -5,7 +5,7 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn package -DskipTests -Dquarkus.package.jar.type=uber-jar
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 RUN addgroup -S apilamiento && adduser -S apilamiento -G apilamiento
 COPY --from=build /app/target/*-runner.jar app.jar

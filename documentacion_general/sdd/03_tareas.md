@@ -61,7 +61,7 @@ No se usará MySQL en este proyecto.
 | 14 | Proveedores | Pendiente inmediato |
 | 15 | Marcas | Pendiente inmediato |
 | 16 | Equipos | Pendiente crítico |
-| 17 | PSR / OSR | Pendiente crítico |
+| 17 | PSR / OSR | ✅ Completado |
 | 18 | Averías | Pendiente crítico |
 | 19 | Evidencias Fotográficas | Pendiente |
 | 20 | Dashboard KPI | Pendiente |
@@ -108,9 +108,9 @@ No se usará MySQL en este proyecto.
 | DB-009 | Crear migración `dim_tipos_equipo` | Crítica | ⏳ |
 | DB-010 | Crear migración `dim_proveedores` | Crítica | ⏳ |
 | DB-011 | Crear migración `dim_marcas` | Alta | ⏳ |
-| DB-012 | Crear migración `fac_equipos` | Crítica | ⏳ |
-| DB-013 | Crear migración `fac_psr` | Crítica | ⏳ |
-| DB-014 | Crear migración `fac_osr` | Crítica | ⏳ |
+| DB-012 | Crear migración `fac_equipos` | Crítica | ✅ |
+| DB-013 | Crear migración `fac_psr` | Crítica | ✅ |
+| DB-014 | Crear migración `fac_osr` | Crítica | ✅ |
 | DB-015 | Crear migración `fac_averias` | Alta | ⏳ |
 | DB-016 | Crear migración `fac_evidencias` | Alta | ⏳ |
 | DB-017 | Crear migración `auditoria_eventos` (V10) | Alta | ⏳ |
@@ -139,7 +139,7 @@ No se usará MySQL en este proyecto.
 | BE-014 | Implementar módulo proveedores | Alta | ⏳ |
 | BE-015 | Implementar módulo marcas | Alta | ⏳ |
 | BE-016 | Implementar módulo equipos | Crítica | ⏳ |
-| BE-017 | Implementar módulo PSR / OSR | Crítica | ⏳ |
+| BE-017 | Implementar módulo PSR / OSR | Crítica | ✅ |
 | BE-018 | Implementar módulo averías | Alta | ⏳ |
 | BE-019 | Implementar módulo evidencias | Alta | ⏳ |
 | BE-020 | Implementar auditoría operacional | Alta | ⏳ |
@@ -172,7 +172,7 @@ No se usará MySQL en este proyecto.
 | WEB-013 | Implementar proveedores | Alta | ⏳ |
 | WEB-014 | Implementar marcas | Alta | ⏳ |
 | WEB-015 | Implementar equipos | Crítica | ⏳ |
-| WEB-016 | Implementar PSR / OSR | Crítica | ⏳ |
+| WEB-016 | Implementar PSR / OSR | Crítica | ✅ |
 | WEB-017 | Implementar averías | Alta | ⏳ |
 | WEB-018 | Implementar evidencias | Alta | ⏳ |
 | WEB-019 | Implementar dashboard KPI | Media | ⏳ |

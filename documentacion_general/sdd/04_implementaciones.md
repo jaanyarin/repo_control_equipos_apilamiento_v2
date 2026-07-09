@@ -77,7 +77,7 @@ No se usará MySQL en este proyecto.
 | Proveedores | Inmediata |
 | Marcas | Inmediata |
 | Equipos | Crítica |
-| PSR / OSR | Crítica |
+| PSR / OSR | ✅ Implementada |
 | Averías | Crítica |
 | Evidencias Fotográficas | Alta |
 | Auditoría Operacional | Alta |

@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
-  Box, Typography, Button, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Paper, Dialog, DialogTitle,
-  DialogContent, DialogActions, TextField, IconButton, Tooltip,
-  CircularProgress, Alert,
+  Box, Typography, Button, Dialog, DialogTitle,
+  DialogContent, DialogActions, TextField, IconButton, Tooltip, Chip,
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
 import api from '../api'
+import DataTable from '../components/DataTable'
 
 export default function Marcas() {
   const [items, setItems] = useState([])
@@ -84,78 +83,81 @@ export default function Marcas() {
     }
   }
 
-  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>
-  if (error) return <Alert severity="error">{error}</Alert>
+  const columns = [
+    { field: 'id', label: 'ID' },
+    { field: 'nombre', label: 'Nombre' },
+    { field: 'codigo', label: 'Código' },
+    {
+      field: 'estadoActivo', label: 'Activo',
+      render: (row) => (
+        <Chip label={row.estadoActivo ? 'Sí' : 'No'} size="small"
+          color={row.estadoActivo ? 'success' : 'default'} />
+      ),
+    },
+  ]
+
+  const renderActions = (item) => (
+    <>
+      <Tooltip title="Editar">
+        <IconButton size="small" onClick={() => openEdit(item)}>
+          <EditIcon fontSize="small" color="primary" />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title="Eliminar">
+        <IconButton size="small" onClick={() => openDelete(item)}>
+          <DeleteIcon fontSize="small" color="error" />
+        </IconButton>
+      </Tooltip>
+    </>
+  )
+
+  const renderCard = (item) => (
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+        <Box>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{item.nombre}</Typography>
+          <Typography variant="caption" color="text.secondary">Código: {item.codigo}</Typography>
+        </Box>
+        <Chip label={item.estadoActivo ? 'Activo' : 'Inactivo'} size="small"
+          color={item.estadoActivo ? 'success' : 'default'} />
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5, mt: 1 }}>
+        {renderActions(item)}
+      </Box>
+    </Box>
+  )
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-        <Typography variant="h4" sx={{ fontWeight: 600, fontSize: 24 }}>Marcas</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+        <Typography variant="h4" sx={{ fontWeight: 600, fontSize: { xs: 20, md: 24 } }}>Marcas</Typography>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} size="small">
           Nueva Marca
         </Button>
       </Box>
 
-      {items.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
-          No hay marcas registradas
-        </Paper>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Nombre</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Código</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Activo</TableCell>
-                <TableCell sx={{ fontWeight: 600, textAlign: 'right' }}>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {items.map((item) => (
-                <TableRow key={item.id} hover>
-                  <TableCell>{item.id}</TableCell>
-                  <TableCell>{item.nombre}</TableCell>
-                  <TableCell>{item.codigo}</TableCell>
-                  <TableCell>{item.estadoActivo ? 'Sí' : 'No'}</TableCell>
-                  <TableCell sx={{ textAlign: 'right' }}>
-                    <Tooltip title="Editar">
-                      <IconButton size="small" onClick={() => openEdit(item)}>
-                        <EditIcon fontSize="small" color="primary" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Eliminar">
-                      <IconButton size="small" onClick={() => openDelete(item)}>
-                        <DeleteIcon fontSize="small" color="error" />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      <DataTable
+        columns={columns}
+        data={items}
+        loading={loading}
+        error={error}
+        emptyMessage="No hay marcas registradas"
+        actions={renderActions}
+        renderCard={renderCard}
+      />
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{editing ? 'Editar Marca' : 'Nueva Marca'}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-            <TextField
-              label="Nombre"
-              value={formData.nombre}
+            <TextField label="Nombre" value={formData.nombre}
               onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-              required
-              fullWidth
-              size="small"
-            />
+              required fullWidth size="small" />
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
-            {saving ? <CircularProgress size={20} sx={{ mr: 0.5 }} /> : null}
             {editing ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>
@@ -164,20 +166,12 @@ export default function Marcas() {
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ color: 'error.main' }}>Confirmar eliminación</DialogTitle>
         <DialogContent>
-          <Typography>
-            ¿Estás seguro de eliminar la marca <strong>{itemToDelete?.nombre}</strong>?
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Esta acción no se puede deshacer.
-          </Typography>
+          <Typography>¿Estás seguro de eliminar la marca <strong>{itemToDelete?.nombre}</strong>?</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Esta acción no se puede deshacer.</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setDeleteDialogOpen(false); setItemToDelete(null) }}>
-            Cancelar
-          </Button>
-          <Button variant="contained" color="error" onClick={handleDelete}>
-            Eliminar
-          </Button>
+          <Button onClick={() => { setDeleteDialogOpen(false); setItemToDelete(null) }}>Cancelar</Button>
+          <Button variant="contained" color="error" onClick={handleDelete}>Eliminar</Button>
         </DialogActions>
       </Dialog>
     </Box>

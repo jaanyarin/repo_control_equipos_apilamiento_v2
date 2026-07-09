@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
-  Box, Typography, Button, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Paper, Dialog, DialogTitle,
-  DialogContent, DialogActions, TextField, IconButton, Tooltip,
-  CircularProgress, Alert, MenuItem,
+  Box, Typography, Button, Dialog, DialogTitle,
+  DialogContent, DialogActions, TextField, IconButton, Tooltip, Chip, MenuItem,
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
 import api from '../api'
+import DataTable from '../components/DataTable'
 
 const booleanOptions = [
   { value: false, label: 'No' },
@@ -149,325 +148,170 @@ export default function Equipos() {
     setFormData({ ...formData, [field]: e.target.value === 'true' })
   }
 
-  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>
-  if (error) return <Alert severity="error">{error}</Alert>
+  const columns = [
+    { field: 'id', label: 'ID' },
+    { field: 'codigo', label: 'Código' },
+    { field: 'modelo', label: 'Modelo' },
+    { field: 'numeroSerie', label: 'Serie' },
+    {
+      field: 'estadoActivo', label: 'Estado',
+      render: (row) => (
+        <Chip label={row.estadoActivo ? 'Activo' : 'Inactivo'} size="small"
+          color={row.estadoActivo ? 'success' : 'default'} />
+      ),
+    },
+  ]
+
+  const renderActions = (item) => (
+    <>
+      <Tooltip title="Editar">
+        <IconButton size="small" onClick={() => openEdit(item)}>
+          <EditIcon fontSize="small" color="primary" />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title="Eliminar">
+        <IconButton size="small" onClick={() => openDelete(item)}>
+          <DeleteIcon fontSize="small" color="error" />
+        </IconButton>
+      </Tooltip>
+    </>
+  )
+
+  const renderCard = (item) => (
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+        <Box>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{item.codigo}</Typography>
+          <Typography variant="caption" color="text.secondary">{item.modelo}</Typography>
+        </Box>
+        <Chip label={item.estadoActivo ? 'Activo' : 'Inactivo'} size="small"
+          color={item.estadoActivo ? 'success' : 'default'} />
+      </Box>
+      <Typography variant="caption" color="text.secondary">Serie: {item.numeroSerie}</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5, mt: 1 }}>
+        {renderActions(item)}
+      </Box>
+    </Box>
+  )
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-        <Typography variant="h4" sx={{ fontWeight: 600, fontSize: 24 }}>Equipos</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+        <Typography variant="h4" sx={{ fontWeight: 600, fontSize: { xs: 20, md: 24 } }}>Equipos</Typography>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} size="small">
           Nuevo Equipo
         </Button>
       </Box>
 
-      {items.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
-          No hay equipos registrados
-        </Paper>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Código</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Modelo</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Serie</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
-                <TableCell sx={{ fontWeight: 600, textAlign: 'right' }}>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {items.map((item) => (
-                <TableRow key={item.id} hover>
-                  <TableCell>{item.id}</TableCell>
-                  <TableCell>{item.codigo}</TableCell>
-                  <TableCell>{item.modelo}</TableCell>
-                  <TableCell>{item.numeroSerie}</TableCell>
-                  <TableCell>{item.estadoActivo ? 'Activo' : 'Inactivo'}</TableCell>
-                  <TableCell sx={{ textAlign: 'right' }}>
-                    <Tooltip title="Editar">
-                      <IconButton size="small" onClick={() => openEdit(item)}>
-                        <EditIcon fontSize="small" color="primary" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Eliminar">
-                      <IconButton size="small" onClick={() => openDelete(item)}>
-                        <DeleteIcon fontSize="small" color="error" />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      <DataTable
+        columns={columns}
+        data={items}
+        loading={loading}
+        error={error}
+        emptyMessage="No hay equipos registrados"
+        actions={renderActions}
+        renderCard={renderCard}
+      />
 
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{ sx: { maxHeight: '90vh' } }}
-      >
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth
+        PaperProps={{ sx: { maxHeight: '90vh' } }}>
         <DialogTitle>{editing ? 'Editar Equipo' : 'Nuevo Equipo'}</DialogTitle>
         <DialogContent dividers>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-            <TextField
-              label="Modelo"
-              value={formData.modelo}
+            <TextField label="Modelo" value={formData.modelo}
               onChange={(e) => setFormData({ ...formData, modelo: e.target.value })}
-              required
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Código"
-              value={formData.codigo}
+              required fullWidth size="small" />
+            <TextField label="Código" value={formData.codigo}
               onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
-              required
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Número de Serie"
-              value={formData.numeroSerie}
+              required fullWidth size="small" />
+            <TextField label="Número de Serie" value={formData.numeroSerie}
               onChange={(e) => setFormData({ ...formData, numeroSerie: e.target.value })}
-              required
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Proveedor ID"
-              value={formData.proveedorId}
+              required fullWidth size="small" />
+            <TextField label="Proveedor ID" value={formData.proveedorId}
               onChange={(e) => setFormData({ ...formData, proveedorId: e.target.value })}
-              required
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Marca ID"
-              value={formData.marcaId}
+              required fullWidth size="small" />
+            <TextField label="Marca ID" value={formData.marcaId}
               onChange={(e) => setFormData({ ...formData, marcaId: e.target.value })}
-              required
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Tipo de Equipo ID"
-              value={formData.tipoEquipoId}
+              required fullWidth size="small" />
+            <TextField label="Tipo de Equipo ID" value={formData.tipoEquipoId}
               onChange={(e) => setFormData({ ...formData, tipoEquipoId: e.target.value })}
-              required
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Capacidad"
-              value={formData.capacidad}
+              required fullWidth size="small" />
+            <TextField label="Capacidad" value={formData.capacidad}
               onChange={(e) => setFormData({ ...formData, capacidad: e.target.value })}
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Altura Máxima"
-              value={formData.alturaMaxima}
+              fullWidth size="small" />
+            <TextField label="Altura Máxima" value={formData.alturaMaxima}
               onChange={(e) => setFormData({ ...formData, alturaMaxima: e.target.value })}
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Batería"
-              value={formData.bateria ? 'true' : 'false'}
-              onChange={handleBoolChange('bateria')}
-              fullWidth
-              size="small"
-              select
-            >
-              {booleanOptions.map((opt) => (
-                <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>
-              ))}
+              fullWidth size="small" />
+            <TextField label="Batería" value={formData.bateria ? 'true' : 'false'}
+              onChange={handleBoolChange('bateria')} fullWidth size="small" select>
+              {booleanOptions.map((opt) => <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>)}
             </TextField>
-            <TextField
-              label="Batería Adicional"
-              value={formData.bateriaAdicional ? 'true' : 'false'}
-              onChange={handleBoolChange('bateriaAdicional')}
-              fullWidth
-              size="small"
-              select
-            >
-              {booleanOptions.map((opt) => (
-                <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>
-              ))}
+            <TextField label="Batería Adicional" value={formData.bateriaAdicional ? 'true' : 'false'}
+              onChange={handleBoolChange('bateriaAdicional')} fullWidth size="small" select>
+              {booleanOptions.map((opt) => <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>)}
             </TextField>
-            <TextField
-              label="Cargador"
-              value={formData.cargador ? 'true' : 'false'}
-              onChange={handleBoolChange('cargador')}
-              fullWidth
-              size="small"
-              select
-            >
-              {booleanOptions.map((opt) => (
-                <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>
-              ))}
+            <TextField label="Cargador" value={formData.cargador ? 'true' : 'false'}
+              onChange={handleBoolChange('cargador')} fullWidth size="small" select>
+              {booleanOptions.map((opt) => <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>)}
             </TextField>
-            <TextField
-              label="Transformador"
-              value={formData.transformador ? 'true' : 'false'}
-              onChange={handleBoolChange('transformador')}
-              fullWidth
-              size="small"
-              select
-            >
-              {booleanOptions.map((opt) => (
-                <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>
-              ))}
+            <TextField label="Transformador" value={formData.transformador ? 'true' : 'false'}
+              onChange={handleBoolChange('transformador')} fullWidth size="small" select>
+              {booleanOptions.map((opt) => <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>)}
             </TextField>
-            <TextField
-              label="Serie Batería"
-              value={formData.serieBateria}
+            <TextField label="Serie Batería" value={formData.serieBateria}
               onChange={(e) => setFormData({ ...formData, serieBateria: e.target.value })}
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Serie Batería Adicional"
-              value={formData.serieBateriaAdicional}
+              fullWidth size="small" />
+            <TextField label="Serie Batería Adicional" value={formData.serieBateriaAdicional}
               onChange={(e) => setFormData({ ...formData, serieBateriaAdicional: e.target.value })}
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Serie Cargador"
-              value={formData.serieCargador}
+              fullWidth size="small" />
+            <TextField label="Serie Cargador" value={formData.serieCargador}
               onChange={(e) => setFormData({ ...formData, serieCargador: e.target.value })}
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Serie Transformador"
-              value={formData.serieTransformador}
+              fullWidth size="small" />
+            <TextField label="Serie Transformador" value={formData.serieTransformador}
               onChange={(e) => setFormData({ ...formData, serieTransformador: e.target.value })}
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Extintor"
-              value={formData.extintor ? 'true' : 'false'}
-              onChange={handleBoolChange('extintor')}
-              fullWidth
-              size="small"
-              select
-            >
-              {booleanOptions.map((opt) => (
-                <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>
-              ))}
+              fullWidth size="small" />
+            <TextField label="Extintor" value={formData.extintor ? 'true' : 'false'}
+              onChange={handleBoolChange('extintor')} fullWidth size="small" select>
+              {booleanOptions.map((opt) => <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>)}
             </TextField>
-            <TextField
-              label="Cono de Seguridad"
-              value={formData.conoSeguridad ? 'true' : 'false'}
-              onChange={handleBoolChange('conoSeguridad')}
-              fullWidth
-              size="small"
-              select
-            >
-              {booleanOptions.map((opt) => (
-                <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>
-              ))}
+            <TextField label="Cono de Seguridad" value={formData.conoSeguridad ? 'true' : 'false'}
+              onChange={handleBoolChange('conoSeguridad')} fullWidth size="small" select>
+              {booleanOptions.map((opt) => <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>)}
             </TextField>
-            <TextField
-              label="Botiquín"
-              value={formData.botiquin ? 'true' : 'false'}
-              onChange={handleBoolChange('botiquin')}
-              fullWidth
-              size="small"
-              select
-            >
-              {booleanOptions.map((opt) => (
-                <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>
-              ))}
+            <TextField label="Botiquín" value={formData.botiquin ? 'true' : 'false'}
+              onChange={handleBoolChange('botiquin')} fullWidth size="small" select>
+              {booleanOptions.map((opt) => <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>)}
             </TextField>
-            <TextField
-              label="Mesa de Rodillos"
-              value={formData.mesaRodillos ? 'true' : 'false'}
-              onChange={handleBoolChange('mesaRodillos')}
-              fullWidth
-              size="small"
-              select
-            >
-              {booleanOptions.map((opt) => (
-                <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>
-              ))}
+            <TextField label="Mesa de Rodillos" value={formData.mesaRodillos ? 'true' : 'false'}
+              onChange={handleBoolChange('mesaRodillos')} fullWidth size="small" select>
+              {booleanOptions.map((opt) => <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>)}
             </TextField>
-            <TextField
-              label="Elevador de Batería"
-              value={formData.elevadorBateria ? 'true' : 'false'}
-              onChange={handleBoolChange('elevadorBateria')}
-              fullWidth
-              size="small"
-              select
-            >
-              {booleanOptions.map((opt) => (
-                <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>
-              ))}
+            <TextField label="Elevador de Batería" value={formData.elevadorBateria ? 'true' : 'false'}
+              onChange={handleBoolChange('elevadorBateria')} fullWidth size="small" select>
+              {booleanOptions.map((opt) => <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>)}
             </TextField>
-            <TextField
-              label="Cable Adicional"
-              value={formData.cableAdicional ? 'true' : 'false'}
-              onChange={handleBoolChange('cableAdicional')}
-              fullWidth
-              size="small"
-              select
-            >
-              {booleanOptions.map((opt) => (
-                <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>
-              ))}
+            <TextField label="Cable Adicional" value={formData.cableAdicional ? 'true' : 'false'}
+              onChange={handleBoolChange('cableAdicional')} fullWidth size="small" select>
+              {booleanOptions.map((opt) => <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>)}
             </TextField>
-            <TextField
-              label="Conector Adicional"
-              value={formData.conectorAdicional ? 'true' : 'false'}
-              onChange={handleBoolChange('conectorAdicional')}
-              fullWidth
-              size="small"
-              select
-            >
-              {booleanOptions.map((opt) => (
-                <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>
-              ))}
+            <TextField label="Conector Adicional" value={formData.conectorAdicional ? 'true' : 'false'}
+              onChange={handleBoolChange('conectorAdicional')} fullWidth size="small" select>
+              {booleanOptions.map((opt) => <MenuItem key={opt.label} value={opt.value}>{opt.label}</MenuItem>)}
             </TextField>
-            <TextField
-              label="Horómetro Inicio"
-              type="number"
-              value={formData.horometroInicio}
+            <TextField label="Horómetro Inicio" type="number" value={formData.horometroInicio}
               onChange={(e) => setFormData({ ...formData, horometroInicio: e.target.value })}
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Horómetro Fin"
-              type="number"
-              value={formData.horometroFin}
+              fullWidth size="small" />
+            <TextField label="Horómetro Fin" type="number" value={formData.horometroFin}
               onChange={(e) => setFormData({ ...formData, horometroFin: e.target.value })}
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Observaciones"
-              value={formData.observaciones}
+              fullWidth size="small" />
+            <TextField label="Observaciones" value={formData.observaciones}
               onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}
-              fullWidth
-              size="small"
-              multiline
-              rows={3}
-            />
+              fullWidth size="small" multiline rows={3} />
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
-            {saving ? <CircularProgress size={20} sx={{ mr: 0.5 }} /> : null}
             {editing ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>
@@ -476,20 +320,12 @@ export default function Equipos() {
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ color: 'error.main' }}>Confirmar eliminación</DialogTitle>
         <DialogContent>
-          <Typography>
-            ¿Estás seguro de eliminar el equipo <strong>{itemToDelete?.codigo}</strong>?
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Esta acción no se puede deshacer.
-          </Typography>
+          <Typography>¿Estás seguro de eliminar el equipo <strong>{itemToDelete?.codigo}</strong>?</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Esta acción no se puede deshacer.</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setDeleteDialogOpen(false); setItemToDelete(null) }}>
-            Cancelar
-          </Button>
-          <Button variant="contained" color="error" onClick={handleDelete}>
-            Eliminar
-          </Button>
+          <Button onClick={() => { setDeleteDialogOpen(false); setItemToDelete(null) }}>Cancelar</Button>
+          <Button variant="contained" color="error" onClick={handleDelete}>Eliminar</Button>
         </DialogActions>
       </Dialog>
     </Box>

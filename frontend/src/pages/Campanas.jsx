@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
-  Box, Typography, Button, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Paper, Dialog, DialogTitle,
-  DialogContent, DialogActions, TextField, IconButton, Tooltip,
-  CircularProgress, Alert, Chip,
+  Box, Typography, Button, Dialog, DialogTitle,
+  DialogContent, DialogActions, TextField, IconButton, Tooltip, Chip,
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -11,6 +9,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import AddIcon from '@mui/icons-material/Add'
 import api from '../api'
+import DataTable from '../components/DataTable'
 
 export default function Campanas() {
   const [campanas, setCampanas] = useState([])
@@ -113,146 +112,134 @@ export default function Campanas() {
     }
   }
 
-  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>
-  if (error) return <Alert severity="error">{error}</Alert>
+  const columns = [
+    { field: 'id', label: 'ID' },
+    { field: 'nombre', label: 'Nombre' },
+    { field: 'codigo', label: 'Código' },
+    {
+      field: 'fechaInicio', label: 'Fecha Inicio',
+      render: (row) => row.fechaInicio ? new Date(row.fechaInicio).toLocaleDateString('es-PE') : '-',
+    },
+    {
+      field: 'fechaFin', label: 'Fecha Fin',
+      render: (row) => row.fechaFin ? new Date(row.fechaFin).toLocaleDateString('es-PE') : '-',
+    },
+    {
+      field: 'estadoActivo', label: 'Estado',
+      render: (row) => (
+        <Chip
+          label={row.estadoActivo ? 'Activa' : 'Cerrada'}
+          size="small"
+          color={row.estadoActivo ? 'success' : 'default'}
+        />
+      ),
+    },
+  ]
+
+  const renderActions = (item) => (
+    <>
+      {item.estadoActivo ? (
+        <Tooltip title="Cerrar campaña">
+          <IconButton size="small" onClick={() => handleCerrar(item.id)}>
+            <CancelIcon fontSize="small" color="error" />
+          </IconButton>
+        </Tooltip>
+      ) : (
+        <Tooltip title="Activar campaña">
+          <IconButton size="small" onClick={() => handleActivar(item.id)}>
+            <CheckCircleIcon fontSize="small" color="success" />
+          </IconButton>
+        </Tooltip>
+      )}
+      <Tooltip title="Eliminar">
+        <IconButton size="small" onClick={() => openDelete(item)}>
+          <DeleteIcon fontSize="small" color="error" />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title="Editar">
+        <IconButton size="small" onClick={() => openEdit(item)}>
+          <EditIcon fontSize="small" color="primary" />
+        </IconButton>
+      </Tooltip>
+    </>
+  )
+
+  const renderCard = (item) => (
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+        <Box>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{item.nombre}</Typography>
+          <Typography variant="caption" color="text.secondary">Código: {item.codigo}</Typography>
+        </Box>
+        <Chip label={item.estadoActivo ? 'Activa' : 'Cerrada'} size="small"
+          color={item.estadoActivo ? 'success' : 'default'} />
+      </Box>
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <Typography variant="caption" color="text.secondary">
+          Inicio: {item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString('es-PE') : '-'}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Fin: {item.fechaFin ? new Date(item.fechaFin).toLocaleDateString('es-PE') : '-'}
+        </Typography>
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5, mt: 1 }}>
+        {renderActions(item)}
+      </Box>
+    </Box>
+  )
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-        <Typography variant="h4" sx={{ fontWeight: 600, fontSize: 24 }}>Campañas Operativas</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-          Nueva Campaña
+        <Typography variant="h4" sx={{ fontWeight: 600, fontSize: { xs: 20, md: 24 } }}>Campañas Operativas</Typography>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} size="small">
+          Nueva
         </Button>
       </Box>
 
-      {campanas.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
-          No hay campañas registradas
-        </Paper>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Nombre</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Código</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Fecha Inicio</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Fecha Fin</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
-                <TableCell sx={{ fontWeight: 600, textAlign: 'right' }}>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {campanas.map((c) => (
-                <TableRow
-                  key={c.id}
-                  hover
-                  sx={c.estadoActivo ? { bgcolor: 'success.lighter', '&:hover': { bgcolor: 'success.light' } } : {}}
-                >
-                  <TableCell>{c.id}</TableCell>
-                  <TableCell>{c.nombre}</TableCell>
-                  <TableCell>{c.codigo}</TableCell>
-                  <TableCell>
-                    {c.fechaInicio ? new Date(c.fechaInicio).toLocaleDateString('es-PE') : '-'}
-                  </TableCell>
-                  <TableCell>
-                    {c.fechaFin ? new Date(c.fechaFin).toLocaleDateString('es-PE') : '-'}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={c.estadoActivo ? 'Activa' : 'Cerrada'}
-                      size="small"
-                      color={c.estadoActivo ? 'success' : 'default'}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ textAlign: 'right' }}>
-                    {c.estadoActivo ? (
-                      <Tooltip title="Cerrar campaña">
-                        <IconButton size="small" onClick={() => handleCerrar(c.id)}>
-                          <CancelIcon fontSize="small" color="error" />
-                        </IconButton>
-                      </Tooltip>
-                    ) : (
-                      <Tooltip title="Activar campaña">
-                        <IconButton size="small" onClick={() => handleActivar(c.id)}>
-                          <CheckCircleIcon fontSize="small" color="success" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                    <Tooltip title="Eliminar">
-                      <IconButton size="small" onClick={() => openDelete(c)}>
-                        <DeleteIcon fontSize="small" color="error" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Editar">
-                      <IconButton size="small" onClick={() => openEdit(c)}>
-                        <EditIcon fontSize="small" color="primary" />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      <DataTable
+        columns={columns}
+        data={campanas}
+        loading={loading}
+        error={error}
+        emptyMessage="No hay campañas registradas"
+        actions={renderActions}
+        renderCard={renderCard}
+        getRowStyle={(row) => row.estadoActivo ? { bgcolor: 'success.lighter', '&:hover': { bgcolor: 'success.light' } } : {}}
+      />
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{editing ? 'Editar Campaña' : 'Nueva Campaña'}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-            <TextField
-              label="Campaña"
-              value={formData.nombre}
+            <TextField label="Campaña" value={formData.nombre}
               onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-              required
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Fecha Inicio"
-              type="datetime-local"
-              value={formData.fechaInicio}
+              required fullWidth size="small" />
+            <TextField label="Fecha Inicio" type="datetime-local" value={formData.fechaInicio}
               onChange={(e) => setFormData({ ...formData, fechaInicio: e.target.value })}
-              size="small"
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              label="Fecha Fin"
-              type="datetime-local"
-              value={formData.fechaFin}
+              size="small" InputLabelProps={{ shrink: true }} />
+            <TextField label="Fecha Fin" type="datetime-local" value={formData.fechaFin}
               onChange={(e) => setFormData({ ...formData, fechaFin: e.target.value })}
-              size="small"
-              InputLabelProps={{ shrink: true }}
-            />
+              size="small" InputLabelProps={{ shrink: true }} />
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
-            {saving ? <CircularProgress size={20} sx={{ mr: 0.5 }} /> : null}
             {editing ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>
       </Dialog>
+
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ color: 'error.main' }}>Confirmar eliminación</DialogTitle>
         <DialogContent>
-          <Typography>
-            ¿Estás seguro de eliminar la campaña <strong>{campanaToDelete?.nombre}</strong>?
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Esta acción no se puede deshacer.
-          </Typography>
+          <Typography>¿Estás seguro de eliminar la campaña <strong>{campanaToDelete?.nombre}</strong>?</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Esta acción no se puede deshacer.</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setDeleteDialogOpen(false); setCampanaToDelete(null) }}>
-            Cancelar
-          </Button>
-          <Button variant="contained" color="error" onClick={handleDelete}>
-            Eliminar
-          </Button>
+          <Button onClick={() => { setDeleteDialogOpen(false); setCampanaToDelete(null) }}>Cancelar</Button>
+          <Button variant="contained" color="error" onClick={handleDelete}>Eliminar</Button>
         </DialogActions>
       </Dialog>
     </Box>

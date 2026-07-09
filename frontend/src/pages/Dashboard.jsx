@@ -4,11 +4,12 @@ import AssignmentIcon from '@mui/icons-material/Assignment'
 import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing'
 import BugReportIcon from '@mui/icons-material/BugReport'
 import InfoIcon from '@mui/icons-material/Info'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import CategoryIcon from '@mui/icons-material/Category'
 import { useApp } from '../store'
 
 const actions = [
-  { label: 'Ingreso de PSR y OSR', icon: <AssignmentIcon sx={{ fontSize: 48 }} />, path: '/campanas', roles: ['Super Admin', 'Admin'] },
+  { label: 'Ingreso de PSR', icon: <AssignmentIcon sx={{ fontSize: 48 }} />, path: '/psr-osr', roles: ['Super Admin', 'Admin'] },
+  { label: 'Motivos PSR', icon: <CategoryIcon sx={{ fontSize: 48 }} />, path: '/motivos-psr', roles: ['Super Admin', 'Admin'] },
   { label: 'Ingreso de Equipo', icon: <PrecisionManufacturingIcon sx={{ fontSize: 48 }} />, path: '/equipos', roles: ['Super Admin', 'Admin', 'Usuario'] },
   { label: 'Registro de Avería', icon: <BugReportIcon sx={{ fontSize: 48 }} />, path: '/averias', roles: ['Super Admin', 'Admin', 'Usuario'] },
   { label: 'Detalles de Equipo', icon: <InfoIcon sx={{ fontSize: 48 }} />, path: '/equipos', roles: ['Super Admin', 'Admin', 'Usuario'] },

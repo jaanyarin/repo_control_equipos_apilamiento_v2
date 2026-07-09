@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
-  Box, Typography, Button, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Paper, Dialog, DialogTitle,
-  DialogContent, DialogActions, TextField, IconButton, Tooltip,
-  CircularProgress, Alert,
+  Box, Typography, Button, Dialog, DialogTitle,
+  DialogContent, DialogActions, TextField, IconButton, Tooltip, Chip,
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
 import api from '../api'
+import DataTable from '../components/DataTable'
 
 export default function Averias() {
   const [items, setItems] = useState([])
@@ -110,132 +109,113 @@ export default function Averias() {
       ' ' + d.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
   }
 
-  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>
-  if (error) return <Alert severity="error">{error}</Alert>
+  const columns = [
+    { field: 'id', label: 'ID' },
+    { field: 'equipoId', label: 'Equipo ID' },
+    { field: 'descripcionFalla', label: 'Falla' },
+    {
+      field: 'estadoAveria', label: 'Estado',
+      render: (row) => (
+        <Chip label={row.estadoAveria || '-'} size="small"
+          color={row.estadoAveria === 'ATENDIDA' ? 'success' : row.estadoAveria === 'PENDIENTE' ? 'warning' : 'default'} />
+      ),
+    },
+    { field: 'fechaHoraAveria', label: 'Fecha Avería', render: (row) => formatDate(row.fechaHoraAveria) },
+    { field: 'fechaHoraAtencion', label: 'Fecha Atención', render: (row) => formatDate(row.fechaHoraAtencion) },
+    {
+      field: 'diasInact', label: 'Días Inact.',
+      render: (row) => {
+        if (!row.fechaHoraAveria) return '-'
+        const avg = new Date(row.fechaHoraAveria)
+        const atn = row.fechaHoraAtencion ? new Date(row.fechaHoraAtencion) : new Date()
+        return Math.max(0, Math.floor((atn - avg) / (1000 * 60 * 60 * 24)))
+      },
+    },
+  ]
+
+  const renderActions = (item) => (
+    <>
+      <Tooltip title="Editar">
+        <IconButton size="small" onClick={() => openEdit(item)}>
+          <EditIcon fontSize="small" color="primary" />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title="Eliminar">
+        <IconButton size="small" onClick={() => openDelete(item)}>
+          <DeleteIcon fontSize="small" color="error" />
+        </IconButton>
+      </Tooltip>
+    </>
+  )
+
+  const renderCard = (item) => (
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+        <Box>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+            Avería #{item.id} - Eq: {item.equipoId}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">{item.descripcionFalla}</Typography>
+        </Box>
+        <Chip label={item.estadoAveria || '-'} size="small"
+          color={item.estadoAveria === 'ATENDIDA' ? 'success' : item.estadoAveria === 'PENDIENTE' ? 'warning' : 'default'} />
+      </Box>
+      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        <Typography variant="caption" color="text.secondary">
+          Avería: {formatDate(item.fechaHoraAveria)}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Atención: {formatDate(item.fechaHoraAtencion)}
+        </Typography>
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5, mt: 1 }}>
+        {renderActions(item)}
+      </Box>
+    </Box>
+  )
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-        <Typography variant="h4" sx={{ fontWeight: 600, fontSize: 24 }}>Averías</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+        <Typography variant="h4" sx={{ fontWeight: 600, fontSize: { xs: 20, md: 24 } }}>Averías</Typography>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} size="small">
           Nueva Avería
         </Button>
       </Box>
 
-      {items.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
-          No hay averías registradas
-        </Paper>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Equipo ID</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Falla</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Fecha Avería</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Fecha Atención</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Días Inact.</TableCell>
-                <TableCell sx={{ fontWeight: 600, textAlign: 'right' }}>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {items.map((item) => {
-                const fechaAveria = new Date(item.fechaHoraAveria)
-                const fechaAtencion = item.fechaHoraAtencion ? new Date(item.fechaHoraAtencion) : null
-                const diasInact = fechaAtencion
-                  ? Math.max(0, Math.floor((fechaAtencion - fechaAveria) / (1000 * 60 * 60 * 24)))
-                  : Math.floor((Date.now() - fechaAveria) / (1000 * 60 * 60 * 24))
-                return (
-                  <TableRow key={item.id} hover>
-                    <TableCell>{item.id}</TableCell>
-                    <TableCell>{item.equipoId}</TableCell>
-                    <TableCell>{item.descripcionFalla}</TableCell>
-                    <TableCell>{item.estadoAveria || '-'}</TableCell>
-                    <TableCell>{formatDate(item.fechaHoraAveria)}</TableCell>
-                    <TableCell>{formatDate(item.fechaHoraAtencion)}</TableCell>
-                    <TableCell>{diasInact}</TableCell>
-                    <TableCell sx={{ textAlign: 'right' }}>
-                      <Tooltip title="Editar">
-                        <IconButton size="small" onClick={() => openEdit(item)}>
-                          <EditIcon fontSize="small" color="primary" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Eliminar">
-                        <IconButton size="small" onClick={() => openDelete(item)}>
-                          <DeleteIcon fontSize="small" color="error" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      <DataTable
+        columns={columns}
+        data={items}
+        loading={loading}
+        error={error}
+        emptyMessage="No hay averías registradas"
+        actions={renderActions}
+        renderCard={renderCard}
+      />
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{editing ? 'Editar Avería' : 'Nueva Avería'}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-            <TextField
-              label="ID Equipo"
-              value={formData.equipoId}
+            <TextField label="ID Equipo" value={formData.equipoId}
               onChange={(e) => setFormData({ ...formData, equipoId: e.target.value })}
-              required
-              fullWidth
-              size="small"
-            />
-            <TextField
-              label="Descripción de la Falla"
-              value={formData.descripcionFalla}
+              required fullWidth size="small" />
+            <TextField label="Descripción de la Falla" value={formData.descripcionFalla}
               onChange={(e) => setFormData({ ...formData, descripcionFalla: e.target.value })}
-              required
-              fullWidth
-              size="small"
-              multiline
-              rows={3}
-            />
-            <TextField
-              label="Fecha y Hora de Avería"
-              type="datetime-local"
-              value={formData.fechaHoraAveria}
+              required fullWidth size="small" multiline rows={3} />
+            <TextField label="Fecha y Hora de Avería" type="datetime-local" value={formData.fechaHoraAveria}
               onChange={(e) => setFormData({ ...formData, fechaHoraAveria: e.target.value })}
-              required
-              fullWidth
-              size="small"
-              InputLabelProps={{ shrink: true }}
-            />
+              required fullWidth size="small" InputLabelProps={{ shrink: true }} />
             {editing && (
               <>
-                <TextField
-                  label="Fecha y Hora de Atención"
-                  type="datetime-local"
-                  value={formData.fechaHoraAtencion || ''}
+                <TextField label="Fecha y Hora de Atención" type="datetime-local" value={formData.fechaHoraAtencion || ''}
                   onChange={(e) => setFormData({ ...formData, fechaHoraAtencion: e.target.value })}
-                  fullWidth
-                  size="small"
-                  InputLabelProps={{ shrink: true }}
-                />
-                <TextField
-                  label="Acción Realizada"
-                  value={formData.accionRealizada || ''}
+                  fullWidth size="small" InputLabelProps={{ shrink: true }} />
+                <TextField label="Acción Realizada" value={formData.accionRealizada || ''}
                   onChange={(e) => setFormData({ ...formData, accionRealizada: e.target.value })}
-                  fullWidth
-                  size="small"
-                  multiline
-                  rows={3}
-                />
-                <TextField
-                  label="Estado de Avería"
-                  value={formData.estadoAveria || ''}
-                  fullWidth
-                  size="small"
-                  InputProps={{ readOnly: true }}
-                />
+                  fullWidth size="small" multiline rows={3} />
+                <TextField label="Estado de Avería" value={formData.estadoAveria || ''}
+                  fullWidth size="small" InputProps={{ readOnly: true }} />
               </>
             )}
           </Box>
@@ -243,7 +223,6 @@ export default function Averias() {
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
-            {saving ? <CircularProgress size={20} sx={{ mr: 0.5 }} /> : null}
             {editing ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>
@@ -252,20 +231,12 @@ export default function Averias() {
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ color: 'error.main' }}>Confirmar eliminación</DialogTitle>
         <DialogContent>
-          <Typography>
-            ¿Estás seguro de eliminar la avería <strong>{itemToDelete?.id}</strong>?
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Esta acción no se puede deshacer.
-          </Typography>
+          <Typography>¿Estás seguro de eliminar la avería <strong>{itemToDelete?.id}</strong>?</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Esta acción no se puede deshacer.</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setDeleteDialogOpen(false); setItemToDelete(null) }}>
-            Cancelar
-          </Button>
-          <Button variant="contained" color="error" onClick={handleDelete}>
-            Eliminar
-          </Button>
+          <Button onClick={() => { setDeleteDialogOpen(false); setItemToDelete(null) }}>Cancelar</Button>
+          <Button variant="contained" color="error" onClick={handleDelete}>Eliminar</Button>
         </DialogActions>
       </Dialog>
     </Box>

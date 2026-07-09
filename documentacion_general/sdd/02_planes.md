@@ -135,11 +135,11 @@ No se usará MySQL en este proyecto.
 | MOD-02 | Usuarios | ✅ Validado |
 | MOD-03 | Sedes | ✅ Validado |
 | MOD-04 | Campañas | ✅ Validado |
-| MOD-05 | PSR / OSR | ⏳ Pendiente |
-| MOD-06 | Equipos | ⏳ Pendiente crítico |
-| MOD-07 | Tipos de Equipos | ⏳ Pendiente crítico |
-| MOD-08 | Proveedores | ⏳ Pendiente crítico |
-| MOD-09 | Averías | ⏳ Pendiente crítico |
+| MOD-05 | PSR / OSR | ✅ Validado |
+| MOD-06 | Equipos | ✅ Validado |
+| MOD-07 | Tipos de Equipos | ✅ Validado |
+| MOD-08 | Proveedores | ✅ Validado |
+| MOD-09 | Averías | ✅ Validado |
 | MOD-10 | Evidencias Fotográficas | ⏳ Pendiente |
 | MOD-11 | Dashboard KPI | ⏳ Pendiente |
 | MOD-12 | Reportes PDF | ⏳ Pendiente |
@@ -185,16 +185,16 @@ No se usará MySQL en este proyecto.
 | 9 | Campañas | ✅ Completado |
 | 10 | Mobile login local | ✅ Validado |
 | 11 | APK inicial | ✅ Validado |
-| 12 | Tipos de Equipos | ⏳ Pendiente inmediato |
-| 13 | Proveedores | ⏳ Pendiente inmediato |
-| 14 | Equipos | ⏳ Pendiente crítico |
-| 15 | PSR / OSR | ⏳ Pendiente crítico |
-| 16 | Averías | ⏳ Pendiente crítico |
+| 12 | Tipos de Equipos | ✅ Completado |
+| 13 | Proveedores | ✅ Completado |
+| 14 | Equipos | ✅ Completado |
+| 15 | PSR / OSR | ✅ Completado |
+| 16 | Averías | ✅ Completado |
 | 17 | Evidencias Fotográficas | ⏳ Pendiente |
 | 18 | Dashboard KPI | ⏳ Pendiente |
 | 19 | Reportes PDF | ⏳ Pendiente |
-| 20 | Auditoría | ⏳ Pendiente |
-| 21 | Configuración | ⏳ Pendiente |
+| 20 | Auditoría | ✅ Completado |
+| 21 | Configuración | ✅ Completado |
 | 22 | CI/CD | ⏳ Pendiente |
 | 23 | QA Integral | ⏳ Pendiente |
 | 24 | Despliegue Producción | ⏳ Pendiente |
