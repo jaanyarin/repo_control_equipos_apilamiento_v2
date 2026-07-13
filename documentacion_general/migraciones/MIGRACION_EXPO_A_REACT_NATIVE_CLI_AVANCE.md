@@ -80,3 +80,17 @@ Se genero una segunda base limpia fuera del repositorio, en la carpeta temporal 
 El fallo continuo con `AccessDeniedException` al mover workspaces temporales de `caches/8.14.3/transforms` a su destino inmutable. Un movimiento manual equivalente dentro del mismo directorio si funciona, lo que confirma interferencia de bloqueo de archivos durante Gradle y no un problema de package Android, Java o SDK.
 
 Desbloqueo requerido antes de continuar: excluir del analisis en tiempo real de Sophos/antivirus las carpetas de proyecto y cache Gradle, o ejecutar la validacion en un entorno Windows/Linux sin ese bloqueo. No se autoriza cambiar la version Gradle/RN de forma arbitraria.
+
+### Resolucion y resultado
+
+La validacion se completo en una plantilla limpia React Native CLI `0.81.5` / React `19.1.0`. Windows bloqueaba el renombrado atomico de workspaces Gradle; se normalizaron los workspaces temporales pendientes dentro de un cache de prueba y Gradle pudo continuar. Tambien se uso una ruta corta (`C:\rn`) para evitar el limite de 260 caracteres de Ninja/CMake.
+
+Comando validado:
+
+```powershell
+./gradlew.bat assembleDebug --no-daemon --no-parallel --max-workers=1
+```
+
+Resultado: `BUILD SUCCESSFUL` y APK generado en `C:\rn\android\app\build\outputs\apk\debug\app-debug.apk` (101,539,425 bytes).
+
+La base Android CLI se incorporo a `mobile/android/` sin caches, APK, `local.properties` ni keystores. Se conserva `mobile_expo_backup/`.
