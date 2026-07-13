@@ -67,3 +67,16 @@ La primera ejecucion fallo porque `ANDROID_HOME` no estaba definido. Se localizo
 La segunda ejecucion fallo en `:app:checkDebugAarMetadata` por `AccessDeniedException` al mover transformaciones en el cache Gradle global. Se repitio con `GRADLE_USER_HOME` aislado dentro de la carpeta temporal y despues con `--no-parallel --max-workers=1`; ambas ejecuciones volvieron a fallar al mover transformaciones con `AccessDeniedException`.
 
 Resultado: Fase 1 bloqueada por el entorno Windows/Sophos durante la validacion Gradle. No se copio la base temporal a `mobile/`, no se modifico `mobile/` y no se genero `app-debug.apk`. No se debe avanzar a la Fase 2 hasta que la base vacia compile correctamente.
+
+### Reintento de desbloqueo
+
+Se genero una segunda base limpia fuera del repositorio, en la carpeta temporal del sistema, y se instalaron `854` paquetes correctamente. La compilacion se repitio con:
+
+- SDK Android configurado mediante `ANDROID_HOME` y `ANDROID_SDK_ROOT`.
+- `GRADLE_USER_HOME` nuevo fuera del repositorio.
+- `--no-daemon --no-parallel --max-workers=1`.
+- `-Dorg.gradle.vfs.watch=false`.
+
+El fallo continuo con `AccessDeniedException` al mover workspaces temporales de `caches/8.14.3/transforms` a su destino inmutable. Un movimiento manual equivalente dentro del mismo directorio si funciona, lo que confirma interferencia de bloqueo de archivos durante Gradle y no un problema de package Android, Java o SDK.
+
+Desbloqueo requerido antes de continuar: excluir del analisis en tiempo real de Sophos/antivirus las carpetas de proyecto y cache Gradle, o ejecutar la validacion en un entorno Windows/Linux sin ese bloqueo. No se autoriza cambiar la version Gradle/RN de forma arbitraria.
