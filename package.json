@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "prettier": "3.9.5",
     "react-native-make": "^1.0.1"
   }
 }

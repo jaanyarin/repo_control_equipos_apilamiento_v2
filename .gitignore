@@ -46,6 +46,8 @@ mobile/ios/build/
 
 # Gradle local cache (Windows lock workaround)
 mobile/.gradle-home/
+ApilamientoMobileCli/.gradle-home/
+ApilamientoMobileCli/.gradle-home-single/
 
 # Docker volumes
 postgres-data/
