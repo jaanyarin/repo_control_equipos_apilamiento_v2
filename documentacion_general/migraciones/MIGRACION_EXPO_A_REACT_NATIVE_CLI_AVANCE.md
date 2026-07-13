@@ -53,3 +53,17 @@ React Navigation, React Native Paper, safe-area-context, screens, vector-icons, 
 ### Resultado de Fase 0
 
 Diagnostico registrado. Se puede iniciar la Fase 1: generar y validar una base React Native CLI `0.81.5` / React `19.1.0` antes de integrar el codigo funcional existente.
+
+## Fase 1 - Base CLI temporal
+
+### Generacion
+
+La plantilla se genero correctamente en `ApilamientoMobileCli/` con React Native CLI `0.81.5`, React `19.1.0`, titulo `Control de Equipos` y package Android `com.apilamiento.mobile`. La instalacion de npm finalizo correctamente tras ampliar el timeout.
+
+### Validacion Gradle
+
+La primera ejecucion fallo porque `ANDROID_HOME` no estaba definido. Se localizo el SDK en `C:\Users\jose.anyarin\AppData\Local\Android\Sdk` y se repitio la validacion con esa variable.
+
+La segunda ejecucion fallo en `:app:checkDebugAarMetadata` por `AccessDeniedException` al mover transformaciones en el cache Gradle global. Se repitio con `GRADLE_USER_HOME` aislado dentro de la carpeta temporal y despues con `--no-parallel --max-workers=1`; ambas ejecuciones volvieron a fallar al mover transformaciones con `AccessDeniedException`.
+
+Resultado: Fase 1 bloqueada por el entorno Windows/Sophos durante la validacion Gradle. No se copio la base temporal a `mobile/`, no se modifico `mobile/` y no se genero `app-debug.apk`. No se debe avanzar a la Fase 2 hasta que la base vacia compile correctamente.
