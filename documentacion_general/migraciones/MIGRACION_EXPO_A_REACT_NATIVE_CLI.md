@@ -1,5 +1,15 @@
 # Migración de Expo a React Native CLI
 
+> **Addendum de estrategia — 2026-07-13**
+>
+> Por decisión del responsable del proyecto, esta guía deja de regir como
+> migración incremental. El trabajo se ejecutará como una reconstrucción
+> completa de `mobile/` mediante React Native CLI, definida en HDT-005 y el
+> ADR-A005. El código Expo existente no se portará ni se usará como base de
+> implementación; el historial Git y la documentación permanecen solo como
+> evidencia funcional. Los requisitos Android nativos, seguridad y build con
+> Gradle siguen vigentes porque son propios de React Native CLI.
+
 ## 1. Propósito
 
 Este documento es la instrucción operativa oficial para migrar la aplicación móvil del repositorio `jaanyarin/repo_control_equipos_apilamiento_v2` desde Expo SDK 54 a React Native CLI, conservando la funcionalidad existente y habilitando la generación de APK y AAB directamente con Gradle.
