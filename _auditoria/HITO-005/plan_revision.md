@@ -23,11 +23,11 @@ Validar o devolver observaciones sobre:
 | G-MOB-NAV | Pasa con condición | Navegación por stacks/tabs y deep link se validan en Fase C. |
 | G-MOB-SEC | Pasa con condición | JWT debe usar Keychain; no se admite AsyncStorage. |
 | G-MOB-OFFLINE | No aplicable | El alcance oficial excluye operación offline. |
-| G-MOB-BUILD | Bloqueante pendiente | Debe generarse e instalarse `app-debug.apk` antes de sustituir `mobile/`. |
+| G-MOB-BUILD | Bloqueante pendiente | Debe generarse `app-debug.apk` en GitHub Actions/Linux antes de sustituir `mobile/`. |
 
 ## Decisión del gate
 
 Se aprueba la Fase A y se autoriza ejecutar exclusivamente la Fase B: generar
-y validar una base React Native CLI limpia. No se autoriza todavía eliminar o
-sustituir el contenido de `mobile/`; esa acción requiere evidencia de build
-debug satisfactoria.
+y validar una base React Native CLI limpia en CI Linux. No se autoriza todavía
+eliminar o sustituir el contenido de `mobile/`; esa acción requiere evidencia
+de build debug satisfactoria en GitHub Actions.

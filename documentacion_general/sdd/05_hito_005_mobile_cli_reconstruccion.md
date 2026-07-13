@@ -28,7 +28,7 @@ operativos aprobados del sistema.
 | Fase | Entregable | Gates del Auditor AI |
 |---|---|---|
 | A | ADR, alcance, riesgos y criterios de aceptación | G-DOC |
-| B | Base CLI y APK debug instalada | G-MOB-BUILD, G-DEVOPS |
+| B | Base CLI y APK debug generado en CI | G-MOB-BUILD, G-DEVOPS |
 | C | Navegación, tema, red, AuthContext y Keychain | G-MOB, G-MOB-NAV, G-MOB-SEC, G-MOB-UI |
 | D | Login, cambio de contraseña y configuración API | G-MOB-FORM, G-TEST-FE |
 | E | Módulos operativos por prioridad | G-MOB, G-MOB-FORM, G-TEST-FE |
@@ -40,13 +40,14 @@ operativos aprobados del sistema.
 - La app usa React Native CLI, `index.js` y Android versionado.
 - `com.apilamiento.mobile` y el deep link `com.apilamiento://callback/` se mantienen.
 - JWT se persiste con `react-native-keychain`.
-- Jest, lint, Gradle `assembleDebug` y CI finalizan correctamente.
-- Se instala `app-debug.apk` en dispositivo Android y se prueban los flujos críticos.
+- Jest, lint, Gradle `assembleDebug` en GitHub Actions y CI finalizan correctamente.
+- Se descarga e instala `app-debug.apk` en dispositivo Android y se prueban los flujos críticos.
 - No existen hallazgos críticos abiertos del Auditor AI.
 
 ## Riesgos iniciales
 
 - El bloqueo Windows/Sophos sobre cachés Gradle impide actualmente el primer build.
+- El build Android se valida en GitHub Actions/Linux, no en la estación local bloqueada.
 - La reconstrucción completa puede introducir diferencias funcionales; cada flujo
   requiere evidencia de prueba contra la API.
 - El alcance offline permanece excluido por el plan oficial del proyecto.

@@ -33,13 +33,16 @@ las validaciones de la nueva app.
 
 - Se elimina la dependencia funcional de Expo, Expo Go, EAS y SecureStore.
 - Todas las pantallas se reconstruyen y prueban nuevamente contra la API actual.
-- El primer gate obligatorio es generar e instalar `app-debug.apk` en Android.
+- El primer gate obligatorio es generar `app-debug.apk` mediante Gradle en CI
+  Linux; la instalacion en dispositivo se registra como evidencia funcional
+  posterior.
 - La app es Android online-only; el gate de offline no aplica al alcance oficial.
 - No se declara cierre hasta aprobar G-MOB, G-MOB-NAV, G-MOB-SEC,
   G-MOB-FORM, G-MOB-UI, G-MOB-BUILD, G-TEST-FE, G-DOC y G-DEVOPS.
 
 ## Criterio de aprobación
 
-El ADR queda aprobado para crear la base CLI. La eliminación del contenido
+El ADR queda aprobado para crear la base CLI. La eliminacion del contenido
 actual de `mobile/` queda condicionada a que la base limpia genere
-`app-debug.apk` y supere G-MOB-BUILD.
+`app-debug.apk` en GitHub Actions y supere G-MOB-BUILD. La compilacion local
+no es requisito mientras Sophos impida el acceso a los caches de Gradle.
