@@ -1,10 +1,10 @@
 import axios from 'axios'
-import * as SecureStore from 'expo-secure-store'
+import * as Keychain from 'react-native-keychain'
 
 const TOKEN_KEY = 'accessToken'
 const API_URL_KEY = 'apiUrl'
 const FALLBACK_API_URL = 'http://10.13.19.40:8082/api/v1'
-export const BUILT_IN_API_URL = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL || FALLBACK_API_URL)
+export const BUILT_IN_API_URL = normalizeApiUrl(process.env.API_URL || FALLBACK_API_URL)
 
 let _cachedApiUrl = null
 let _cachedToken = null
@@ -15,7 +15,7 @@ function normalizeApiUrl(url) {
 
 export async function loadApiUrl() {
   if (!_cachedApiUrl) {
-    const stored = await SecureStore.getItemAsync(API_URL_KEY)
+    const stored = await getSecureValue(API_URL_KEY)
     _cachedApiUrl = normalizeApiUrl(stored || BUILT_IN_API_URL)
   }
   return _cachedApiUrl
@@ -23,24 +23,24 @@ export async function loadApiUrl() {
 
 export async function setApiUrl(url) {
   const normalized = normalizeApiUrl(url)
-  await SecureStore.setItemAsync(API_URL_KEY, normalized)
+  await setSecureValue(API_URL_KEY, normalized)
   _cachedApiUrl = normalized
 }
 
 export async function getToken() {
   if (!_cachedToken) {
-    _cachedToken = await SecureStore.getItemAsync(TOKEN_KEY)
+    _cachedToken = await getSecureValue(TOKEN_KEY)
   }
   return _cachedToken
 }
 
 export async function setToken(token) {
-  await SecureStore.setItemAsync(TOKEN_KEY, token)
+  await setSecureValue(TOKEN_KEY, token)
   _cachedToken = token
 }
 
 export async function removeToken() {
-  await SecureStore.deleteItemAsync(TOKEN_KEY)
+  await removeSecureValue(TOKEN_KEY)
   _cachedToken = null
 }
 
@@ -61,15 +61,28 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       _cachedToken = null
-      SecureStore.deleteItemAsync(TOKEN_KEY)
+      void removeToken()
     }
     return Promise.reject(error)
   }
 )
 
 // Pre-load cached values on first import
-loadApiUrl()
-getToken()
+void loadApiUrl().catch(() => null)
+void getToken().catch(() => null)
+
+async function getSecureValue(key) {
+  const credentials = await Keychain.getGenericPassword({ service: key })
+  return credentials ? credentials.password : null
+}
+
+async function setSecureValue(key, value) {
+  await Keychain.setGenericPassword('apilamiento-mobile', String(value), { service: key })
+}
+
+async function removeSecureValue(key) {
+  await Keychain.resetGenericPassword({ service: key })
+}
 
 export function parseToken(token) {
   if (!token) return null
