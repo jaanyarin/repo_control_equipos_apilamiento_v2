@@ -1,7 +1,7 @@
 import React from 'react'
+import { StatusBar } from 'react-native'
 import { PaperProvider, MD3LightTheme } from 'react-native-paper'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { StatusBar } from 'expo-status-bar'
 import { AuthProvider } from './src/AuthContext'
 import AppNavigator from './src/navigation/AppNavigator'
 
@@ -20,7 +20,7 @@ export default function App() {
       <PaperProvider theme={theme}>
         <AuthProvider>
           <AppNavigator />
-          <StatusBar style="light" />
+          <StatusBar barStyle="light-content" />
         </AuthProvider>
       </PaperProvider>
     </SafeAreaProvider>
