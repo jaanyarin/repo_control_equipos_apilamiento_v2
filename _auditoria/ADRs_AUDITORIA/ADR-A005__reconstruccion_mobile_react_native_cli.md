@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | Propuesto para revisión del Auditor AI |
+| Estado | Aprobado con gate de build obligatorio |
 | Fecha | 2026-07-13 |
 | Hito | HDT-005 |
 | Rama | `refactor/mobile-react-native-cli` |
@@ -40,5 +40,6 @@ las validaciones de la nueva app.
 
 ## Criterio de aprobación
 
-El Auditor AI debe aprobar este ADR y el plan HDT-005 antes de la eliminación
-del contenido actual de `mobile/`.
+El ADR queda aprobado para crear la base CLI. La eliminación del contenido
+actual de `mobile/` queda condicionada a que la base limpia genere
+`app-debug.apk` y supere G-MOB-BUILD.
