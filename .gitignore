@@ -31,9 +31,18 @@ Thumbs.db
 *.keystore
 credentials.json
 
-# Expo / React Native prebuild
-mobile/android/
-mobile/ios/
+# React Native Android
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/android/build/
+mobile/android/local.properties
+mobile/android/.cxx/
+mobile/android/app/.cxx/
+mobile/android/captures/
+
+# React Native iOS, si existiera localmente
+mobile/ios/Pods/
+mobile/ios/build/
 
 # Gradle local cache (Windows lock workaround)
 mobile/.gradle-home/
