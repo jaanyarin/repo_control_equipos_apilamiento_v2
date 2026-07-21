@@ -112,4 +112,5 @@ Fecha: 2026-07-21
 - El interceptor Axios espera la carga de URL y token desde Keychain antes de cada solicitud, evitando la carrera que producia `Network Error` al iniciar el login.
 - Se valido desde el dispositivo que los tuneles ADB Wi-Fi de Metro (`8081`) y backend (`8082`) estan activos. El login conserva la opcion `Configurar servidor` para cambios posteriores de IP.
 - El Bottom Tab usa el inset inferior real de Android para evitar superposicion con la barra de navegacion del dispositivo.
+- Las escenas principales del Bottom Tab reservan el inset superior real y la barra de estado usa fondo no translucido, evitando superposicion con la barra de notificaciones.
 - El login usa `ScrollView` y padding de area segura superior/inferior; sus acciones permanecen visibles y desplazables al abrir la configuracion del servidor o el teclado.

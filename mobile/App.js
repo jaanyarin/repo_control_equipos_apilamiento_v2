@@ -20,7 +20,7 @@ export default function App() {
       <PaperProvider theme={theme}>
         <AuthProvider>
           <AppNavigator />
-          <StatusBar barStyle="light-content" />
+          <StatusBar barStyle="light-content" backgroundColor="#1565C0" translucent={false} />
         </AuthProvider>
       </PaperProvider>
     </SafeAreaProvider>

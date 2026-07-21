@@ -73,6 +73,10 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        sceneStyle: {
+          backgroundColor: '#f5f5f5',
+          paddingTop: insets.top,
+        },
         tabBarActiveTintColor: '#1565C0',
         tabBarInactiveTintColor: '#888',
         tabBarStyle: {
