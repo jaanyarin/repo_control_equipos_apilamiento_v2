@@ -12,9 +12,9 @@
 | Plataforma | Web SPA + Android APK |
 | Backend | Quarkus Java |
 | Base de Datos Oficial | PostgreSQL 18 |
-| Versión Documento | 1.4 |
-| Estado | En desarrollo sincronizado con repositorio |
-| Fecha | 2026-06-08 |
+| Versión Documento | 1.5 |
+| Estado | En desarrollo — configuración de infraestructura congelada |
+| Fecha | 2026-07-21 |
 | Responsable | Jose Anyarin |
 
 ---
@@ -282,6 +282,75 @@ La implementación debe iniciar por el modelo de datos operativo en PostgreSQL m
 
 ---
 
-# 15. Cierre
+# 15. Configuración de Red y Puertos — Congelada
 
-Este documento queda sincronizado con el estado actual del repositorio y establece PostgreSQL 18 como base de datos oficial del sistema.
+La siguiente configuración de infraestructura está validada y funcionando. NO MODIFICAR sin autorización expresa del arquitecto validada por auditoría.
+
+## 15.1 Mapa de Puertos Docker
+
+| Servicio | Puerto Host | Puerto Contenedor | Protocolo | Uso |
+|---|---|---|---|---|
+| Nginx (Frontend + Proxy) | 80 | 80 | HTTP | Frontend SPA + Proxy API |
+| Nginx (HTTPS futuro) | 443 | 443 | HTTPS | Reservado para SSL |
+| Backend Quarkus | 8082 | 8082 | HTTP | API REST |
+| PostgreSQL 18 | 5433 | 5432 | TCP | Base de datos (Host:5433 para evitar conflicto con PostgreSQL local en 5432) |
+
+## 15.2 URLs de Acceso
+
+| Servicio | URL | Descripción |
+|---|---|---|
+| Frontend Web (SPA) | `http://localhost/` | Aplicación React con ruteo client-side |
+| API Backend | `http://localhost/api/v1/` | Proxy inverso Nginx → backend:8082 |
+| Health Check | `http://localhost/health` | Estado del backend Quarkus |
+| Swagger UI | `http://localhost/swagger` | Documentación OpenAPI |
+| Conexión DB (externo) | `localhost:5433` | Clientes externos (VS Code, DBeaver, pgAdmin) |
+| Conexión DB (Docker) | `postgres:5432` | Red interna Docker entre contenedores |
+
+## 15.3 Cadena de Conexión a Base de Datos
+
+| Contexto | Cadena |
+|---|---|
+| Backend (Docker) | `jdbc:postgresql://postgres:5432/repo_control_equipos_apilamiento` |
+| Backend (dev local) | `jdbc:postgresql://localhost:5432/repo_control_equipos_apilamiento` |
+| Cliente externo | `jdbc:postgresql://localhost:5433/repo_control_equipos_apilamiento` |
+
+## 15.4 Configuración Mobile (APK)
+
+| Parámetro | Valor | Dónde se define |
+|---|---|---|
+| API URL (LAN) | `http://10.13.18.168:8082/api/v1` | `mobile/src/api.js:6` |
+| API URL (debug) | `http://127.0.0.1:8082/api/v1` | `mobile/src/api.js:7` |
+| Almacenamiento de token | `react-native-keychain` (SecureStore) | `mobile/src/api.js` |
+| Timeout de API | 15000ms | `mobile/src/api.js:53` |
+
+## 15.5 Configuración Backend
+
+| Parámetro | Valor |
+|---|---|
+| Puerto HTTP | 8082 |
+| Host | `0.0.0.0` |
+| API Base Path | `/api/v1` |
+| JWT Expiración | 28800s (8h) |
+| Timezone | `America/Lima` |
+| Tamaño máximo body | 10MB |
+| Pool conexiones DB | min:2, max:20 |
+
+## 15.6 Nombres de Contenedores
+
+| Contenedor | Imagen | Puerto Expuesto |
+|---|---|---|
+| `apilamiento-nginx` | `nginx:alpine` (build local) | 80, 443 |
+| `apilamiento-backend` | `quarkus:3.14` (build local) | 8082 |
+| `apilamiento-postgres` | `postgres:18` | 5433 → 5432 |
+
+## 15.7 Dependencias de Orquestación
+
+```
+postgres (healthcheck) → backend → nginx
+```
+
+---
+
+# 16. Cierre
+
+Este documento queda sincronizado con el estado actual del repositorio y establece PostgreSQL 18 como base de datos oficial del sistema. La configuración de puertos, conexiones y URLs queda documentada y congelada en la sección 15.

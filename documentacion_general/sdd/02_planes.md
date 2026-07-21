@@ -211,6 +211,34 @@ No se usará MySQL en este proyecto.
 
 Cada ambiente deberá mantener configuraciones independientes y controladas.
 
+## 9.1 Configuración de Infraestructura — Congelada
+
+La siguiente configuración corresponde al ambiente de desarrollo local y está validada como funcionando. NO MODIFICAR sin autorización.
+
+### Mapa de Puertos
+
+| Servicio | Puerto Host | Puerto Contenedor | Uso |
+|---|---|---|---|
+| Nginx | 80 / 443 | 80 / 443 | Frontend SPA + Proxy API |
+| Backend Quarkus | 8082 | 8082 | API REST |
+| PostgreSQL 18 | 5433 | 5432 | Base de datos |
+
+### URLs de Acceso
+
+| URL | Descripción |
+|---|---|
+| `http://localhost/` | Frontend Web SPA |
+| `http://localhost/api/v1/` | API Backend (proxy Nginx) |
+| `http://localhost/health` | Health Check |
+| `http://localhost/swagger` | Swagger UI |
+| `localhost:5433` | Conexión DB externa (DBeaver, pgAdmin) |
+
+### Dependencias de Contenedores
+
+```
+postgres (healthcheck) → backend → nginx
+```
+
 ---
 
 # 10. Estrategia de Seguridad

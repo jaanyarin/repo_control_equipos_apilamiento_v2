@@ -205,6 +205,15 @@ mapper/EntidadMapper.java          → MapStruct mapper
 | 13 | NO poner lógica de negocio en Controllers (backend) | Violación de Clean Architecture |
 | 14 | NO hacer barrel imports desde `@mui/material` | Impacta rendimiento |
 | 15 | NO commitear archivos `.env` con secretos reales | Solo `.env.example` |
+| 16 | NO cambiar mapa de puertos Docker (80, 443, 8082, 5433) | Configuración validada y funcionando |
+| 17 | NO cambiar cadena de conexión a DB (postgres:5432 / host:5433) | Evita conflictos con PostgreSQL local |
+| 18 | NO cambiar nombres de contenedores Docker (apilamiento-*) | Referenciados en configuración Nginx y red Docker |
+| 19 | NO cambiar `application.properties` (puerto, host, CORS, JWT, timezone) | Configuración validada en producción local |
+| 20 | NO cambiar URL de API Mobile sin validación | `10.13.18.168:8082` es la IP LAN validada |
+| 21 | NO cambiar nginx/default.conf (rutas, upstreams, proxy) | Proxy inverso validado y funcionando |
+| 22 | NO cambiar configuración de orquestación Docker Compose | Dependencias y healthchecks validados |
+| 23 | NO cambiar versión de PostgreSQL 18 | Motor oficial congelado |
+| 24 | NO cambiar timezone de `America/Lima` | Zona horaria operativa oficial |
 
 ### ❌ Restricciones condicionales
 
@@ -334,7 +343,102 @@ db: crear migración V8 para tabla de evidencias
 
 ---
 
-## 13. Referencias
+## 13. Configuración de Red y Puertos Congelados (NO CAMBIAR)
+
+Esta sección documenta la configuración actual de puertos, conexiones y URLs del sistema en funcionamiento. Cualquier modificación requiere autorización expresa del arquitecto validada por auditoría.
+
+### 13.1 Mapa de Puertos Docker (HOST → Contenedor)
+
+| Servicio | Puerto Host | Puerto Contenedor | Protocolo | Uso |
+|---|---|---|---|---|
+| Nginx (Frontend + Proxy) | 80 | 80 | HTTP | Frontend SPA + Proxy API |
+| Nginx (HTTPS futuro) | 443 | 443 | HTTPS | Reservado para SSL |
+| Backend Quarkus | 8082 | 8082 | HTTP | API REST |
+| PostgreSQL 18 | 5433 | 5432 | TCP | Base de datos (Host:5433 para evitar conflicto con PostgreSQL local en 5432) |
+
+### 13.2 URLs de Acceso (Entorno Local Docker)
+
+| Servicio | URL | Descripción |
+|---|---|---|
+| Frontend Web (SPA) | `http://localhost/` | Aplicación React con ruteo client-side |
+| API Backend | `http://localhost/api/v1/` | Proxy inverso Nginx → backend:8082 |
+| Health Check | `http://localhost/health` | Estado del backend Quarkus |
+| Swagger UI | `http://localhost/swagger` | Documentación OpenAPI |
+| Swagger JSON | `http://localhost/q/openapi` | Especificación OpenAPI en JSON |
+| Conexión DB (externo) | `localhost:5433` | Clientes externos (VS Code, DBeaver, pgAdmin) |
+| Conexión DB (Docker) | `postgres:5432` | Red interna Docker entre contenedores |
+
+### 13.3 Nombres de Contenedores (NO CAMBIAR)
+
+| Contenedor | Imagen | Puerto Expuesto |
+|---|---|---|
+| `apilamiento-nginx` | `nginx:alpine` (build local) | 80, 443 |
+| `apilamiento-backend` | `quarkus:3.14` (build local) | 8082 |
+| `apilamiento-postgres` | `postgres:18` | 5433 → 5432 |
+
+### 13.4 Cadena de Conexión a Base de Datos
+
+| Contexto | Cadena |
+|---|---|
+| Backend (Docker) | `jdbc:postgresql://postgres:5432/repo_control_equipos_apilamiento` |
+| Backend (dev local) | `jdbc:postgresql://localhost:5432/repo_control_equipos_apilamiento` |
+| Cliente externo | `jdbc:postgresql://localhost:5433/repo_control_equipos_apilamiento` |
+
+### 13.5 Configuración Mobile (APK)
+
+| Parámetro | Valor | Dónde se define |
+|---|---|---|
+| API URL (LAN) | `http://10.13.18.168:8082/api/v1` | `mobile/src/api.js:6` |
+| API URL (debug) | `http://127.0.0.1:8082/api/v1` | `mobile/src/api.js:7` |
+| API URL (production) | Configurable en runtime con `setApiUrl(url)` | `mobile/src/api.js` |
+| Almacenamiento de token | `react-native-keychain` (SecureStore) | `mobile/src/api.js` |
+| Timeout de API | 15000ms | `mobile/src/api.js:53` |
+
+### 13.6 Configuración Frontend Web
+
+| Parámetro | Valor | Dónde se define |
+|---|---|---|
+| API Base URL | `/api/v1` (proxy Nginx) | `nginx/default.conf` |
+| CORS Origins | `http://localhost:3000, http://localhost:5173, http://localhost:5174` | `application.properties:30` |
+| Puerto dev Vite | 5173 (por defecto) | `vite.config` implícito |
+
+### 13.7 Configuración Backend
+
+| Parámetro | Valor | Dónde se define |
+|---|---|---|
+| Puerto HTTP | 8082 | `application.properties:26` |
+| Host | `0.0.0.0` | `application.properties:25` |
+| API Base Path | `/api/v1` | `application.properties:36` |
+| JWT Expiración | 28800s (8h) | `application.properties:63` |
+| Timezone | `America/Lima` | `application.properties:61` |
+| Tamaño máximo body | 10MB | `application.properties:67` |
+| Pool conexiones DB | min:2, max:20 | `application.properties:8-9` |
+
+### 13.8 Variables de Entorno Requeridas
+
+| Variable | Propósito | Valor por defecto |
+|---|---|---|
+| `DB_USERNAME` | Usuario PostgreSQL | `postgres` |
+| `DB_PASSWORD` | Contraseña PostgreSQL | *(requerido en .env)* |
+| `OIDC_TENANT_ID` | Tenant ID Microsoft Entra ID | *(requerido en .env)* |
+| `OIDC_CLIENT_ID` | Client ID Microsoft Entra ID | *(requerido en .env)* |
+| `OIDC_CLIENT_SECRET` | Client Secret Microsoft Entra ID | *(requerido en .env)* |
+| `OIDC_REDIRECT_URI` | Redirect URI OIDC | `http://localhost/api/v1/auth/callback` |
+| `QUARKUS_PROFILE` | Perfil Quarkus | `dev` |
+
+### 13.9 Dependencias de Orquestación
+
+```
+postgres (healthcheck) → backend → nginx
+```
+
+- El backend espera a que PostgreSQL esté saludable antes de iniciar (`condition: service_healthy`).
+- Nginx depende del backend para el proxy inverso.
+- El frontend web se sirve estáticamente desde Nginx.
+
+---
+
+## 14. Referencias
 
 - Perfil de Desarrollo: `documentacion_general/perfiles/perfil_desarrollador.md`
 - Perfil de Auditoría: `documentacion_general/perfiles/perfil_auditor.md`
@@ -349,4 +453,4 @@ db: crear migración V8 para tabla de evidencias
 
 ---
 
-*Documento generado por AI Auditor. Versión 2.0 — 2026-07-08*
+*Documento generado por AI Auditor. Versión 2.1 — 2026-07-21*

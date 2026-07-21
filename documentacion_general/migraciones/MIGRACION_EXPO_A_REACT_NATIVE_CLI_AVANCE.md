@@ -94,3 +94,22 @@ Comando validado:
 Resultado: `BUILD SUCCESSFUL` y APK generado en `C:\rn\android\app\build\outputs\apk\debug\app-debug.apk` (101,539,425 bytes).
 
 La base Android CLI se incorporo a `mobile/android/` sin caches, APK, `local.properties` ni keystores. Se conserva `mobile_expo_backup/`.
+
+## Validacion de la aplicacion integrada en dispositivo
+
+Fecha: 2026-07-21
+
+- Se ejecutaron las 3 suites Jest existentes: 7 pruebas aprobadas.
+- Se genero la APK debug nativa con React Native CLI y Gradle para `arm64-v8a`.
+- Comando validado: `gradlew.bat assembleDebug --no-daemon --no-parallel --max-workers=1 -Dorg.gradle.vfs.watch=false -PreactNativeArchitectures=arm64-v8a`.
+- Resultado: `BUILD SUCCESSFUL` y APK en `mobile/android/app/build/outputs/apk/debug/app-debug.apk` (40,357,628 bytes).
+- Los workspaces de transformacion bloqueados por Sophos se normalizaron dentro del cache Gradle aislado, sin cambiar versiones del stack.
+- La APK se instalo mediante ADB inalambrico en el dispositivo Android `24049RN28L`.
+- Metro se inicio con React Native CLI en el puerto `8081` y se conecto mediante `adb reverse tcp:8081 tcp:8081` sobre ADB Wi-Fi.
+- `com.apilamiento.mobile/.MainActivity` quedo como actividad visible y no se detectaron errores criticos de React Native.
+- Expo Go, EAS Build y comandos Expo no participaron en la compilacion, instalacion ni ejecucion.
+- En debug, la API usa `http://127.0.0.1:8082/api/v1` mediante `adb reverse tcp:8082 tcp:8082`; en release conserva `http://10.13.18.168:8082/api/v1` como valor LAN configurable.
+- El interceptor Axios espera la carga de URL y token desde Keychain antes de cada solicitud, evitando la carrera que producia `Network Error` al iniciar el login.
+- Se valido desde el dispositivo que los tuneles ADB Wi-Fi de Metro (`8081`) y backend (`8082`) estan activos. El login conserva la opcion `Configurar servidor` para cambios posteriores de IP.
+- El Bottom Tab usa el inset inferior real de Android para evitar superposicion con la barra de navegacion del dispositivo.
+- El login usa `ScrollView` y padding de area segura superior/inferior; sus acciones permanecen visibles y desplazables al abrir la configuracion del servidor o el teclado.

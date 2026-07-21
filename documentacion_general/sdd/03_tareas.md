@@ -76,7 +76,7 @@ No se usará MySQL en este proyecto.
 # 5. Tareas de Infraestructura
 
 | ID | Tarea | Prioridad | Estado |
-|---|---|---|---|
+|---|---|---|---|---|
 | INF-001 | Crear estructura inicial del repositorio | Crítica | ✅ |
 | INF-002 | Configurar Docker Backend | Crítica | ✅ |
 | INF-003 | Configurar Docker Frontend Web | Crítica | ✅ |
@@ -90,6 +90,9 @@ No se usará MySQL en este proyecto.
 | INF-011 | Configurar backups PostgreSQL | Alta | ⏳ |
 | INF-012 | Configurar restauración backups PostgreSQL | Alta | ⏳ |
 | INF-013 | Configurar ambientes Desarrollo / QA / Producción | Alta | ⏳ |
+| INF-014 | Documentar configuración de red y puertos congelada en AGENTS.md | Alta | ✅ |
+| INF-015 | Documentar configuración de red y puertos en SDD 01, 02, 04 | Alta | ✅ |
+| INF-016 | Congelar versiones de infraestructura (PostgreSQL 18, Nginx, Quarkus 3.14) | Alta | ✅ |
 
 ---
 

@@ -5,6 +5,7 @@ import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturi
 import BugReportIcon from '@mui/icons-material/BugReport'
 import InfoIcon from '@mui/icons-material/Info'
 import CategoryIcon from '@mui/icons-material/Category'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { useApp } from '../store'
 
 const actions = [

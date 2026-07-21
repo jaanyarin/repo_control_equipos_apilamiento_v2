@@ -2,6 +2,7 @@ import React from 'react'
 import { NavigationContainer, useNavigation } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ActivityIndicator, View, ScrollView } from 'react-native'
 import { IconButton, Text, Button } from 'react-native-paper'
 import { useAuth } from '../AuthContext'
@@ -66,13 +67,22 @@ const MainStack = createNativeStackNavigator()
 const Tab = createBottomTabNavigator()
 
 function MainTabs() {
+  const insets = useSafeAreaInsets()
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: '#1565C0',
         tabBarInactiveTintColor: '#888',
-        tabBarStyle: { backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#e0e0e0', paddingBottom: 4, height: 60 },
+        tabBarStyle: {
+          backgroundColor: '#fff',
+          borderTopWidth: 1,
+          borderTopColor: '#e0e0e0',
+          height: 60 + insets.bottom,
+          paddingTop: 4,
+          paddingBottom: Math.max(insets.bottom, 4),
+        },
         tabBarLabelStyle: { fontSize: 12, fontWeight: 500 },
       }}
     >

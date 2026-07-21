@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { View, ScrollView, StyleSheet, ImageBackground } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button, Text, Surface, TextInput, ActivityIndicator, Menu, Divider } from 'react-native-paper'
 import api, { setToken, parseToken, loadApiUrl, setApiUrl, BUILT_IN_API_URL } from './api'
 import { useAuth } from './AuthContext'
 
 export default function LoginScreen() {
+  const insets = useSafeAreaInsets()
   const { refreshUser } = useAuth()
   const [roles, setRoles] = useState([])
   const [usuarios, setUsuarios] = useState([])
@@ -111,7 +113,16 @@ export default function LoginScreen() {
       style={styles.background}
       resizeMode="cover"
     >
-      <View style={styles.overlay}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.overlay,
+          {
+            paddingTop: Math.max(insets.top, 24),
+            paddingBottom: Math.max(insets.bottom, 24),
+          },
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
         <Surface style={styles.card}>
           <Text variant="headlineSmall" style={styles.title}>
             Control de Equipos de Apilamiento Packing
@@ -227,7 +238,7 @@ export default function LoginScreen() {
             </>
           )}
         </Surface>
-      </View>
+      </ScrollView>
     </ImageBackground>
   )
 }
@@ -235,7 +246,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   background: { flex: 1 },
   overlay: {
-    flex: 1, justifyContent: 'center', alignItems: 'center',
+    flexGrow: 1, justifyContent: 'center', alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.3)', padding: 24,
   },
   card: {

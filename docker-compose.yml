@@ -1,5 +1,6 @@
 # ═══════════════════════════════════════════════════════════════════════════════
-# IMPORTANTE – CONFIGURACIÓN DE PUERTOS (NO CAMBIAR)
+# CONFIGURACIÓN CONGELADA — NO MODIFICAR sin autorización del arquitecto
+# Validada y funcionando. Ver AGENTS.md sección 13.
 #
 # PostgreSQL se expone en el HOST como puerto 5433 (NO 5432) porque el equipo
 # local de desarrollo tiene PostgreSQL 18 instalado localmente como servicio de
