@@ -51,3 +51,10 @@ ApilamientoMobileCli/.gradle-home-single/
 
 # Docker volumes
 postgres-data/
+
+# Proyectos duplicados / backup (no activos)
+android/
+mobile_cli/
+mobile_cli_next/
+mobile_expo_backup/
+ApilamientoMobileCli/
