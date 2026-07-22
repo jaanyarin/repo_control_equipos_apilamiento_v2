@@ -1,6 +1,7 @@
 import { Component } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { Text, Button, IconButton } from 'react-native-paper'
+import { theme } from '../theme'
 
 class ErrorBoundaryImpl extends Component {
   constructor(props) {
@@ -20,7 +21,7 @@ class ErrorBoundaryImpl extends Component {
     if (this.state.hasError) {
       return (
         <View style={styles.container}>
-          <IconButton icon="alert" size={64} iconColor="#d32f2f" />
+          <IconButton icon="alert" size={56} iconColor={theme.colors.status.error} />
           <Text variant="titleMedium" style={styles.title}>
             Algo salió mal
           </Text>
@@ -46,20 +47,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#f5f5f5',
+    padding: theme.spacing[6],
+    backgroundColor: theme.colors.background.page,
   },
   title: {
-    fontWeight: 700,
-    marginBottom: 8,
-    color: '#d32f2f',
+    ...theme.typography.subtitle1,
+    marginBottom: theme.spacing[2],
+    color: theme.colors.status.error,
   },
   message: {
     textAlign: 'center',
-    marginBottom: 24,
-    opacity: 0.7,
+    ...theme.typography.body2,
+    marginBottom: theme.spacing[6],
+    color: theme.colors.text.secondary,
   },
   button: {
-    borderRadius: 8,
+    borderRadius: theme.radius.sm,
   },
 })

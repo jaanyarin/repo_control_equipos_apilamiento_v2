@@ -6,13 +6,14 @@ import api from '../api'
 import LoadingScreen from '../components/LoadingScreen'
 import EmptyState from '../components/EmptyState'
 import ErrorBoundary from '../components/ErrorBoundary'
+import { theme } from '../theme'
 
 const typeColor = (tipo) => {
   const t = (tipo || '').toLowerCase()
-  if (t.includes('error') || t.includes('delete')) return '#d32f2f'
-  if (t.includes('create') || t.includes('alta')) return '#2e7d32'
-  if (t.includes('update') || t.includes('modificacion')) return '#e65100'
-  return '#1565C0'
+  if (t.includes('error') || t.includes('delete')) return theme.colors.status.error
+  if (t.includes('create') || t.includes('alta')) return theme.colors.status.success
+  if (t.includes('update') || t.includes('modificacion')) return theme.colors.status.warning
+  return theme.colors.action.primary
 }
 
 export default function AuditoriaScreen() {
@@ -53,7 +54,7 @@ export default function AuditoriaScreen() {
     <Card style={styles.card}>
       <Card.Content>
         <View style={styles.cardHeader}>
-          <Chip mode="flat" textStyle={{ color: '#fff', fontSize: 10, fontWeight: 600 }}
+          <Chip mode="flat" textStyle={{ color: theme.colors.text.inverse, fontSize: 10, fontWeight: 600 }}
             style={{ backgroundColor: typeColor(item.tipoEvento) }}
           >
             {item.tipoEvento || 'EVENTO'}
@@ -98,7 +99,7 @@ export default function AuditoriaScreen() {
             keyExtractor={(item) => String(item.id)}
             renderItem={renderItem}
             contentContainerStyle={styles.list}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1565C0']} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.action.primary]} />}
             ListEmptyComponent={<EmptyState icon="history" title={search ? 'Sin resultados' : 'No hay eventos'} subtitle={search ? 'Intenta con otro término' : 'Aún no se han registrado eventos de auditoría'} />}
           />
         )}
@@ -108,7 +109,7 @@ export default function AuditoriaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: theme.colors.background.page },
   searchbar: { margin: 16, borderRadius: 8 },
   list: { paddingHorizontal: 16, paddingBottom: 16 },
   card: { borderRadius: 12, marginBottom: 8 },

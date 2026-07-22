@@ -1,12 +1,17 @@
 import React, { useState } from 'react'
-import { View, ScrollView, StyleSheet, Alert } from 'react-native'
-import { Text, TextInput, Button, Surface, ActivityIndicator } from 'react-native-paper'
+import { ScrollView, StyleSheet, Alert } from 'react-native'
+import { Text } from 'react-native-paper'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import api from '../api'
 import ErrorBoundary from '../components/ErrorBoundary'
+import AppCard from '../components/AppCard'
+import AppTextArea from '../components/AppTextArea'
+import AppInput from '../components/AppInput'
+import AppButton from '../components/AppButton'
+import { theme } from '../theme'
 
 const schema = z.object({
   descripcionFalla: z.string().min(10, 'La descripción debe tener al menos 10 caracteres'),
@@ -18,19 +23,11 @@ export default function RegistrarAveriaScreen() {
   const navigation = useNavigation()
   const { equipoId } = route.params
   const [submitting, setSubmitting] = useState(false)
-
   const currentDate = new Date().toISOString().slice(0, 16)
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
+  const { control, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: {
-      descripcionFalla: '',
-      fechaHoraAveria: currentDate,
-    },
+    defaultValues: { descripcionFalla: '', fechaHoraAveria: currentDate },
   })
 
   const onSubmit = async (formData) => {
@@ -53,102 +50,54 @@ export default function RegistrarAveriaScreen() {
 
   return (
     <ErrorBoundary>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Surface style={styles.formCard}>
-          <Text variant="titleMedium" style={styles.title}>
-            Registrar Avería
-          </Text>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <AppCard style={styles.formCard} accessibilityLabel="Formulario para registrar avería">
+          <Text variant="titleMedium" style={styles.title}>Registrar Avería</Text>
 
           <Controller
             control={control}
             name="descripcionFalla"
             render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
+              <AppTextArea
                 label="Descripción de la falla"
-                mode="outlined"
-                multiline
-                numberOfLines={4}
                 value={value}
                 onBlur={onBlur}
                 onChangeText={onChange}
-                error={!!errors.descripcionFalla}
+                errorMessage={errors.descripcionFalla?.message}
                 style={styles.input}
               />
             )}
           />
-          {errors.descripcionFalla && (
-            <Text variant="bodySmall" style={styles.errorText}>
-              {errors.descripcionFalla.message}
-            </Text>
-          )}
 
           <Controller
             control={control}
             name="fechaHoraAveria"
             render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
+              <AppInput
                 label="Fecha y hora de la avería"
-                mode="outlined"
                 value={value}
                 onBlur={onBlur}
                 onChangeText={onChange}
-                error={!!errors.fechaHoraAveria}
+                errorMessage={errors.fechaHoraAveria?.message}
                 style={styles.input}
               />
             )}
           />
-          {errors.fechaHoraAveria && (
-            <Text variant="bodySmall" style={styles.errorText}>
-              {errors.fechaHoraAveria.message}
-            </Text>
-          )}
 
-          <Button
-            mode="contained"
-            onPress={handleSubmit(onSubmit)}
-            disabled={submitting}
-            style={styles.button}
-            contentStyle={{ height: 48 }}
-          >
-            {submitting ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              'Registrar Avería'
-            )}
-          </Button>
-        </Surface>
+          <AppButton variant="primary" onPress={handleSubmit(onSubmit)} disabled={submitting} loading={submitting} style={styles.button} fullWidth>
+            Registrar Avería
+          </AppButton>
+        </AppCard>
       </ScrollView>
     </ErrorBoundary>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  content: {
-    padding: 16,
-  },
-  formCard: {
-    padding: 24,
-    borderRadius: 12,
-    elevation: 2,
-  },
-  title: {
-    fontWeight: 700,
-    marginBottom: 20,
-  },
-  input: {
-    marginBottom: 4,
-  },
-  errorText: {
-    color: '#d32f2f',
-    marginBottom: 12,
-    marginLeft: 4,
-  },
-  button: {
-    marginTop: 16,
-    borderRadius: 8,
-  },
+  container: { flex: 1, backgroundColor: theme.colors.background.page },
+  content: { padding: theme.spacing[4], paddingBottom: theme.spacing[8] },
+  formCard: { padding: theme.spacing[6] },
+  title: { ...theme.typography.title, color: theme.colors.text.primary, marginBottom: theme.spacing[5] },
+  input: { marginBottom: theme.spacing[3] },
+  button: { marginTop: theme.spacing[2] },
 })

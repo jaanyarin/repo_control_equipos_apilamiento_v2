@@ -3,6 +3,7 @@ import { View, StyleSheet, ImageBackground } from 'react-native'
 import { Button, Text, Surface, TextInput, ActivityIndicator } from 'react-native-paper'
 import api, { setToken } from '../api'
 import { useAuth } from '../AuthContext'
+import { theme } from '../theme'
 
 export default function PasswordChangeScreen() {
   const { user, refreshUser, logout } = useAuth()
@@ -87,7 +88,7 @@ export default function PasswordChangeScreen() {
             contentStyle={{ height: 48 }}
             disabled={loading || success}
           >
-            {loading ? <ActivityIndicator color="#fff" /> : 'Cambiar contraseña'}
+            {loading ? <ActivityIndicator color={theme.colors.text.inverse} /> : 'Cambiar contraseña'}
           </Button>
           <Button
             mode="outlined"
@@ -113,7 +114,7 @@ const styles = StyleSheet.create({
   background: { flex: 1 },
   overlay: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)', padding: 24,
+    backgroundColor: theme.colors.background.backdrop, padding: theme.spacing[6],
   },
   card: {
     width: '100%', maxWidth: 360, padding: 32, borderRadius: 16,
@@ -121,10 +122,10 @@ const styles = StyleSheet.create({
   },
   title: { fontWeight: '700', marginBottom: 16 },
   infoText: { textAlign: 'center', marginBottom: 8, opacity: 0.8 },
-  hintText: { textAlign: 'center', marginBottom: 16, color: '#1565C0', fontWeight: '500' },
+  hintText: { textAlign: 'center', marginBottom: 16, color: theme.colors.action.primary, fontFamily: theme.fontFamily.medium },
   input: { width: '100%', marginBottom: 12 },
   button: { width: '100%', borderRadius: 8 },
   cancelButton: { width: '100%', borderRadius: 8, marginTop: 8 },
-  errorText: { width: '100%', color: '#d32f2f', textAlign: 'center', marginBottom: 12 },
-  successText: { width: '100%', color: '#2e7d32', textAlign: 'center', marginTop: 12 },
+  errorText: { width: '100%', color: theme.colors.status.error, textAlign: 'center', marginBottom: 12 },
+  successText: { width: '100%', color: theme.colors.status.success, textAlign: 'center', marginTop: 12 },
 })

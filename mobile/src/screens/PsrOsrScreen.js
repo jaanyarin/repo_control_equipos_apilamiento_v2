@@ -1,11 +1,16 @@
 import React, { useState, useCallback } from 'react'
 import { View, FlatList, RefreshControl, StyleSheet, Alert } from 'react-native'
-import { Card, Text, Chip, Searchbar, IconButton } from 'react-native-paper'
+import { Text, Searchbar } from 'react-native-paper'
 import { useFocusEffect } from '@react-navigation/native'
 import api from '../api'
 import LoadingScreen from '../components/LoadingScreen'
 import EmptyState from '../components/EmptyState'
 import ErrorBoundary from '../components/ErrorBoundary'
+import AppCard from '../components/AppCard'
+import AppIconButton from '../components/AppIconButton'
+import StatusChip from '../components/StatusChip'
+import ErrorState from '../components/ErrorState'
+import { theme } from '../theme'
 
 export default function PsrOsrScreen() {
   const [items, setItems] = useState([])
@@ -51,18 +56,13 @@ export default function PsrOsrScreen() {
   })
 
   const renderItem = ({ item }) => (
-    <Card style={styles.card}>
-      <Card.Content>
+    <AppCard style={styles.card} accessibilityLabel={`PSR ${item.numeroPsr || 'sin número'}`}>
         <View style={styles.cardHeader}>
           <View style={styles.cardInfo}>
             <Text variant="titleMedium" style={styles.cardTitle}>{item.numeroPsr || 'Sin PSR'}</Text>
             {item.motivoNombreCorto ? <Text variant="bodySmall" style={styles.cardMeta}>Motivo: {item.motivoNombreCorto}</Text> : null}
           </View>
-          <Chip mode="flat" textStyle={{ color: '#fff', fontSize: 11, fontWeight: 600 }}
-            style={{ backgroundColor: item.estadoActivo ? '#2e7d32' : '#888' }}
-          >
-            {item.estadoActivo ? 'ACTIVO' : 'INACTIVO'}
-          </Chip>
+          <StatusChip status={item.estadoActivo ? 'active' : 'cancelled'} label={item.estadoActivo ? 'ACTIVO' : 'INACTIVO'} />
         </View>
         <View style={styles.details}>
           <Text variant="bodySmall" style={styles.detailText}>
@@ -79,10 +79,9 @@ export default function PsrOsrScreen() {
           <Text variant="bodySmall" style={styles.obsText}>{item.observaciones}</Text>
         ) : null}
         <View style={styles.actions}>
-          <IconButton icon="delete" iconColor="#d32f2f" size={20} onPress={() => handleDelete(item)} />
+          <AppIconButton icon="delete-outline" iconColor={theme.colors.status.error} size={20} accessibilityLabel={`Eliminar PSR ${item.numeroPsr || ''}`} onPress={() => handleDelete(item)} />
         </View>
-      </Card.Content>
-    </Card>
+    </AppCard>
   )
 
   if (loading && items.length === 0) return <LoadingScreen />
@@ -92,14 +91,14 @@ export default function PsrOsrScreen() {
       <View style={styles.container}>
         <Searchbar placeholder="Buscar por número PSR" onChangeText={setSearch} value={search} style={styles.searchbar} />
         {error ? (
-          <EmptyState icon="alert" title="Error" subtitle={error} />
+          <ErrorState title="Error al cargar PSR" message={error} onRetry={fetch} />
         ) : (
           <FlatList
             data={filtered}
             keyExtractor={(item) => String(item.id)}
             renderItem={renderItem}
             contentContainerStyle={styles.list}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1565C0']} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.action.primary]} />}
             ListEmptyComponent={<EmptyState icon="file-document" title={search ? 'Sin resultados' : 'No hay PSR'} subtitle={search ? 'Intenta con otro término' : 'Aún no se han registrado PSR'} />}
           />
         )}
@@ -109,16 +108,16 @@ export default function PsrOsrScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  searchbar: { margin: 16, borderRadius: 8 },
-  list: { paddingHorizontal: 16, paddingBottom: 16 },
-  card: { borderRadius: 12, marginBottom: 8 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
-  cardInfo: { flex: 1, marginRight: 8 },
-  cardTitle: { fontWeight: 700 },
-  cardMeta: { opacity: 0.5, marginTop: 2 },
-  details: { marginBottom: 4 },
-  detailText: { opacity: 0.6, fontSize: 12, marginBottom: 2 },
-  obsText: { opacity: 0.5, fontSize: 11, fontStyle: 'italic', marginTop: 4 },
-  actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
+  container: { flex: 1, backgroundColor: theme.colors.background.page },
+  searchbar: { margin: theme.spacing[4], borderRadius: theme.radius.md, backgroundColor: theme.colors.background.paper },
+  list: { paddingHorizontal: theme.spacing[4], paddingBottom: theme.spacing[6] },
+  card: { marginBottom: theme.spacing[3] },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: theme.spacing[2] },
+  cardInfo: { flex: 1, marginRight: theme.spacing[2] },
+  cardTitle: { ...theme.typography.subtitle, color: theme.colors.text.primary },
+  cardMeta: { ...theme.typography.caption, color: theme.colors.text.tertiary, marginTop: theme.spacing[1] },
+  details: { marginBottom: theme.spacing[1] },
+  detailText: { ...theme.typography.caption, color: theme.colors.text.secondary, marginBottom: theme.spacing[1] },
+  obsText: { ...theme.typography.caption, color: theme.colors.text.tertiary, fontStyle: 'italic', marginTop: theme.spacing[1] },
+  actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: theme.spacing[2] },
 })

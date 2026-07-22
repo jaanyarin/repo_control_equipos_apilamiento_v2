@@ -1,23 +1,26 @@
 import React, { useState, useEffect } from 'react'
-import { View, ScrollView, StyleSheet, ImageBackground } from 'react-native'
+import { View, ScrollView, StyleSheet, ImageBackground, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Button, Text, Surface, TextInput, ActivityIndicator, Menu, Divider } from 'react-native-paper'
+import { Text, Divider } from 'react-native-paper'
 import api, { setToken, parseToken, loadApiUrl, setApiUrl, BUILT_IN_API_URL } from './api'
 import { useAuth } from './AuthContext'
+import AppButton from './components/AppButton'
+import AppCard from './components/AppCard'
+import AppInput from './components/AppInput'
+import AppSelect from './components/AppSelect'
+import { theme } from './theme'
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets()
+  const { width } = useWindowDimensions()
   const { refreshUser } = useAuth()
   const [roles, setRoles] = useState([])
   const [usuarios, setUsuarios] = useState([])
   const [selectedRolId, setSelectedRolId] = useState(null)
   const [selectedUsuarioId, setSelectedUsuarioId] = useState(null)
-  const [selectedUsuarioLabel, setSelectedUsuarioLabel] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [showRolMenu, setShowRolMenu] = useState(false)
-  const [showUserMenu, setShowUserMenu] = useState(false)
   const [showServerConfig, setShowServerConfig] = useState(false)
   const [apiUrl, setApiUrlState] = useState(BUILT_IN_API_URL)
   const [savingApiUrl, setSavingApiUrl] = useState(false)
@@ -39,7 +42,6 @@ export default function LoginScreen() {
     if (selectedRolId) {
       setStep('usuarios')
       setSelectedUsuarioId(null)
-      setSelectedUsuarioLabel('')
       api.get(`/auth/usuarios-by-rol/${selectedRolId}`)
         .then(r => {
           const data = Array.isArray(r.data) ? r.data : (r.data?.data || [])
@@ -89,7 +91,6 @@ export default function LoginScreen() {
       setRoles(Array.isArray(data) ? data : (data?.data || []))
       setSelectedRolId(null)
       setSelectedUsuarioId(null)
-      setSelectedUsuarioLabel('')
       setUsuarios([])
       setStep('roles')
     } catch (e) {
@@ -102,10 +103,6 @@ export default function LoginScreen() {
   const handleResetApiUrl = () => {
     setApiUrlState(BUILT_IN_API_URL)
   }
-
-  const selectedRolName = selectedRolId && Array.isArray(roles)
-    ? roles.find(r => r.id === selectedRolId)?.nombre || ''
-    : ''
 
   return (
     <ImageBackground
@@ -123,7 +120,7 @@ export default function LoginScreen() {
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <Surface style={styles.card}>
+        <AppCard style={[styles.card, { width: Math.min(width - theme.spacing[12], 420) }]}>
           <Text variant="headlineSmall" style={styles.title}>
             Control de Equipos de Apilamiento Packing
           </Text>
@@ -133,111 +130,79 @@ export default function LoginScreen() {
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-          <Menu
-            visible={showRolMenu}
-            onDismiss={() => setShowRolMenu(false)}
-            anchor={
-              <Button
-                mode="outlined"
-                onPress={() => setShowRolMenu(true)}
-                style={styles.dropdown}
-              >
-                {selectedRolName || 'Seleccionar Perfil'}
-              </Button>
-            }
-          >
-            {(roles || []).map(r => (
-              <Menu.Item
-                key={r.id}
-                title={r.nombre}
-                onPress={() => { setSelectedRolId(r.id); setShowRolMenu(false) }}
-              />
-            ))}
-          </Menu>
+          <AppSelect
+            label="Perfil"
+            placeholder="Seleccionar perfil"
+            value={selectedRolId}
+            options={(roles || []).map(role => ({ value: role.id, label: role.nombre }))}
+            onChange={setSelectedRolId}
+          />
 
           {step !== 'roles' && (
-            <Menu
-              visible={showUserMenu}
-              onDismiss={() => setShowUserMenu(false)}
-              anchor={
-                <Button
-                  mode="outlined"
-                  onPress={() => setShowUserMenu(true)}
-                  style={styles.dropdown}
-                >
-                  {selectedUsuarioLabel || 'Seleccionar Usuario'}
-                </Button>
-              }
-            >
-              {(usuarios || []).map(u => (
-                <Menu.Item
-                  key={u.id}
-                  title={`${u.nombre}${u.area ? ` (${u.area})` : ''}`}
-                  onPress={() => { setSelectedUsuarioId(u.id); setSelectedUsuarioLabel(`${u.nombre}${u.area ? ` (${u.area})` : ''}`); setShowUserMenu(false) }}
-                />
-              ))}
-            </Menu>
+            <AppSelect
+              label="Usuario"
+              placeholder="Seleccionar usuario"
+              value={selectedUsuarioId}
+              options={(usuarios || []).map(usuario => ({ value: usuario.id, label: `${usuario.nombre}${usuario.area ? ` (${usuario.area})` : ''}` }))}
+              onChange={setSelectedUsuarioId}
+            />
           )}
 
           {step === 'password' && (
             <>
-              <TextInput
-                label="Contraseña"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                mode="outlined"
-                style={styles.input}
-              />
-              <Button
-                mode="contained"
-                onPress={handleLogin}
-                style={styles.button}
-                contentStyle={{ height: 48 }}
-                disabled={loading}
-              >
-                {loading ? <ActivityIndicator color="#fff" /> : 'Iniciar sesión'}
-              </Button>
-              <Button
-                mode="text"
-                onPress={() => { setSelectedRolId(null); setStep('roles') }}
-                style={styles.resetButton}
-              >
-                Cambiar usuario
-              </Button>
+            <AppInput
+              label="Contraseña"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              style={styles.input}
+            />
+            <AppButton
+              onPress={handleLogin}
+              style={styles.button}
+              loading={loading}
+            >
+              Iniciar sesión
+            </AppButton>
+            <AppButton
+              tone="text"
+              onPress={() => { setSelectedRolId(null); setStep('roles') }}
+              style={styles.resetButton}
+            >
+              Cambiar usuario
+            </AppButton>
             </>
           )}
           <Divider style={styles.divider} />
-          <Button
-            mode="text"
+          <AppButton
+            tone="text"
             onPress={() => setShowServerConfig(!showServerConfig)}
             style={styles.resetButton}
           >
             Configurar servidor
-          </Button>
+          </AppButton>
           {showServerConfig && (
             <>
-              <TextInput
+              <AppInput
                 label="URL de la API"
                 value={apiUrl}
                 onChangeText={setApiUrlState}
-                mode="outlined"
                 autoCapitalize="none"
                 autoCorrect={false}
                 placeholder="http://servidor:8082/api/v1"
                 style={styles.input}
               />
               <View style={styles.serverButtons}>
-                <Button mode="outlined" onPress={handleResetApiUrl} style={styles.serverButton}>
+                <AppButton tone="secondary" onPress={handleResetApiUrl} style={styles.serverButton}>
                   Restablecer
-                </Button>
-                <Button mode="contained" onPress={handleSaveApiUrl} loading={savingApiUrl} disabled={savingApiUrl} style={styles.serverButton}>
+                </AppButton>
+                <AppButton onPress={handleSaveApiUrl} loading={savingApiUrl} style={styles.serverButton}>
                   Guardar
-                </Button>
+                </AppButton>
               </View>
             </>
           )}
-        </Surface>
+        </AppCard>
       </ScrollView>
     </ImageBackground>
   )
@@ -247,20 +212,20 @@ const styles = StyleSheet.create({
   background: { flex: 1 },
   overlay: {
     flexGrow: 1, justifyContent: 'center', alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)', padding: 24,
+    backgroundColor: theme.colors.background.backdrop, padding: theme.spacing[6],
   },
   card: {
-    width: '100%', maxWidth: 360, padding: 32, borderRadius: 16,
-    alignItems: 'center', elevation: 4,
+    padding: theme.spacing[6], borderRadius: theme.radius.lg,
+    alignItems: 'center', backgroundColor: theme.colors.background.authOverlay,
+    ...theme.shadows.z2,
   },
-  title: { fontWeight: '700', marginBottom: 10, textAlign: 'center' },
-  subtitle: { opacity: 0.6, marginBottom: 24 },
-  dropdown: { width: '100%', marginBottom: 12 },
-  input: { width: '100%', marginBottom: 12 },
-  button: { width: '100%', borderRadius: 8, marginBottom: 8 },
+  title: { ...theme.typography.h3, color: theme.colors.text.primary, marginBottom: theme.spacing[2], textAlign: 'center' },
+  subtitle: { ...theme.typography.body1, color: theme.colors.text.secondary, marginBottom: theme.spacing[6] },
+  input: { width: '100%', marginTop: theme.spacing[4] },
+  button: { width: '100%', marginTop: theme.spacing[4], marginBottom: theme.spacing[2] },
   resetButton: { width: '100%' },
-  divider: { width: '100%', marginVertical: 8 },
-  serverButtons: { width: '100%', flexDirection: 'row', gap: 8 },
+  divider: { width: '100%', marginVertical: theme.spacing[2], backgroundColor: theme.colors.border.subtle },
+  serverButtons: { width: '100%', flexDirection: 'row', gap: theme.spacing[2] },
   serverButton: { flex: 1, borderRadius: 8 },
-  errorText: { width: '100%', color: '#d32f2f', textAlign: 'center', marginBottom: 16 },
+  errorText: { ...theme.typography.body2, width: '100%', color: theme.colors.status.error, textAlign: 'center', marginBottom: theme.spacing[4] },
 })

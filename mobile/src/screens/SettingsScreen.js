@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet, Alert } from 'react-native'
 import { Text, TextInput, Button, Surface, Divider } from 'react-native-paper'
 import { loadApiUrl, setApiUrl, BUILT_IN_API_URL } from '../api'
 import ErrorBoundary from '../components/ErrorBoundary'
+import { theme } from '../theme'
 
 export default function SettingsScreen() {
   const [apiUrl, setApiUrlState] = useState('')
@@ -86,7 +87,7 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: theme.colors.background.page },
   content: { padding: 16 },
   card: { padding: 16, borderRadius: 12, marginBottom: 12, elevation: 1 },
   sectionTitle: { fontWeight: 700, marginBottom: 8 },

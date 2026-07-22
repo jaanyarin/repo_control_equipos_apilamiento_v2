@@ -1,11 +1,12 @@
 import React from 'react'
 import { View, StyleSheet } from 'react-native'
 import { ActivityIndicator, Text } from 'react-native-paper'
+import { theme } from '../theme'
 
 export default function LoadingScreen({ message = 'Cargando...' }) {
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#1565C0" />
+      <ActivityIndicator size="large" color={theme.colors.action.secondary} />
       <Text variant="bodyMedium" style={styles.message}>
         {message}
       </Text>
@@ -18,10 +19,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background.page,
   },
   message: {
-    marginTop: 16,
-    opacity: 0.6,
+    ...theme.typography.body1,
+    marginTop: theme.spacing[4],
+    color: theme.colors.text.secondary,
   },
 })

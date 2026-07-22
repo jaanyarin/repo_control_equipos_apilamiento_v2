@@ -1,27 +1,22 @@
 import React from 'react'
 import { StatusBar } from 'react-native'
-import { PaperProvider, MD3LightTheme } from 'react-native-paper'
+import { PaperProvider } from 'react-native-paper'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from './src/AuthContext'
 import AppNavigator from './src/navigation/AppNavigator'
-
-const theme = {
-  ...MD3LightTheme,
-  colors: {
-    ...MD3LightTheme.colors,
-    primary: '#1565C0',
-    secondary: '#0D47A1',
-  },
-}
+import { ToastProvider } from './src/components/ToastProvider'
+import { paperTheme, theme } from './src/theme'
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <PaperProvider theme={theme}>
-        <AuthProvider>
-          <AppNavigator />
-          <StatusBar barStyle="light-content" backgroundColor="#1565C0" translucent={false} />
-        </AuthProvider>
+      <PaperProvider theme={paperTheme}>
+        <ToastProvider>
+          <AuthProvider>
+            <AppNavigator />
+            <StatusBar barStyle="light-content" backgroundColor={theme.colors.action.primary} translucent={false} />
+          </AuthProvider>
+        </ToastProvider>
       </PaperProvider>
     </SafeAreaProvider>
   )

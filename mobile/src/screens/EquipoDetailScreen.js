@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { View, ScrollView, StyleSheet, Alert } from 'react-native'
-import { Text, Surface, Chip, Button, IconButton, ActivityIndicator, Divider } from 'react-native-paper'
+import { Text, Divider } from 'react-native-paper'
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native'
 import api from '../api'
 import LoadingScreen from '../components/LoadingScreen'
 import ErrorBoundary from '../components/ErrorBoundary'
 import EmptyState from '../components/EmptyState'
+import AppCard from '../components/AppCard'
+import AppButton from '../components/AppButton'
+import AppIconButton from '../components/AppIconButton'
+import StatusChip from '../components/StatusChip'
+import ErrorState from '../components/ErrorState'
+import { theme } from '../theme'
 
 export default function EquipoDetailScreen() {
   const route = useRoute()
@@ -52,25 +58,14 @@ export default function EquipoDetailScreen() {
     }
   }
 
-  const chipColor = (estado) => {
-    switch (estado) {
-      case 'OPERATIVO':
-        return '#2e7d32'
-      case 'AVERIADO':
-        return '#d32f2f'
-      default:
-        return '#888'
-    }
-  }
-
   if (loading) return <LoadingScreen />
-  if (error) return <EmptyState icon="alert" title="Error" subtitle={error} />
+  if (error) return <ErrorState title="Error al cargar el equipo" message={error} onRetry={fetchEquipo} />
   if (!equipo) return <EmptyState icon="information" title="Equipo no encontrado" />
 
   return (
     <ErrorBoundary>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Surface style={styles.section}>
+        <AppCard style={styles.section}>
           <Text variant="titleMedium" style={styles.sectionTitle}>
             Información General
           </Text>
@@ -93,26 +88,20 @@ export default function EquipoDetailScreen() {
               {equipo.capacidad != null ? `${equipo.capacidad} ${equipo.unidadCapacidad || ''}` : '-'}
             </Text>
           </View>
-        </Surface>
+        </AppCard>
 
-        <Surface style={styles.section}>
+        <AppCard style={styles.section}>
           <Text variant="titleMedium" style={styles.sectionTitle}>
             Estado
           </Text>
           <Divider style={styles.divider} />
           <View style={styles.row}>
             <Text variant="bodySmall" style={styles.label}>Estado Operativo</Text>
-            <Chip
-              mode="flat"
-              textStyle={{ color: '#fff', fontSize: 12, fontWeight: 600 }}
-              style={{ backgroundColor: chipColor(equipo.estadoOperativo) }}
-            >
-              {equipo.estadoOperativo || 'DESCONOCIDO'}
-            </Chip>
+            <StatusChip status={equipo.estadoOperativo === 'OPERATIVO' ? 'active' : equipo.estadoOperativo === 'AVERIADO' ? 'fault' : 'cancelled'} label={equipo.estadoOperativo || 'DESCONOCIDO'} />
           </View>
-        </Surface>
+        </AppCard>
 
-        <Surface style={styles.section}>
+        <AppCard style={styles.section}>
           <Text variant="titleMedium" style={styles.sectionTitle}>
             Proveedor / Marca / Tipo
           </Text>
@@ -129,51 +118,52 @@ export default function EquipoDetailScreen() {
             <Text variant="bodySmall" style={styles.label}>Tipo</Text>
             <Text variant="bodyMedium" style={styles.value}>{equipo.tipoEquipo?.nombre || '-'}</Text>
           </View>
-        </Surface>
+        </AppCard>
 
         {equipo.accesorios && equipo.accesorios.length > 0 ? (
-          <Surface style={styles.section}>
+          <AppCard style={styles.section}>
             <Text variant="titleMedium" style={styles.sectionTitle}>
               Accesorios
             </Text>
             <Divider style={styles.divider} />
             {equipo.accesorios.map((acc, index) => (
               <View key={index} style={styles.accesorioRow}>
-                <IconButton
+                <AppIconButton
                   icon={acc.tiene ? 'check-circle' : 'close-circle'}
                   size={20}
-                  iconColor={acc.tiene ? '#2e7d32' : '#d32f2f'}
+                  iconColor={acc.tiene ? theme.colors.status.success : theme.colors.status.error}
+                  accessibilityLabel={`${acc.nombre || acc.accesorio?.nombre || 'Accesorio'}: ${acc.tiene ? 'incluido' : 'no incluido'}`}
                 />
                 <Text variant="bodyMedium">{acc.nombre || acc.accesorio?.nombre || '-'}</Text>
               </View>
             ))}
-          </Surface>
+          </AppCard>
         ) : null}
 
         <View style={styles.actions}>
-          <Button
-            mode="contained"
+          <AppButton
+            variant="primary"
             icon="alert"
             onPress={() => navigation.navigate('RegistrarAveria', { equipoId: equipo.id })}
             style={styles.actionButton}
-            contentStyle={{ height: 48 }}
+            fullWidth
           >
             Registrar Avería
-          </Button>
-          <Button
-            mode="outlined"
+          </AppButton>
+          <AppButton
+            variant="secondary"
             icon="file-document"
             onPress={fetchAverias}
             style={styles.actionButton}
-            contentStyle={{ height: 48 }}
             loading={loadingAverias}
+            fullWidth
           >
             {showAverias ? 'Ocultar Averías' : 'Ver Averías'}
-          </Button>
+          </AppButton>
         </View>
 
         {showAverias && (
-          <Surface style={styles.section}>
+          <AppCard style={styles.section}>
             <Text variant="titleMedium" style={styles.sectionTitle}>
               Averías del Equipo
             </Text>
@@ -189,33 +179,23 @@ export default function EquipoDetailScreen() {
                     <Text variant="bodyMedium" style={styles.averiaDate}>
                       {av.fechaHoraAveria ? new Date(av.fechaHoraAveria).toLocaleDateString() : '-'}
                     </Text>
-                    <Chip
-                      mode="flat"
-                      textStyle={{ color: '#fff', fontSize: 11, fontWeight: 600 }}
-                      style={{
-                        backgroundColor:
-                          av.estadoAveria === 'ATENDIDA' ? '#2e7d32' : av.estadoAveria === 'PENDIENTE' ? '#e65100' : '#888',
-                      }}
-                    >
-                      {av.estadoAveria || 'PENDIENTE'}
-                    </Chip>
+                    <StatusChip status={av.estadoAveria === 'ATENDIDA' ? 'approved' : av.estadoAveria === 'PENDIENTE' ? 'pending' : 'cancelled'} label={av.estadoAveria || 'PENDIENTE'} />
                   </View>
                   <Text variant="bodySmall" style={styles.averiaDesc}>
                     {av.descripcionFalla || av.descripcion || '-'}
                   </Text>
                   {av.estadoAveria === 'PENDIENTE' && (
-                    <Button
-                      mode="text"
-                      compact
+                    <AppButton
+                      variant="text"
                       onPress={() => navigation.navigate('AtenderAveria', { averiaId: av.id })}
                     >
                       Atender
-                    </Button>
+                    </AppButton>
                   )}
                 </View>
               ))
             )}
-          </Surface>
+          </AppCard>
         )}
       </ScrollView>
     </ErrorBoundary>
@@ -225,73 +205,75 @@ export default function EquipoDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background.page,
   },
   content: {
-    padding: 16,
-    paddingBottom: 32,
+    padding: theme.spacing[4],
+    paddingBottom: theme.spacing[8],
   },
   section: {
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    elevation: 1,
+    marginBottom: theme.spacing[3],
   },
   sectionTitle: {
-    fontWeight: 700,
-    marginBottom: 8,
+    ...theme.typography.subtitle,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing[2],
   },
   divider: {
-    marginBottom: 12,
+    marginBottom: theme.spacing[3],
+    backgroundColor: theme.colors.border.subtle,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: theme.spacing[2],
   },
   label: {
-    opacity: 0.6,
+    ...theme.typography.caption,
+    color: theme.colors.text.secondary,
     flex: 1,
   },
   value: {
-    fontWeight: 600,
+    ...theme.typography.body,
+    fontFamily: theme.fontFamily.semiBold,
+    color: theme.colors.text.primary,
     flex: 1,
     textAlign: 'right',
   },
   accesorioRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: theme.spacing[1],
   },
   actions: {
-    marginTop: 8,
-    marginBottom: 12,
+    marginTop: theme.spacing[2],
+    marginBottom: theme.spacing[3],
   },
   actionButton: {
-    marginBottom: 8,
-    borderRadius: 8,
+    marginBottom: theme.spacing[2],
   },
   emptyText: {
     textAlign: 'center',
-    opacity: 0.5,
-    paddingVertical: 16,
+    color: theme.colors.text.tertiary,
+    paddingVertical: theme.spacing[4],
   },
   averiaItem: {
-    paddingVertical: 8,
+    paddingVertical: theme.spacing[2],
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.border.subtle,
   },
   averiaHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: theme.spacing[1],
   },
   averiaDate: {
-    fontWeight: 600,
+    fontFamily: theme.fontFamily.semiBold,
+    color: theme.colors.text.primary,
   },
   averiaDesc: {
-    opacity: 0.7,
+    color: theme.colors.text.secondary,
   },
 })

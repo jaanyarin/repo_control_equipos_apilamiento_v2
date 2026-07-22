@@ -33,17 +33,17 @@ Estos colores deben dominar la aplicación.
 
 ```ts
 export const primaryColors = {
-  greyLighter: '#D4D6D9',
-  greyLight: '#A7ACB1',
-  greyDark: '#80878E',
-  greyDarker: '#59626B',
-  greyMain: '#3C4651',
+  greyLighter: "#D4D6D9",
+  greyLight: "#A7ACB1",
+  greyDark: "#80878E",
+  greyDarker: "#59626B",
+  greyMain: "#3C4651",
 
-  blueLighter: '#DDE8ED',
-  blueLight: '#B8CED9',
-  blueDark: '#96B7C7',
-  blueDarker: '#74A0B5',
-  blueMain: '#558BA5',
+  blueLighter: "#DDE8ED",
+  blueLight: "#B8CED9",
+  blueDark: "#96B7C7",
+  blueDarker: "#74A0B5",
+  blueMain: "#558BA5",
 };
 ```
 
@@ -53,16 +53,16 @@ Usarlos solo para estados, feedback y elementos auxiliares.
 
 ```ts
 export const secondaryColors = {
-  teal: '#30586B',
-  blue: '#6BA6C2',
-  sky: '#B3E1F8',
-  ice: '#F5FCFF',
-  wine: '#9F4F64',
-  red: '#D7594E',
-  orange: '#DB9647',
-  yellow: '#F2CF68',
-  lime: '#95BA21',
-  green: '#54904C',
+  teal: "#30586B",
+  blue: "#6BA6C2",
+  sky: "#B3E1F8",
+  ice: "#F5FCFF",
+  wine: "#9F4F64",
+  red: "#D7594E",
+  orange: "#DB9647",
+  yellow: "#F2CF68",
+  lime: "#95BA21",
+  green: "#54904C",
 };
 ```
 
@@ -70,17 +70,17 @@ export const secondaryColors = {
 
 ```ts
 export const neutralColors = {
-  100: '#F7F9FA',
-  200: '#E8EDF2',
-  300: '#D4DAE0',
-  400: '#B5BEC8',
-  500: '#8A95A3',
-  600: '#5E6B78',
-  700: '#4A5460',
-  800: '#3C4651',
-  900: '#262E36',
-  white: '#FFFFFF',
-  black: '#000000',
+  100: "#F7F9FA",
+  200: "#E8EDF2",
+  300: "#D4DAE0",
+  400: "#B5BEC8",
+  500: "#8A95A3",
+  600: "#5E6B78",
+  700: "#4A5460",
+  800: "#3C4651",
+  900: "#262E36",
+  white: "#FFFFFF",
+  black: "#000000",
 };
 ```
 
@@ -93,52 +93,52 @@ Las pantallas deben consumir estos tokens, no colores físicos directamente.
 ```ts
 export const colors = {
   background: {
-    default: '#FFFFFF',
-    page: '#F7F9FA',
-    paper: '#FFFFFF',
-    neutral: '#E8EDF2',
-    elevated: '#FFFFFF',
-    authOverlay: 'rgba(255,255,255,0.88)',
-    backdrop: 'rgba(22,28,36,0.48)',
+    default: "#FFFFFF",
+    page: "#F7F9FA",
+    paper: "#FFFFFF",
+    neutral: "#E8EDF2",
+    elevated: "#FFFFFF",
+    authOverlay: "rgba(255,255,255,0.88)",
+    backdrop: "rgba(22,28,36,0.48)",
   },
 
   text: {
-    primary: '#3C4651',
-    secondary: '#5E6B78',
-    tertiary: '#8A95A3',
-    disabled: '#8A95A3',
-    inverse: '#FFFFFF',
-    link: '#558BA5',
+    primary: "#3C4651",
+    secondary: "#5E6B78",
+    tertiary: "#8A95A3",
+    disabled: "#8A95A3",
+    inverse: "#FFFFFF",
+    link: "#558BA5",
   },
 
   border: {
-    default: '#D4DAE0',
-    subtle: '#E8EDF2',
-    strong: '#A7ACB1',
-    focus: '#3C4651',
-    error: '#D7594E',
+    default: "#D4DAE0",
+    subtle: "#E8EDF2",
+    strong: "#A7ACB1",
+    focus: "#3C4651",
+    error: "#D7594E",
   },
 
   action: {
-    primary: '#3C4651',
-    primaryHover: '#4A5460',
-    primaryPressed: '#262E36',
-    secondary: '#558BA5',
-    secondaryHover: '#74A0B5',
-    disabled: '#D4DAE0',
+    primary: "#3C4651",
+    primaryHover: "#4A5460",
+    primaryPressed: "#262E36",
+    secondary: "#558BA5",
+    secondaryHover: "#74A0B5",
+    disabled: "#D4DAE0",
   },
 
   status: {
-    info: '#6BA6C2',
-    infoBackground: '#DDE8ED',
-    success: '#54904C',
-    successBackground: '#E7F2E5',
-    warning: '#DB9647',
-    warningBackground: '#FAEBD8',
-    error: '#D7594E',
-    errorBackground: '#FBE4E2',
-    neutral: '#8A95A3',
-    neutralBackground: '#E8EDF2',
+    info: "#6BA6C2",
+    infoBackground: "#DDE8ED",
+    success: "#54904C",
+    successBackground: "#E7F2E5",
+    warning: "#DB9647",
+    warningBackground: "#FAEBD8",
+    error: "#D7594E",
+    errorBackground: "#FBE4E2",
+    neutral: "#8A95A3",
+    neutralBackground: "#E8EDF2",
   },
 };
 ```
@@ -155,20 +155,20 @@ export const colors = {
 
 ### Aplicación
 
-| Elemento | Color recomendado |
-|---|---|
-| Fondo principal | `#F7F9FA` o `#FFFFFF` |
-| AppBar | `#3C4651` |
-| Botón principal | `#3C4651` |
-| Botón secundario | borde y texto `#558BA5` |
-| Navegación activa | `#558BA5` |
-| Navegación inactiva | `#8A95A3` |
-| Título principal | `#3C4651` |
-| Texto secundario | `#5E6B78` |
-| Enlaces | `#558BA5` |
-| Iconos principales | `#3C4651` |
-| Tarjetas | `#FFFFFF` |
-| Bordes | `#D4DAE0` |
+| Elemento            | Color recomendado       |
+| ------------------- | ----------------------- |
+| Fondo principal     | `#F7F9FA` o `#FFFFFF`   |
+| AppBar              | `#3C4651`               |
+| Botón principal     | `#3C4651`               |
+| Botón secundario    | borde y texto `#558BA5` |
+| Navegación activa   | `#558BA5`               |
+| Navegación inactiva | `#8A95A3`               |
+| Título principal    | `#3C4651`               |
+| Texto secundario    | `#5E6B78`               |
+| Enlaces             | `#558BA5`               |
+| Iconos principales  | `#3C4651`               |
+| Tarjetas            | `#FFFFFF`               |
+| Bordes              | `#D4DAE0`               |
 
 ### Restricciones
 
@@ -185,10 +185,10 @@ export const colors = {
 
 ```ts
 export const fontFamily = {
-  regular: 'Poppins-Regular',
-  medium: 'Poppins-Medium',
-  semiBold: 'Poppins-SemiBold',
-  bold: 'Poppins-Bold',
+  regular: "Poppins-Regular",
+  medium: "Poppins-Medium",
+  semiBold: "Poppins-SemiBold",
+  bold: "Poppins-Bold",
 };
 ```
 
@@ -197,57 +197,57 @@ export const fontFamily = {
 ```ts
 export const typography = {
   display: {
-    fontFamily: 'Poppins-Bold',
+    fontFamily: "Poppins-Bold",
     fontSize: 32,
     lineHeight: 40,
   },
   h1: {
-    fontFamily: 'Poppins-Bold',
+    fontFamily: "Poppins-Bold",
     fontSize: 28,
     lineHeight: 36,
   },
   h2: {
-    fontFamily: 'Poppins-Bold',
+    fontFamily: "Poppins-Bold",
     fontSize: 24,
     lineHeight: 32,
   },
   h3: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: "Poppins-SemiBold",
     fontSize: 20,
     lineHeight: 28,
   },
   h4: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: "Poppins-SemiBold",
     fontSize: 18,
     lineHeight: 26,
   },
   subtitle1: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: "Poppins-SemiBold",
     fontSize: 16,
     lineHeight: 24,
   },
   subtitle2: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: "Poppins-SemiBold",
     fontSize: 14,
     lineHeight: 22,
   },
   body1: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: "Poppins-Regular",
     fontSize: 14,
     lineHeight: 22,
   },
   body2: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: "Poppins-Regular",
     fontSize: 13,
     lineHeight: 20,
   },
   caption: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: "Poppins-Regular",
     fontSize: 12,
     lineHeight: 18,
   },
   button: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: "Poppins-SemiBold",
     fontSize: 14,
     lineHeight: 20,
   },
@@ -311,15 +311,15 @@ export const radius = {
 
 ### Reglas
 
-| Componente | Radio |
-|---|---:|
-| Input | 8 px |
-| Botón | 8 px |
-| Tarjeta | 12 px |
-| Modal | 16 px |
+| Componente   |          Radio |
+| ------------ | -------------: |
+| Input        |           8 px |
+| Botón        |           8 px |
+| Tarjeta      |          12 px |
+| Modal        |          16 px |
 | Bottom sheet | 24 px superior |
-| Chip | 999 px |
-| Avatar | circular |
+| Chip         |         999 px |
+| Avatar       |       circular |
 
 No utilizar radios excesivos en todos los elementos. Reservar radios grandes para modales, paneles y pantalla de login.
 
@@ -330,22 +330,22 @@ No utilizar radios excesivos en todos los elementos. Reservar radios grandes par
 ```ts
 export const shadows = {
   z1: {
-    shadowColor: '#000000',
-    shadowOffset: {width: 0, height: 1},
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.12,
     shadowRadius: 2,
     elevation: 2,
   },
   z2: {
-    shadowColor: '#000000',
-    shadowOffset: {width: 0, height: 4},
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.14,
     shadowRadius: 8,
     elevation: 4,
   },
   modal: {
-    shadowColor: '#000000',
-    shadowOffset: {width: -20, height: 20},
+    shadowColor: "#000000",
+    shadowOffset: { width: -20, height: 20 },
     shadowOpacity: 0.24,
     shadowRadius: 40,
     elevation: 12,
@@ -379,14 +379,14 @@ Preferencia:
 
 ### Tamaños
 
-| Uso | Tamaño |
-|---|---:|
-| Icono inline | 16 px |
-| Input | 20 px |
-| Botón | 20 px |
-| Menú | 24 px |
+| Uso              |   Tamaño |
+| ---------------- | -------: |
+| Icono inline     |    16 px |
+| Input            |    20 px |
+| Botón            |    20 px |
+| Menú             |    24 px |
 | Acción destacada | 28-32 px |
-| Estado vacío | 48-64 px |
+| Estado vacío     | 48-64 px |
 
 ### Reglas
 
@@ -413,7 +413,8 @@ Cada pantalla principal debe seguir este orden:
 
   <ScrollView
     contentContainerStyle={styles.content}
-    keyboardShouldPersistTaps="handled">
+    keyboardShouldPersistTaps="handled"
+  >
     {/* contenido */}
   </ScrollView>
 
@@ -469,10 +470,10 @@ Cada pantalla principal debe seguir este orden:
 
 ```ts
 export const cardStyle = {
-  backgroundColor: '#FFFFFF',
+  backgroundColor: "#FFFFFF",
   borderRadius: 12,
   borderWidth: 1,
-  borderColor: '#E8EDF2',
+  borderColor: "#E8EDF2",
   padding: 16,
 };
 ```
@@ -566,34 +567,34 @@ Texto blanco, `Poppins-SemiBold`, `14-16 px`.
 ```ts
 export const statusStyles = {
   pending: {
-    color: '#DB9647',
-    backgroundColor: '#FAEBD8',
-    label: 'Pendiente',
+    color: "#DB9647",
+    backgroundColor: "#FAEBD8",
+    label: "Pendiente",
   },
   approved: {
-    color: '#54904C',
-    backgroundColor: '#E7F2E5',
-    label: 'Aprobado',
+    color: "#54904C",
+    backgroundColor: "#E7F2E5",
+    label: "Aprobado",
   },
   active: {
-    color: '#54904C',
-    backgroundColor: '#E7F2E5',
-    label: 'Operativo',
+    color: "#54904C",
+    backgroundColor: "#E7F2E5",
+    label: "Operativo",
   },
   fault: {
-    color: '#D7594E',
-    backgroundColor: '#FBE4E2',
-    label: 'Averiado',
+    color: "#D7594E",
+    backgroundColor: "#FBE4E2",
+    label: "Averiado",
   },
   cancelled: {
-    color: '#5E6B78',
-    backgroundColor: '#E8EDF2',
-    label: 'Anulado',
+    color: "#5E6B78",
+    backgroundColor: "#E8EDF2",
+    label: "Anulado",
   },
   info: {
-    color: '#30586B',
-    backgroundColor: '#DDE8ED',
-    label: 'Información',
+    color: "#30586B",
+    backgroundColor: "#DDE8ED",
+    label: "Información",
   },
 };
 ```
@@ -612,12 +613,12 @@ export const statusStyles = {
 
 ### Tipos
 
-| Tipo | Color principal | Ejemplo |
-|---|---|---|
-| Éxito | `#54904C` | Registro guardado correctamente |
-| Información | `#6BA6C2` | Datos actualizados |
-| Advertencia | `#DB9647` | Faltan campos por completar |
-| Error | `#D7594E` | No se pudo guardar el registro |
+| Tipo        | Color principal | Ejemplo                         |
+| ----------- | --------------- | ------------------------------- |
+| Éxito       | `#54904C`       | Registro guardado correctamente |
+| Información | `#6BA6C2`       | Datos actualizados              |
+| Advertencia | `#DB9647`       | Faltan campos por completar     |
+| Error       | `#D7594E`       | No se pudo guardar el registro  |
 
 ### Toast / Snackbar
 
@@ -914,13 +915,13 @@ export type AppTheme = typeof theme;
 Toda pantalla debe importar desde el tema:
 
 ```ts
-import {theme} from '@/theme';
+import { theme } from "@/theme";
 ```
 
 No permitido:
 
 ```ts
-backgroundColor: '#3C4651';
+backgroundColor: "#3C4651";
 ```
 
 Permitido:

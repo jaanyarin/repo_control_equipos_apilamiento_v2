@@ -6,6 +6,7 @@ import api from '../api'
 import LoadingScreen from '../components/LoadingScreen'
 import EmptyState from '../components/EmptyState'
 import ErrorBoundary from '../components/ErrorBoundary'
+import { theme } from '../theme'
 
 export default function UsuariosScreen() {
   const [items, setItems] = useState([])
@@ -41,9 +42,9 @@ export default function UsuariosScreen() {
 
   const rolColor = (rol) => {
     const r = (rol || '').toLowerCase()
-    if (r.includes('super admin')) return '#6a1b9a'
-    if (r === 'admin') return '#1565C0'
-    return '#2e7d32'
+    if (r.includes('super admin')) return theme.colors.secondary.wine
+    if (r === 'admin') return theme.colors.action.primary
+    return theme.colors.status.success
   }
 
   const filtered = items.filter(item => {
@@ -59,13 +60,13 @@ export default function UsuariosScreen() {
           <View style={styles.cardInfo}>
             <Text variant="titleMedium" style={styles.nameText}>{item.nombre || 'Sin nombre'}</Text>
             <Text variant="bodySmall" style={styles.emailText}>{item.correo || '-'}</Text>
-            <Chip mode="flat" textStyle={{ color: '#fff', fontSize: 11, fontWeight: 600 }}
+            <Chip mode="flat" textStyle={{ color: theme.colors.text.inverse, fontSize: 11, fontWeight: 600 }}
               style={{ backgroundColor: rolColor(item.rolNombre || item.rol), marginTop: 6, alignSelf: 'flex-start' }}
             >
               {item.rolNombre || item.rol || 'Sin rol'}
             </Chip>
           </View>
-          <IconButton icon="delete" iconColor="#d32f2f" size={20} onPress={() => handleDelete(item)} />
+          <IconButton icon="delete" iconColor={theme.colors.status.error} size={20} onPress={() => handleDelete(item)} />
         </View>
       </Card.Content>
     </Card>
@@ -85,7 +86,7 @@ export default function UsuariosScreen() {
             keyExtractor={(item) => String(item.id)}
             renderItem={renderItem}
             contentContainerStyle={styles.list}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1565C0']} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.action.primary]} />}
             ListEmptyComponent={<EmptyState icon="account-group" title={search ? 'Sin resultados' : 'No hay usuarios'} subtitle={search ? 'Intenta con otro término' : 'Aún no se han registrado usuarios'} />}
           />
         )}
@@ -95,7 +96,7 @@ export default function UsuariosScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: theme.colors.background.page },
   searchbar: { margin: 16, borderRadius: 8 },
   list: { paddingHorizontal: 16, paddingBottom: 16 },
   card: { borderRadius: 12, marginBottom: 8 },

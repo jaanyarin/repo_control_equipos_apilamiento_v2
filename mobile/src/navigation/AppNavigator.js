@@ -3,8 +3,8 @@ import { NavigationContainer, useNavigation } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ActivityIndicator, View, ScrollView } from 'react-native'
-import { IconButton, Text, Button } from 'react-native-paper'
+import { View, ScrollView } from 'react-native'
+import { Icon, Text, Button } from 'react-native-paper'
 import { useAuth } from '../AuthContext'
 import LoginScreen from '../LoginScreen'
 import PasswordChangeScreen from '../screens/PasswordChangeScreen'
@@ -25,6 +25,8 @@ import UsuariosScreen from '../screens/UsuariosScreen'
 import PsrOsrScreen from '../screens/PsrOsrScreen'
 import MotivosPsrScreen from '../screens/MotivosPsrScreen'
 import AuditoriaScreen from '../screens/AuditoriaScreen'
+import LoadingScreen from '../components/LoadingScreen'
+import { theme } from '../theme'
 
 function CatalogoTabScreen() {
   const navigation = useNavigation()
@@ -41,16 +43,16 @@ function CatalogoTabScreen() {
     { label: 'Configuración', icon: 'cog-outline', screen: 'Settings' },
   ]
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#f5f5f5' }} contentContainerStyle={{ padding: 16 }}>
-      <Text variant="titleMedium" style={{ fontWeight: 700, marginBottom: 16 }}>Catálogos y Administración</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: theme.colors.background.page }} contentContainerStyle={{ padding: theme.spacing[4], paddingBottom: theme.spacing[8] }}>
+      <Text variant="titleMedium" style={{ ...theme.typography.title, color: theme.colors.text.primary, marginBottom: theme.spacing[4] }}>Catálogos y Administración</Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing[3] }}>
         {catalogItems.map(item => (
           <Button
             key={item.screen}
             mode="contained"
             icon={item.icon}
             onPress={() => navigation.navigate(item.screen)}
-            style={{ borderRadius: 12, marginBottom: 4, minWidth: '45%', flex: 1 }}
+            style={{ borderRadius: theme.radius.md, marginBottom: theme.spacing[1], minWidth: '45%', flex: 1 }}
             contentStyle={{ height: 56 }}
             labelStyle={{ fontSize: 13, fontWeight: 600 }}
           >
@@ -74,41 +76,41 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         sceneStyle: {
-          backgroundColor: '#f5f5f5',
+          backgroundColor: theme.colors.background.page,
           paddingTop: insets.top,
         },
-        tabBarActiveTintColor: '#1565C0',
-        tabBarInactiveTintColor: '#888',
+        tabBarActiveTintColor: theme.colors.action.primary,
+        tabBarInactiveTintColor: theme.colors.text.tertiary,
         tabBarStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: theme.colors.background.paper,
           borderTopWidth: 1,
-          borderTopColor: '#e0e0e0',
-          height: 60 + insets.bottom,
-          paddingTop: 4,
-          paddingBottom: Math.max(insets.bottom, 4),
+          borderTopColor: theme.colors.border.subtle,
+          height: 68 + insets.bottom,
+          paddingTop: theme.spacing[1],
+          paddingBottom: Math.max(insets.bottom, theme.spacing[1]),
         },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: 500 },
+        tabBarLabelStyle: { ...theme.typography.caption, fontFamily: theme.fontFamily.medium },
       }}
     >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ tabBarLabel: 'Inicio', tabBarIcon: ({ color, size }) => <IconButton icon="home" size={size} iconColor={color} /> }}
+        options={{ tabBarLabel: 'Inicio', tabBarIcon: ({ color, size }) => <Icon source="home" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="EquiposList"
         component={EquiposListScreen}
-        options={{ tabBarLabel: 'Equipos', tabBarIcon: ({ color, size }) => <IconButton icon="warehouse" size={size} iconColor={color} /> }}
+        options={{ tabBarLabel: 'Equipos', tabBarIcon: ({ color, size }) => <Icon source="warehouse" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="Catalogo"
         component={CatalogoTabScreen}
-        options={{ tabBarLabel: 'Catálogos', tabBarIcon: ({ color, size }) => <IconButton icon="bookmark" size={size} iconColor={color} /> }}
+        options={{ tabBarLabel: 'Catálogos', tabBarIcon: ({ color, size }) => <Icon source="bookmark" size={size} color={color} /> }}
       />
       <Tab.Screen
         name="Perfil"
         component={PerfilScreen}
-        options={{ tabBarLabel: 'Perfil', tabBarIcon: ({ color, size }) => <IconButton icon="account" size={size} iconColor={color} /> }}
+        options={{ tabBarLabel: 'Perfil', tabBarIcon: ({ color, size }) => <Icon source="account" size={size} color={color} /> }}
       />
     </Tab.Navigator>
   )
@@ -118,9 +120,9 @@ function MainNavigator() {
   return (
     <MainStack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: '#1565C0' },
-        headerTintColor: '#fff',
-        headerTitleStyle: { fontWeight: 600 },
+        headerStyle: { backgroundColor: theme.colors.action.primary },
+        headerTintColor: theme.colors.text.inverse,
+        headerTitleStyle: { fontFamily: theme.fontFamily.semiBold, fontWeight: 'normal' },
       }}
     >
       <MainStack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
@@ -156,9 +158,7 @@ export default function AppNavigator() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' }}>
-        <ActivityIndicator size="large" color="#1565C0" />
-      </View>
+      <LoadingScreen message="Preparando la aplicación" />
     )
   }
 

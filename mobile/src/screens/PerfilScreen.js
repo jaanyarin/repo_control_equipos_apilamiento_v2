@@ -4,6 +4,7 @@ import { Text, Surface, Button, Avatar, IconButton, Divider } from 'react-native
 import { useAuth } from '../AuthContext'
 import { removeToken } from '../api'
 import ErrorBoundary from '../components/ErrorBoundary'
+import { theme } from '../theme'
 
 export default function PerfilScreen() {
   const { user, logout } = useAuth()
@@ -26,7 +27,7 @@ export default function PerfilScreen() {
     <ErrorBoundary>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <Surface style={styles.profileCard}>
-          <Avatar.Icon size={72} icon="account" color="#fff" style={styles.avatar} />
+          <Avatar.Icon size={72} icon="account" color={theme.colors.text.inverse} style={styles.avatar} />
           <Text variant="titleLarge" style={styles.name}>
             {user?.nombre || 'Usuario'}
           </Text>
@@ -70,7 +71,7 @@ export default function PerfilScreen() {
 
         <Button
           mode="contained"
-          buttonColor="#d32f2f"
+          buttonColor={theme.colors.status.error}
           icon="logout"
           onPress={handleLogout}
           style={styles.logoutButton}
@@ -86,7 +87,7 @@ export default function PerfilScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background.page,
   },
   content: {
     padding: 16,
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   avatar: {
-    backgroundColor: '#1565C0',
+    backgroundColor: theme.colors.action.primary,
     marginBottom: 12,
   },
   name: {

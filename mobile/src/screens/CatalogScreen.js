@@ -1,11 +1,18 @@
 import React, { useState, useCallback } from 'react'
-import { View, FlatList, RefreshControl, Modal, StyleSheet, ScrollView, Alert } from 'react-native'
-import { Card, Text, TextInput, Button, Searchbar, FAB, Portal, Dialog, Surface, IconButton, ActivityIndicator } from 'react-native-paper'
+import { View, FlatList, RefreshControl, StyleSheet, ScrollView, Alert } from 'react-native'
+import { Text, Searchbar, FAB, Portal, Dialog } from 'react-native-paper'
 import { useFocusEffect } from '@react-navigation/native'
 import api from '../api'
 import LoadingScreen from '../components/LoadingScreen'
 import EmptyState from '../components/EmptyState'
 import ErrorBoundary from '../components/ErrorBoundary'
+import AppCard from '../components/AppCard'
+import AppInput from '../components/AppInput'
+import AppTextArea from '../components/AppTextArea'
+import AppButton from '../components/AppButton'
+import AppIconButton from '../components/AppIconButton'
+import ErrorState from '../components/ErrorState'
+import { theme } from '../theme'
 
 export default function CatalogScreen({ title, endpoint, searchPlaceholder, searchFields, emptyMessage, fields }) {
   const [items, setItems] = useState([])
@@ -107,8 +114,8 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
   })
 
   const renderItem = ({ item }) => (
-    <Card style={styles.card} onPress={() => openEdit(item)}>
-      <Card.Content style={styles.cardContent}>
+    <AppCard style={styles.card} onPress={() => openEdit(item)} accessibilityLabel={`Editar ${title}: ${item[fields[0]?.key] || item.nombre || item.id}`}>
+      <View style={styles.cardContent}>
         <View style={styles.cardRow}>
           <View style={styles.cardInfo}>
             {fields.map(f => (
@@ -117,10 +124,10 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
               </Text>
             ))}
           </View>
-          <IconButton icon="delete" iconColor="#d32f2f" size={20} onPress={() => handleDelete(item)} />
+          <AppIconButton icon="delete-outline" iconColor={theme.colors.status.error} size={20} accessibilityLabel={`Eliminar ${item[fields[0]?.key] || item.nombre || item.id}`} onPress={() => handleDelete(item)} />
         </View>
-      </Card.Content>
-    </Card>
+      </View>
+    </AppCard>
   )
 
   if (loading && items.length === 0) return <LoadingScreen />
@@ -135,7 +142,7 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
           style={styles.searchbar}
         />
         {error ? (
-          <EmptyState icon="alert" title="Error" subtitle={error} />
+          <ErrorState title={`Error al cargar ${title.toLowerCase()}`} message={error} onRetry={fetchItems} />
         ) : (
           <FlatList
             data={filtered}
@@ -143,7 +150,7 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
             renderItem={renderItem}
             contentContainerStyle={styles.list}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1565C0']} />
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.action.primary]} />
             }
             ListEmptyComponent={
               <EmptyState
@@ -162,24 +169,17 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
             <Dialog.ScrollArea>
               <ScrollView>
                 {fields.map(f => (
-                  <TextInput
-                    key={f.key}
-                    label={f.label}
-                    mode="outlined"
-                    value={formData[f.key] || ''}
-                    onChangeText={(v) => setFormData(prev => ({ ...prev, [f.key]: v }))}
-                    style={styles.dialogInput}
-                    multiline={f.multiline}
-                    numberOfLines={f.multiline ? 3 : 1}
-                  />
+                  f.multiline ? (
+                    <AppTextArea key={f.key} label={f.label} value={formData[f.key] || ''} onChangeText={(v) => setFormData(prev => ({ ...prev, [f.key]: v }))} style={styles.dialogInput} />
+                  ) : (
+                    <AppInput key={f.key} label={f.label} value={formData[f.key] || ''} onChangeText={(v) => setFormData(prev => ({ ...prev, [f.key]: v }))} style={styles.dialogInput} />
+                  )
                 ))}
               </ScrollView>
             </Dialog.ScrollArea>
             <Dialog.Actions>
-              <Button onPress={() => setShowForm(false)}>Cancelar</Button>
-              <Button mode="contained" onPress={handleSave} disabled={saving}>
-                {saving ? <ActivityIndicator color="#fff" size="small" /> : editing ? 'Actualizar' : 'Crear'}
-              </Button>
+              <AppButton variant="text" onPress={() => setShowForm(false)}>Cancelar</AppButton>
+              <AppButton variant="primary" onPress={handleSave} disabled={saving} loading={saving}>{editing ? 'Actualizar' : 'Crear'}</AppButton>
             </Dialog.Actions>
           </Dialog>
         </Portal>
@@ -191,22 +191,22 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background.page,
   },
   searchbar: {
-    margin: 16,
-    borderRadius: 8,
+    margin: theme.spacing[4],
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.background.paper,
   },
   list: {
-    paddingHorizontal: 16,
-    paddingBottom: 80,
+    paddingHorizontal: theme.spacing[4],
+    paddingBottom: theme.spacing[8] + theme.spacing[12],
   },
   card: {
-    borderRadius: 12,
-    marginBottom: 8,
+    marginBottom: theme.spacing[2],
   },
   cardContent: {
-    paddingVertical: 12,
+    padding: 0,
   },
   cardRow: {
     flexDirection: 'row',
@@ -217,23 +217,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   primaryText: {
-    fontWeight: 700,
+    ...theme.typography.subtitle,
+    color: theme.colors.text.primary,
   },
   secondaryText: {
-    opacity: 0.7,
-    marginTop: 2,
+    ...theme.typography.body,
+    color: theme.colors.text.secondary,
+    marginTop: theme.spacing[1],
   },
   fab: {
     position: 'absolute',
-    right: 16,
-    bottom: 16,
-    borderRadius: 16,
-    backgroundColor: '#1565C0',
+    right: theme.spacing[4],
+    bottom: theme.spacing[4],
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.action.primary,
   },
   dialog: {
     maxHeight: '80%',
   },
   dialogInput: {
-    marginBottom: 12,
+    marginBottom: theme.spacing[3],
   },
 })

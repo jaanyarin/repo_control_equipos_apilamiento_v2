@@ -1,11 +1,15 @@
 import React, { useState, useCallback } from 'react'
 import { View, FlatList, RefreshControl, StyleSheet } from 'react-native'
-import { Card, Text, TextInput, Chip, TouchableRipple, Searchbar } from 'react-native-paper'
+import { Text, TouchableRipple, Searchbar } from 'react-native-paper'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import api from '../api'
 import LoadingScreen from '../components/LoadingScreen'
 import EmptyState from '../components/EmptyState'
 import ErrorBoundary from '../components/ErrorBoundary'
+import AppCard from '../components/AppCard'
+import StatusChip from '../components/StatusChip'
+import ErrorState from '../components/ErrorState'
+import { theme } from '../theme'
 
 export default function EquiposListScreen() {
   const [equipos, setEquipos] = useState([])
@@ -50,35 +54,20 @@ export default function EquiposListScreen() {
     )
   })
 
-  const chipColor = (estado) => {
-    switch (estado) {
-      case 'OPERATIVO':
-        return '#2e7d32'
-      case 'AVERIADO':
-        return '#d32f2f'
-      default:
-        return '#888'
-    }
-  }
+  const statusType = (estado) => estado === 'OPERATIVO' ? 'active' : estado === 'AVERIADO' ? 'fault' : 'cancelled'
 
   const renderItem = ({ item }) => (
     <TouchableRipple
       onPress={() => navigation.navigate('EquipoDetail', { id: item.id })}
       style={styles.cardWrapper}
     >
-      <Card style={styles.card}>
-        <Card.Content style={styles.cardContent}>
+      <AppCard style={styles.card} accessibilityLabel={`Equipo ${item.codigo || 'sin código'}`}>
+        <View style={styles.cardContent}>
           <View style={styles.cardHeader}>
             <Text variant="titleMedium" style={styles.cardTitle}>
               {item.codigo || 'Sin código'}
             </Text>
-            <Chip
-              mode="flat"
-              textStyle={{ color: '#fff', fontSize: 12, fontWeight: 600 }}
-              style={{ backgroundColor: chipColor(item.estadoOperativo) }}
-            >
-              {item.estadoOperativo || 'DESCONOCIDO'}
-            </Chip>
+            <StatusChip status={statusType(item.estadoOperativo)} label={item.estadoOperativo || 'DESCONOCIDO'} />
           </View>
           <Text variant="bodyMedium" style={styles.cardModel}>
             {item.modelo || 'Sin modelo'}
@@ -88,8 +77,8 @@ export default function EquiposListScreen() {
               {item.tipoEquipo.nombre}
             </Text>
           ) : null}
-        </Card.Content>
-      </Card>
+        </View>
+      </AppCard>
     </TouchableRipple>
   )
 
@@ -105,7 +94,7 @@ export default function EquiposListScreen() {
           style={styles.searchbar}
         />
         {error ? (
-          <EmptyState icon="alert" title="Error al cargar" subtitle={error} />
+          <ErrorState title="Error al cargar equipos" message={error} onRetry={fetchEquipos} />
         ) : (
           <FlatList
             data={filteredEquipos}
@@ -113,7 +102,7 @@ export default function EquiposListScreen() {
             renderItem={renderItem}
             contentContainerStyle={styles.list}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1565C0']} />
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.action.primary]} />
             }
             ListEmptyComponent={
               <EmptyState
@@ -132,42 +121,46 @@ export default function EquiposListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background.page,
   },
   searchbar: {
-    margin: 16,
-    borderRadius: 8,
+    margin: theme.spacing[4],
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.background.paper,
   },
   list: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: theme.spacing[4],
+    paddingBottom: theme.spacing[6],
   },
   cardWrapper: {
-    marginBottom: 8,
-    borderRadius: 12,
+    marginBottom: theme.spacing[3],
+    borderRadius: theme.radius.md,
   },
   card: {
-    borderRadius: 12,
+    padding: 0,
   },
   cardContent: {
-    paddingVertical: 12,
+    padding: theme.spacing[4],
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: theme.spacing[1],
   },
   cardTitle: {
-    fontWeight: 700,
+    ...theme.typography.subtitle,
+    color: theme.colors.text.primary,
     flex: 1,
-    marginRight: 8,
+    marginRight: theme.spacing[2],
   },
   cardModel: {
-    opacity: 0.7,
+    ...theme.typography.body,
+    color: theme.colors.text.secondary,
   },
   cardMeta: {
-    opacity: 0.5,
-    marginTop: 2,
+    ...theme.typography.caption,
+    color: theme.colors.text.tertiary,
+    marginTop: theme.spacing[1],
   },
 })

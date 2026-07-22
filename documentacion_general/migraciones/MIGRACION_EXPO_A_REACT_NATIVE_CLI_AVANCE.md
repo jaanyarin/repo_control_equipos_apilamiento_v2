@@ -114,3 +114,32 @@ Fecha: 2026-07-21
 - El Bottom Tab usa el inset inferior real de Android para evitar superposicion con la barra de navegacion del dispositivo.
 - Las escenas principales del Bottom Tab reservan el inset superior real y la barra de estado usa fondo no translucido, evitando superposicion con la barra de notificaciones.
 - El login usa `ScrollView` y padding de area segura superior/inferior; sus acciones permanecen visibles y desplazables al abrir la configuracion del servidor o el teclado.
+
+## Aplicacion del sistema de diseno Mobile Vanguard
+
+Fecha: 2026-07-21
+
+- Se aplico el orden de implementacion definido en el apartado 30 de `documentacion_general/base/DESIGN_SYSTEM_MOBILE_VANGUARD.md`.
+- Se centralizaron color, tipografia, espaciado, radios, sombras y estados en `mobile/src/theme/index.js`; no quedan colores literales fuera del tema.
+- Se incorporaron las variantes oficiales Poppins Regular, Medium, SemiBold y Bold en `mobile/android/app/src/main/assets/fonts/`, junto con su licencia OFL.
+- Se crearon componentes reutilizables para botones, campos, selector, tarjetas, cabecera, chips de estado, navegacion inferior, confirmacion, toast y estados loading/empty/error.
+- Login y Home se migraron primero; despues PSR, Equipos, detalle de equipo, registro y atencion de averias; finalmente catalogos, administracion, perfil, configuracion y navegacion.
+- Se conservaron rutas, endpoints, payloads, autenticacion, validaciones React Hook Form + Zod y reglas de visibilidad por rol.
+- La barra inferior usa 68 dp mas el inset inferior y las escenas respetan el inset superior del dispositivo.
+- Se agrego configuracion ESLint local para ejecutar `npm run lint` sin cambiar dependencias ni versiones mayores.
+- Validaciones JavaScript: `npm run lint` correcto y 3 suites Jest / 7 pruebas aprobadas.
+- El bundle Android de Metro se genero correctamente, resolviendo JSX, imports y 26 activos.
+- La compilacion Gradle alcanzo CMake sin errores de codigo, pero Ninja rechazo rutas fisicas mayores a 260 caracteres. La unidad temporal y los caches de prueba fueron retirados; para regenerar el APK se mantiene la solucion ya validada de copiar el proyecto a una ruta fisica corta como `C:\rn` antes de ejecutar Gradle.
+
+## Instalacion Wi-Fi posterior a Vanguard
+
+Fecha: 2026-07-22
+
+- Se preparo una copia fisica corta en `C:\rn-mobile-vanguard` para evitar MAX_PATH de Ninja/CMake.
+- Se normalizaron exclusivamente workspaces temporales de Gradle bloqueados por Sophos; no se modificaron versiones ni dependencias del proyecto.
+- Se agrego la tarea oficial `fonts.gradle` de `react-native-vector-icons` en `mobile/android/app/build.gradle` para empaquetar correctamente los iconos MaterialCommunityIcons.
+- Gradle finalizo con `BUILD SUCCESSFUL` para `arm64-v8a`.
+- APK generado y copiado a `mobile/android/app/build/outputs/apk/debug/app-debug.apk` (42,827,009 bytes; SHA-256 `6858E8C20B247E2EA922E72A59E80663AF7A0F248487230A2C29457FAA052606`).
+- Instalacion ADB Wi-Fi finalizada con `Success` en el dispositivo Android `24049RN28L`.
+- Se activaron `adb reverse tcp:8081 tcp:8081` para Metro y `adb reverse tcp:8082 tcp:8082` para la API.
+- Se verifico visualmente el login Vanguard, la carga de perfiles, Poppins, los iconos y las areas seguras superior e inferior.

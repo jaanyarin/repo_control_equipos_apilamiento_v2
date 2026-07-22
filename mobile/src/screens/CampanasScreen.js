@@ -6,13 +6,14 @@ import api from '../api'
 import LoadingScreen from '../components/LoadingScreen'
 import EmptyState from '../components/EmptyState'
 import ErrorBoundary from '../components/ErrorBoundary'
+import { theme } from '../theme'
 
 const statusColor = (estado) => {
-  if (!estado) return '#888'
+  if (!estado) return theme.colors.status.neutral
   const e = estado.toLowerCase()
-  if (e === 'activo') return '#2e7d32'
-  if (e === 'cerrado') return '#d32f2f'
-  return '#e65100'
+  if (e === 'activo') return theme.colors.status.success
+  if (e === 'cerrado') return theme.colors.status.error
+  return theme.colors.status.warning
 }
 
 export default function CampanasScreen() {
@@ -75,7 +76,7 @@ export default function CampanasScreen() {
             <Text variant="titleMedium" style={styles.cardTitle}>{item.nombre || 'Sin nombre'}</Text>
             {item.codigo ? <Text variant="bodySmall" style={styles.cardMeta}>Código: {item.codigo}</Text> : null}
           </View>
-          <Chip mode="flat" textStyle={{ color: '#fff', fontSize: 11, fontWeight: 600 }}
+          <Chip mode="flat" textStyle={{ color: theme.colors.text.inverse, fontSize: 11, fontWeight: 600 }}
             style={{ backgroundColor: statusColor(item.estado) }}
           >
             {item.estado || 'DESCONOCIDO'}
@@ -91,15 +92,15 @@ export default function CampanasScreen() {
         </View>
         <View style={styles.actions}>
           {(item.estado === 'ACTIVO' || item.estado === 'activo') ? (
-            <Button mode="outlined" textColor="#d32f2f" compact onPress={() => handleCerrar(item)}>
+            <Button mode="outlined" textColor={theme.colors.status.error} compact onPress={() => handleCerrar(item)}>
               Cerrar
             </Button>
           ) : (
-            <Button mode="outlined" textColor="#2e7d32" compact onPress={() => handleActivar(item)}>
+            <Button mode="outlined" textColor={theme.colors.status.success} compact onPress={() => handleActivar(item)}>
               Activar
             </Button>
           )}
-          <IconButton icon="delete" iconColor="#d32f2f" size={20} onPress={() => handleDelete(item)} />
+          <IconButton icon="delete" iconColor={theme.colors.status.error} size={20} onPress={() => handleDelete(item)} />
         </View>
       </Card.Content>
     </Card>
@@ -119,7 +120,7 @@ export default function CampanasScreen() {
             keyExtractor={(item) => String(item.id)}
             renderItem={renderItem}
             contentContainerStyle={styles.list}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1565C0']} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.action.primary]} />}
             ListEmptyComponent={<EmptyState icon="calendar" title={search ? 'Sin resultados' : 'No hay campañas'} subtitle={search ? 'Intenta con otro término' : 'Aún no se han registrado campañas'} />}
           />
         )}
@@ -129,7 +130,7 @@ export default function CampanasScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: theme.colors.background.page },
   searchbar: { margin: 16, borderRadius: 8 },
   list: { paddingHorizontal: 16, paddingBottom: 16 },
   card: { borderRadius: 12, marginBottom: 8 },
