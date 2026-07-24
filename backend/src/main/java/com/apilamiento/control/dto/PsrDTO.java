@@ -7,7 +7,9 @@ import java.time.OffsetDateTime;
 public class PsrDTO {
     private Long id;
     private Long campanaId;
+    private String campanaNombre;
     private Long sedeId;
+    private String sedeNombre;
     private String numeroPsr;
     private LocalDate fechaPsr;
     private Long motivoId;
@@ -22,6 +24,7 @@ public class PsrDTO {
     private Long usuarioActualizacion;
     private OffsetDateTime fechaCreacion;
     private OffsetDateTime fechaActualizacion;
+    private OsrDTO osr;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -29,8 +32,14 @@ public class PsrDTO {
     public Long getCampanaId() { return campanaId; }
     public void setCampanaId(Long campanaId) { this.campanaId = campanaId; }
 
+    public String getCampanaNombre() { return campanaNombre; }
+    public void setCampanaNombre(String campanaNombre) { this.campanaNombre = campanaNombre; }
+
     public Long getSedeId() { return sedeId; }
     public void setSedeId(Long sedeId) { this.sedeId = sedeId; }
+
+    public String getSedeNombre() { return sedeNombre; }
+    public void setSedeNombre(String sedeNombre) { this.sedeNombre = sedeNombre; }
 
     public String getNumeroPsr() { return numeroPsr; }
     public void setNumeroPsr(String numeroPsr) { this.numeroPsr = numeroPsr; }
@@ -73,4 +82,7 @@ public class PsrDTO {
 
     public OffsetDateTime getFechaActualizacion() { return fechaActualizacion; }
     public void setFechaActualizacion(OffsetDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
+
+    public OsrDTO getOsr() { return osr; }
+    public void setOsr(OsrDTO osr) { this.osr = osr; }
 }

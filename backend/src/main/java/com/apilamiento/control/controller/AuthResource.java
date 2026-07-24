@@ -3,9 +3,15 @@ package com.apilamiento.control.controller;
 import com.apilamiento.control.service.AuthService;
 import com.apilamiento.control.service.LocalAuthService;
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.SecurityContext;
+import com.apilamiento.control.dto.ChangePasswordRequest;
+import com.apilamiento.control.security.SecurityUtil;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -69,25 +75,16 @@ public class AuthResource {
 
     @POST
     @Path("/change-password")
-    public Response changePassword(Map<String, String> body) {
-        String usuarioIdStr = body.get("usuarioId");
-        String newPassword = body.get("newPassword");
-
-        if (usuarioIdStr == null || newPassword == null || newPassword.isBlank()) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(Map.of("error", "usuarioId y newPassword requeridos")).build();
+    @RolesAllowed({"Super Admin", "Admin", "Usuario"})
+    public Response changePassword(@Valid ChangePasswordRequest request,
+                                   @Context SecurityContext securityContext) {
+        Long usuarioId = SecurityUtil.getUsuarioId(securityContext);
+        if (usuarioId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("error", "Token de usuario inválido")).build();
         }
-
-        Long usuarioId;
         try {
-            usuarioId = Long.parseLong(usuarioIdStr);
-        } catch (NumberFormatException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(Map.of("error", "usuarioId inválido")).build();
-        }
-
-        try {
-            Map<String, Object> result = localAuthService.changePassword(usuarioId, newPassword);
+            Map<String, Object> result = localAuthService.changePassword(usuarioId, request.getNewPassword());
             return Response.ok(result).build();
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST)

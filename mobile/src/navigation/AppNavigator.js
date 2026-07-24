@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { View, ScrollView } from 'react-native'
-import { Icon, Text, Button } from 'react-native-paper'
+import { Icon, Text, Button, IconButton } from 'react-native-paper'
 import { useAuth } from '../AuthContext'
 import LoginScreen from '../LoginScreen'
 import PasswordChangeScreen from '../screens/PasswordChangeScreen'
@@ -23,10 +23,13 @@ import SettingsScreen from '../screens/SettingsScreen'
 import RolesScreen from '../screens/RolesScreen'
 import UsuariosScreen from '../screens/UsuariosScreen'
 import PsrOsrScreen from '../screens/PsrOsrScreen'
+import CreatePsrScreen from '../screens/CreatePsrScreen'
+import CreateEditUserScreen from '../screens/CreateEditUserScreen'
 import MotivosPsrScreen from '../screens/MotivosPsrScreen'
 import AuditoriaScreen from '../screens/AuditoriaScreen'
 import LoadingScreen from '../components/LoadingScreen'
 import { theme } from '../theme'
+import { hasPsrAdminRole } from '../utils/roles'
 
 function CatalogoTabScreen() {
   const navigation = useNavigation()
@@ -117,6 +120,9 @@ function MainTabs() {
 }
 
 function MainNavigator() {
+  const { user } = useAuth()
+  const canManagePsr = hasPsrAdminRole(user)
+
   return (
     <MainStack.Navigator
       screenOptions={{
@@ -127,7 +133,22 @@ function MainNavigator() {
     >
       <MainStack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
       <MainStack.Screen name="EquipoDetail" component={EquipoDetailScreen} options={{ title: 'Detalle de Equipo' }} />
-      <MainStack.Screen name="PsrOsr" component={PsrOsrScreen} options={{ title: 'PSR' }} />
+      <MainStack.Screen name="PsrOsr" component={PsrOsrScreen} options={({ navigation }) => ({
+        title: 'PSR',
+        headerRight: canManagePsr ? () => (
+          <IconButton
+            icon="plus"
+            iconColor={theme.colors.text.inverse}
+            size={24}
+            onPress={() => navigation.navigate('CreatePsr')}
+          />
+        ) : undefined,
+      })} />
+      <MainStack.Screen name="CreatePsr" component={CreatePsrScreen} options={({ route }) => ({
+        title: route.params?.mode === 'osr'
+          ? 'Agregar OSR'
+          : route.params?.psr ? 'Editar PSR' : 'Nuevo PSR',
+      })} />
       <MainStack.Screen name="MotivosPsr" component={MotivosPsrScreen} options={{ title: 'Motivos PSR' }} />
       <MainStack.Screen name="RegistrarAveria" component={RegistrarAveriaScreen} options={{ title: 'Registrar Avería' }} />
       <MainStack.Screen name="AtenderAveria" component={AtenderAveriaScreen} options={{ title: 'Atender Avería' }} />
@@ -138,6 +159,7 @@ function MainNavigator() {
       <MainStack.Screen name="Campanas" component={CampanasScreen} options={{ title: 'Campañas' }} />
       <MainStack.Screen name="Roles" component={RolesScreen} options={{ title: 'Roles' }} />
       <MainStack.Screen name="Usuarios" component={UsuariosScreen} options={{ title: 'Usuarios' }} />
+      <MainStack.Screen name="CreateEditUser" component={CreateEditUserScreen} options={({ route }) => ({ title: route.params?.user ? 'Editar Usuario' : 'Nuevo Usuario' })} />
       <MainStack.Screen name="Auditoria" component={AuditoriaScreen} options={{ title: 'Auditoría' }} />
       <MainStack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Configuración' }} />
     </MainStack.Navigator>
@@ -162,16 +184,22 @@ export default function AppNavigator() {
     )
   }
 
+  const navigationState = !user
+    ? 'login'
+    : user.passwordResetRequired
+      ? `password-change-${user.sub || 'user'}`
+      : `authenticated-${user.sub || 'user'}`
+
   return (
-    <NavigationContainer>
+    <NavigationContainer key={navigationState}>
       {user ? (
         user.passwordResetRequired ? (
-          <AuthNavigator initialRouteName="PasswordChange" />
+          <AuthNavigator key={`password-change-${user.sub || 'user'}`} initialRouteName="PasswordChange" />
         ) : (
           <MainNavigator />
         )
       ) : (
-        <AuthNavigator initialRouteName="Login" />
+        <AuthNavigator key="login" initialRouteName="Login" />
       )}
     </NavigationContainer>
   )

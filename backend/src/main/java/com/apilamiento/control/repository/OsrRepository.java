@@ -12,4 +12,8 @@ public class OsrRepository implements PanacheRepository<Osr> {
     public Optional<Osr> findByPsrId(Long psrId) {
         return find("psrId", psrId).firstResultOptional();
     }
+
+    public Optional<Osr> findByNumeroOsr(String numeroOsr) {
+        return find("numeroOsr", numeroOsr).firstResultOptional();
+    }
 }

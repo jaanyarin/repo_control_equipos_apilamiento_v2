@@ -1,19 +1,36 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useLayoutEffect } from 'react'
 import { View, FlatList, RefreshControl, StyleSheet, Alert } from 'react-native'
-import { Card, Text, TextInput, Button, Searchbar, FAB, Chip, Surface, IconButton, ActivityIndicator } from 'react-native-paper'
-import { useFocusEffect } from '@react-navigation/native'
+import { Card, Text, Searchbar, Chip, IconButton } from 'react-native-paper'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import api from '../api'
+import { useAuth } from '../AuthContext'
 import LoadingScreen from '../components/LoadingScreen'
 import EmptyState from '../components/EmptyState'
 import ErrorBoundary from '../components/ErrorBoundary'
 import { theme } from '../theme'
+import { isSuperAdmin } from '../utils/roles'
 
 export default function UsuariosScreen() {
+  const navigation = useNavigation()
+  const { user } = useAuth()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <IconButton
+          icon="plus"
+          iconColor={theme.colors.text.inverse}
+          size={24}
+          onPress={() => navigation.navigate('CreateEditUser')}
+        />
+      ),
+    })
+  }, [navigation])
 
   const fetch = useCallback(async () => {
     try {
@@ -40,10 +57,14 @@ export default function UsuariosScreen() {
     ])
   }
 
+  const handleEdit = (item) => {
+    navigation.navigate('CreateEditUser', { user: item })
+  }
+
   const rolColor = (rol) => {
     const r = (rol || '').toLowerCase()
-    if (r.includes('super admin')) return theme.colors.secondary.wine
-    if (r === 'admin') return theme.colors.action.primary
+    if (r.includes('super admin')) return theme.secondaryColors.wine
+    if (r.includes('admin')) return theme.colors.action.primary
     return theme.colors.status.success
   }
 
@@ -52,6 +73,15 @@ export default function UsuariosScreen() {
     const q = search.toLowerCase()
     return (item.nombre || '').toLowerCase().includes(q) || (item.correo || '').toLowerCase().includes(q)
   })
+
+  const isTargetSuperAdmin = (item) => {
+    const r = (item.rolNombre || item.rol || '').toLowerCase()
+    return r.includes('super admin')
+  }
+
+  const canModify = (item) => {
+    return isSuperAdmin(user) || !isTargetSuperAdmin(item)
+  }
 
   const renderItem = ({ item }) => (
     <Card style={styles.card}>
@@ -66,7 +96,12 @@ export default function UsuariosScreen() {
               {item.rolNombre || item.rol || 'Sin rol'}
             </Chip>
           </View>
-          <IconButton icon="delete" iconColor={theme.colors.status.error} size={20} onPress={() => handleDelete(item)} />
+          {canModify(item) ? (
+            <View style={styles.actions}>
+              <IconButton icon="pencil" iconColor={theme.colors.action.primary} size={20} onPress={() => handleEdit(item)} />
+              <IconButton icon="delete" iconColor={theme.colors.status.error} size={20} onPress={() => handleDelete(item)} />
+            </View>
+          ) : null}
         </View>
       </Card.Content>
     </Card>
@@ -98,10 +133,11 @@ export default function UsuariosScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background.page },
   searchbar: { margin: 16, borderRadius: 8 },
-  list: { paddingHorizontal: 16, paddingBottom: 16 },
+  list: { paddingHorizontal: 16, paddingBottom: 96 },
   card: { borderRadius: 12, marginBottom: 8 },
   cardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardInfo: { flex: 1, marginRight: 8 },
+  actions: { flexDirection: 'row', alignItems: 'center' },
   nameText: { fontWeight: 700 },
   emailText: { opacity: 0.6, marginTop: 2 },
 })

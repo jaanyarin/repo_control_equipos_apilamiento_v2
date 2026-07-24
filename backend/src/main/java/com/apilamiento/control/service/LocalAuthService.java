@@ -75,8 +75,8 @@ public class LocalAuthService {
 
     @Transactional
     public Map<String, Object> changePassword(Long usuarioId, String newPassword) {
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new RuntimeException("La nueva contraseña debe tener al menos 6 caracteres");
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new RuntimeException("La nueva contraseña debe tener al menos 8 caracteres");
         }
 
         Usuario user = usuarioRepository.findById(usuarioId);
@@ -85,6 +85,9 @@ public class LocalAuthService {
         }
         if (!Boolean.TRUE.equals(user.getEstadoActivo())) {
             throw new RuntimeException("Usuario no activo");
+        }
+        if (BCrypt.checkpw(newPassword, user.getPasswordHash())) {
+            throw new RuntimeException("La nueva contraseña debe ser diferente de la contraseña actual");
         }
 
         String hashed = BCrypt.hashpw(newPassword, BCrypt.gensalt());

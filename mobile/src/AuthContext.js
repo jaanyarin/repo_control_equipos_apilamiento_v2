@@ -9,19 +9,27 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     ;(async () => {
-      const token = await getToken()
-      if (token) setUser(parseToken(token))
-      setLoading(false)
+      try {
+        const token = await getToken()
+        if (token) setUser(parseToken(token))
+      } finally {
+        setLoading(false)
+      }
     })()
   }, [])
 
-  const refreshUser = async () => {
-    const token = await getToken()
-    setUser(parseToken(token))
+  const refreshUser = async (accessToken) => {
+    const token = accessToken || await getToken()
+    const nextUser = parseToken(token)
+    setUser(nextUser)
+    return nextUser
   }
 
   const logout = async () => {
-    await removeToken()
+    try {
+      await removeToken()
+    } catch (_) {
+    }
     setUser(null)
   }
 

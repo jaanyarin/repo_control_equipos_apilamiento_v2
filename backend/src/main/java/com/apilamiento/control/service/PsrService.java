@@ -2,21 +2,31 @@ package com.apilamiento.control.service;
 
 import com.apilamiento.control.dto.PsrDTO;
 import com.apilamiento.control.dto.PsrRequest;
+import com.apilamiento.control.entity.Campana;
 import com.apilamiento.control.entity.MotivoPsr;
+import com.apilamiento.control.entity.Osr;
 import com.apilamiento.control.entity.Psr;
+import com.apilamiento.control.entity.Sede;
 import com.apilamiento.control.mapper.PsrMapper;
+import com.apilamiento.control.mapper.OsrMapper;
+import com.apilamiento.control.repository.CampanaRepository;
 import com.apilamiento.control.repository.MotivoPsrRepository;
+import com.apilamiento.control.repository.OsrRepository;
 import com.apilamiento.control.repository.PsrRepository;
+import com.apilamiento.control.repository.SedeRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.Period;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 @ApplicationScoped
 public class PsrService {
@@ -26,18 +36,27 @@ public class PsrService {
     private final PsrRepository psrRepository;
     private final MotivoPsrRepository motivoRepository;
     private final PsrMapper mapper;
+    private final OsrRepository osrRepository;
+    private final OsrMapper osrMapper;
+    private final CampanaRepository campanaRepository;
+    private final SedeRepository sedeRepository;
 
-    public PsrService(PsrRepository psrRepository, MotivoPsrRepository motivoRepository, PsrMapper mapper) {
+    public PsrService(PsrRepository psrRepository, MotivoPsrRepository motivoRepository,
+                      PsrMapper mapper, OsrRepository osrRepository, OsrMapper osrMapper,
+                      CampanaRepository campanaRepository, SedeRepository sedeRepository) {
         this.psrRepository = psrRepository;
         this.motivoRepository = motivoRepository;
         this.mapper = mapper;
+        this.osrRepository = osrRepository;
+        this.osrMapper = osrMapper;
+        this.campanaRepository = campanaRepository;
+        this.sedeRepository = sedeRepository;
     }
 
     public List<PsrDTO> listarTodas() {
         List<PsrDTO> result = new ArrayList<>();
         for (Psr psr : psrRepository.listAll()) {
-            MotivoPsr motivo = motivoRepository.findByIdOptional(psr.getMotivoId()).orElse(null);
-            result.add(mapper.toDTO(psr, motivo));
+            result.add(toDTO(psr));
         }
         return result;
     }
@@ -45,13 +64,35 @@ public class PsrService {
     public PsrDTO buscarPorId(Long id) {
         Psr psr = psrRepository.findById(id);
         if (psr == null) return null;
+        return toDTO(psr);
+    }
+
+    private PsrDTO toDTO(Psr psr) {
         MotivoPsr motivo = motivoRepository.findByIdOptional(psr.getMotivoId()).orElse(null);
-        return mapper.toDTO(psr, motivo);
+        PsrDTO dto = mapper.toDTO(psr, motivo);
+        Campana campana = campanaRepository.findByIdOptional(psr.getCampanaId()).orElse(null);
+        Sede sede = sedeRepository.findByIdOptional(psr.getSedeId()).orElse(null);
+        if (campana != null) dto.setCampanaNombre(campana.getNombre());
+        if (sede != null) dto.setSedeNombre(sede.getNombre());
+        osrRepository.findByPsrId(psr.getId())
+                .map(osrMapper::toDTO)
+                .ifPresent(dto::setOsr);
+        return dto;
     }
 
     private BigDecimal calcularMeses(LocalDate inicio, LocalDate fin) {
-        long dias = ChronoUnit.DAYS.between(inicio, fin);
-        return BigDecimal.valueOf(dias).divide(DIAS_POR_MES, 2, RoundingMode.HALF_UP);
+        if (fin.isBefore(inicio)) {
+            throw new WebApplicationException(
+                    "La fecha de fin debe ser igual o posterior a la fecha de inicio",
+                    Response.Status.BAD_REQUEST);
+        }
+        Period periodo = Period.between(inicio, fin.plusDays(1));
+        long mesesCompletos = periodo.toTotalMonths();
+        BigDecimal fraccionDias = BigDecimal.valueOf(periodo.getDays())
+                .divide(DIAS_POR_MES, 8, RoundingMode.HALF_UP);
+        return BigDecimal.valueOf(mesesCompletos)
+                .add(fraccionDias)
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     @Transactional
@@ -70,8 +111,7 @@ public class PsrService {
         psr.setUsuarioCreacion(request.getUsuarioCreacion() != null ? request.getUsuarioCreacion() : 1L);
         psrRepository.persist(psr);
 
-        MotivoPsr motivo = motivoRepository.findByIdOptional(psr.getMotivoId()).orElse(null);
-        return mapper.toDTO(psr, motivo);
+        return toDTO(psr);
     }
 
     @Transactional
@@ -79,9 +119,15 @@ public class PsrService {
         Psr psr = psrRepository.findById(id);
         if (psr == null) return null;
 
+        if (request.getNumeroPsr() != null
+                && !Objects.equals(psr.getNumeroPsr(), request.getNumeroPsr().trim())) {
+            throw new WebApplicationException(
+                    "El número de PSR es único y no se puede modificar",
+                    Response.Status.BAD_REQUEST);
+        }
+
         if (request.getCampanaId() != null) psr.setCampanaId(request.getCampanaId());
         if (request.getSedeId() != null) psr.setSedeId(request.getSedeId());
-        if (request.getNumeroPsr() != null) psr.setNumeroPsr(request.getNumeroPsr());
         if (request.getFechaPsr() != null) psr.setFechaPsr(request.getFechaPsr());
         if (request.getMotivoId() != null) psr.setMotivoId(request.getMotivoId());
         if (request.getFechaInicioUso() != null) psr.setFechaInicioUso(request.getFechaInicioUso());
@@ -93,8 +139,19 @@ public class PsrService {
         psr.setUsuarioActualizacion(request.getUsuarioActualizacion() != null ? request.getUsuarioActualizacion() : 1L);
         psr.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
 
-        MotivoPsr motivo = motivoRepository.findByIdOptional(psr.getMotivoId()).orElse(null);
-        return mapper.toDTO(psr, motivo);
+        if (request.getOsr() != null) {
+            Osr osr = osrRepository.findByPsrId(id)
+                    .orElseThrow(() -> new WebApplicationException(
+                            "La OSR relacionada no existe",
+                            Response.Status.BAD_REQUEST));
+            osr.setCostoUnitario(request.getOsr().getCostoUnitario());
+            osr.setTipoMoneda(request.getOsr().getTipoMoneda());
+            osr.setUsuarioActualizacion(
+                    request.getUsuarioActualizacion() != null ? request.getUsuarioActualizacion() : 1L);
+            osr.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+        }
+
+        return toDTO(psr);
     }
 
     @Transactional

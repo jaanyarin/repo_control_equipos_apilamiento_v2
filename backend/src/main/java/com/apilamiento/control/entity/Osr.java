@@ -1,6 +1,7 @@
 package com.apilamiento.control.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -16,7 +17,7 @@ public class Osr {
     @Column(name = "psr_id", nullable = false, unique = true)
     private Long psrId;
 
-    @Column(name = "equipo_id", nullable = false)
+    @Column(name = "equipo_id")
     private Long equipoId;
 
     @Column(name = "numero_osr", unique = true, length = 100)
@@ -24,6 +25,12 @@ public class Osr {
 
     @Column(name = "fecha_osr")
     private LocalDate fechaOsr;
+
+    @Column(name = "costo_unitario", precision = 14, scale = 2)
+    private BigDecimal costoUnitario;
+
+    @Column(name = "tipo_moneda", length = 3)
+    private String tipoMoneda;
 
     @Column(columnDefinition = "TEXT")
     private String observaciones;
@@ -60,6 +67,12 @@ public class Osr {
 
     public LocalDate getFechaOsr() { return fechaOsr; }
     public void setFechaOsr(LocalDate fechaOsr) { this.fechaOsr = fechaOsr; }
+
+    public BigDecimal getCostoUnitario() { return costoUnitario; }
+    public void setCostoUnitario(BigDecimal costoUnitario) { this.costoUnitario = costoUnitario; }
+
+    public String getTipoMoneda() { return tipoMoneda; }
+    public void setTipoMoneda(String tipoMoneda) { this.tipoMoneda = tipoMoneda; }
 
     public String getObservaciones() { return observaciones; }
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }

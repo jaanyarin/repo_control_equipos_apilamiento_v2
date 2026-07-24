@@ -1,0 +1,81 @@
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+export function extractApiList(response, catalogName) {
+  const body = response?.data ?? response
+
+  if (body && typeof body === 'object' && body.success === false) {
+    throw new Error(body.message || `No se pudo cargar ${catalogName}`)
+  }
+
+  const list = body && typeof body === 'object' && 'data' in body
+    ? body.data
+    : body
+
+  if (!Array.isArray(list)) {
+    throw new Error(`La respuesta de ${catalogName} no contiene un listado válido`)
+  }
+
+  return list
+}
+
+export function getActiveCampanaId(campanas) {
+  const activeCampana = campanas.find(campana => campana.estadoActivo === true)
+  const activeCampanaId = activeCampana?.id ?? activeCampana?.campana
+  return activeCampanaId != null ? String(activeCampanaId) : ''
+}
+
+export function formatDisplayDate(dateStr) {
+  if (!ISO_DATE_PATTERN.test(dateStr || '')) return ''
+  const [year, month, day] = dateStr.split('-')
+  return `${day}/${month}/${year}`
+}
+
+export function formatApiDate(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+export function parseApiDate(dateStr) {
+  if (!ISO_DATE_PATTERN.test(dateStr || '')) return new Date()
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+export function isValidApiDate(dateStr) {
+  if (!ISO_DATE_PATTERN.test(dateStr || '')) return false
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const parsed = new Date(year, month - 1, day)
+  return parsed.getFullYear() === year
+    && parsed.getMonth() === month - 1
+    && parsed.getDate() === day
+}
+
+export function calcularMeses(inicio, fin) {
+  if (!isValidApiDate(inicio) || !isValidApiDate(fin)) return ''
+  const [startYear, startMonth, startDay] = inicio.split('-').map(Number)
+  const [endYear, endMonth, endDay] = fin.split('-').map(Number)
+  const start = new Date(Date.UTC(startYear, startMonth - 1, startDay))
+  const endExclusive = new Date(Date.UTC(endYear, endMonth - 1, endDay + 1))
+  if (endExclusive <= start) return ''
+
+  const addMonthsClamped = months => {
+    const targetMonth = startMonth - 1 + months
+    const targetYear = startYear + Math.floor(targetMonth / 12)
+    const normalizedMonth = ((targetMonth % 12) + 12) % 12
+    const lastDay = new Date(Date.UTC(targetYear, normalizedMonth + 1, 0)).getUTCDate()
+    return new Date(Date.UTC(targetYear, normalizedMonth, Math.min(startDay, lastDay)))
+  }
+
+  let completeMonths = (endExclusive.getUTCFullYear() - startYear) * 12
+    + endExclusive.getUTCMonth() - (startMonth - 1)
+  let anchor = addMonthsClamped(completeMonths)
+  if (anchor > endExclusive) {
+    completeMonths -= 1
+    anchor = addMonthsClamped(completeMonths)
+  }
+
+  const remainingDays = (endExclusive - anchor) / (1000 * 60 * 60 * 24)
+  return (completeMonths + remainingDays / 30.44).toFixed(2)
+}

@@ -14,8 +14,8 @@ export default function PasswordChangeScreen() {
   const [success, setSuccess] = useState(false)
 
   const handleChangePassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres')
+    if (!newPassword || newPassword.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres')
       return
     }
     if (newPassword !== confirmPassword) {
@@ -26,21 +26,22 @@ export default function PasswordChangeScreen() {
     setError('')
     try {
       const { data } = await api.post('/auth/change-password', {
-        usuarioId: user.sub,
         newPassword,
       })
       await setToken(data.token)
       setSuccess(true)
-      await refreshUser()
+      await refreshUser(data.token)
     } catch (e) {
-      setError(e.response?.data?.error || 'Error al cambiar contraseña')
+      const errMsg = e.response?.data?.error || e.message || 'Error al cambiar contraseña'
+      console.error('[PasswordChange]', e?.response?.status, errMsg)
+      setError(errMsg)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleCancel = async () => {
-    await logout()
+  const handleCancel = () => {
+    logout().catch(() => {})
   }
 
   return (

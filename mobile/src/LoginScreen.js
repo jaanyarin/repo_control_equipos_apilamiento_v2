@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { View, ScrollView, StyleSheet, ImageBackground, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text, Divider } from 'react-native-paper'
-import api, { setToken, parseToken, loadApiUrl, setApiUrl, BUILT_IN_API_URL } from './api'
+import api, { setToken, loadApiUrl, setApiUrl, BUILT_IN_API_URL } from './api'
 import { useAuth } from './AuthContext'
 import AppButton from './components/AppButton'
 import AppCard from './components/AppCard'
@@ -65,12 +65,7 @@ export default function LoginScreen() {
         password,
       })
       await setToken(data.token)
-      const parsed = parseToken(data.token)
-      if (parsed?.passwordResetRequired) {
-        refreshUser()
-      } else {
-        await refreshUser()
-      }
+      await refreshUser(data.token)
     } catch (e) {
       setError(e.response?.data?.error || 'Error al iniciar sesión')
     } finally {

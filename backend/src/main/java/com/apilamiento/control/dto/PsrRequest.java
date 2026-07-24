@@ -2,6 +2,7 @@ package com.apilamiento.control.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 import java.time.LocalDate;
 
 public class PsrRequest {
@@ -31,6 +32,8 @@ public class PsrRequest {
 
     private Long usuarioCreacion;
     private Long usuarioActualizacion;
+    @Valid
+    private OsrUpdateRequest osr;
 
     public Long getCampanaId() { return campanaId; }
     public void setCampanaId(Long campanaId) { this.campanaId = campanaId; }
@@ -61,4 +64,7 @@ public class PsrRequest {
 
     public Long getUsuarioActualizacion() { return usuarioActualizacion; }
     public void setUsuarioActualizacion(Long usuarioActualizacion) { this.usuarioActualizacion = usuarioActualizacion; }
+
+    public OsrUpdateRequest getOsr() { return osr; }
+    public void setOsr(OsrUpdateRequest osr) { this.osr = osr; }
 }
