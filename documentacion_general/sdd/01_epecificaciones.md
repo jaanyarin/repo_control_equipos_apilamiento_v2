@@ -12,9 +12,9 @@
 | Plataforma | Web SPA + Android APK |
 | Backend | Quarkus Java |
 | Base de Datos Oficial | PostgreSQL 18 |
-| Versión Documento | 1.5 |
-| Estado | En desarrollo — configuración de infraestructura congelada |
-| Fecha | 2026-07-21 |
+| Versión Documento | 1.6 |
+| Estado | En desarrollo — frontend web funcional, migración mobile a React Native CLI completada |
+| Fecha | 2026-07-24 |
 | Responsable | Jose Anyarin |
 
 ---

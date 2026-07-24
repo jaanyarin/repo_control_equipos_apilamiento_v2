@@ -20,7 +20,7 @@ La planificación queda sincronizada con el repositorio actual y con la decisió
 | Persistencia | Hibernate ORM Panache |
 | Migraciones | Flyway |
 | Frontend web | React 18 + Vite + MUI |
-| Mobile | Expo React Native SDK 54 |
+| Mobile | React Native CLI 0.81 + Hermes (migrado desde Expo) |
 | Autenticación | Local BCrypt + JWT propio |
 | Infraestructura | Docker Compose + Nginx |
 
@@ -57,19 +57,24 @@ No se usará MySQL en este proyecto.
 | 10 | Campañas | Completado |
 | 11 | Mobile login local + menú perfil | Validado |
 | 12 | APK inicial | Validado |
-| 13 | Tipos de Equipos | Pendiente inmediato |
-| 14 | Proveedores | Pendiente inmediato |
-| 15 | Marcas | Pendiente inmediato |
-| 16 | Equipos | Pendiente crítico |
-| 17 | PSR / OSR | ✅ Completado |
-| 18 | Averías | Pendiente crítico |
+| 13 | Tipos de Equipos | ✅ Completado |
+| 14 | Proveedores | ✅ Completado |
+| 15 | Marcas | ✅ Completado |
+| 16 | Equipos | ✅ Completado |
+| 17 | PSR / OSR | ✅ Completado (CRUD mobile + web) |
+| 18 | Averías | ✅ Completado (mobile + web) |
 | 19 | Evidencias Fotográficas | Pendiente |
 | 20 | Dashboard KPI | Pendiente |
 | 21 | Reportes PDF | Pendiente |
-| 22 | Auditoría | Pendiente |
-| 23 | Configuración | Pendiente |
+| 22 | Auditoría | ✅ Completado |
+| 23 | Configuración | ✅ Completado |
 | 24 | QA Integral | Pendiente |
 | 25 | Despliegue Producción | Pendiente |
+| 26 | Migración Expo → React Native CLI | ✅ Completado |
+| 27 | Componentes UI reutilizables mobile (14) | ✅ Completado |
+| 28 | Sistema de tema mobile (Design Tokens) | ✅ Completado |
+| 29 | Pantalla PSR/OSR mobile (date picker, catálogos, CRUD) | ✅ Completado |
+| 30 | Pantalla crear PSR mobile (React Hook Form + Zod) | ✅ Completado |
 
 ---
 
@@ -186,62 +191,60 @@ No se usará MySQL en este proyecto.
 # 9. Tareas Frontend Mobile
 
 | ID | Tarea | Prioridad | Estado |
-|---|---|---|---|
+|---|---|---|---|---|
 | AND-001 | Inicializar proyecto Expo React Native | Crítica | ✅ |
-| AND-002 | Configurar Expo SDK 54 | Crítica | ✅ |
+| AND-002 | Configurar Expo SDK 54 | Crítica | ✅ (luego migrado a CLI) |
 | AND-003 | Implementar login local (select perfil → select usuario → password) | Crítica | ✅ |
 | AND-004 | Implementar cambio de contraseña obligatorio | Alta | ✅ |
 | AND-005 | Implementar menú principal con 5 botones según perfil | Alta | ✅ |
-| AND-006 | Persistir JWT en SecureStore | Alta | ✅ |
+| AND-006 | Persistir JWT en SecureStore | Alta | ✅ (migrado a Keychain) |
 | AND-007 | Recuperar sesión al abrir app | Alta | ✅ |
-| AND-008 | Compilar APK inicial con EAS Cloud | Alta | ✅ |
-| AND-009 | Validar APK en dispositivo físico | Alta | ✅ |
-| AND-010 | Configurar navegación operativa | Alta | ⏳ |
-| AND-011 | Implementar listado de equipos | Crítica | ⏳ |
-| AND-012 | Implementar registro de averías | Alta | ⏳ |
-| AND-013 | Implementar atención de averías | Alta | ⏳ |
-| AND-014 | Implementar captura de fotografías | Alta | ⏳ |
-| AND-015 | Implementar consumo de APIs operativas | Crítica | ⏳ |
-| AND-016 | Implementar manejo global de errores | Alta | ⏳ |
-| AND-017 | Implementar visualización de PDF | Media | ⏳ |
+| AND-008 | Compilar APK inicial con EAS Cloud | Alta | ⏳ Bloqueado (requiere EAS Cloud config) |
+| AND-009 | Validar APK en dispositivo físico | Alta | ⏳ |
+| AND-010 | Configurar navegación operativa (AuthStack + MainStack + BottomTabs) | Alta | ✅ |
+| AND-011 | Implementar listado de equipos | Crítica | ✅ |
+| AND-012 | Implementar registro de averías | Alta | ✅ |
+| AND-013 | Implementar atención de averías | Alta | ✅ |
+| AND-014 | Implementar captura de fotografías | Alta | ⏳ Pendiente |
+| AND-015 | Implementar consumo de APIs operativas | Crítica | ✅ |
+| AND-016 | Implementar manejo global de errores | Alta | ✅ |
+| AND-017 | Implementar visualización de PDF | Media | ⏳ Pendiente |
+| AND-018 | Migrar de Expo a React Native CLI puro | Crítica | ✅ |
+| AND-019 | Crear 14 componentes UI reutilizables | Alta | ✅ |
+| AND-020 | Implementar sistema de tema con design tokens | Alta | ✅ |
+| AND-021 | Implementar pantalla PSR/OSR con listado + botón crear/editar | Crítica | ✅ |
+| AND-022 | Implementar pantalla crear PSR con React Hook Form + Zod + date picker nativo | Crítica | ✅ |
+| AND-023 | Integrar catálogos (sedes, motivos, campañas) en formularios mobile | Alta | ✅ |
 
 ---
 
-# 10. HDT-002 — Siguiente Hito Crítico
+# 10. HDT-002 — Núcleo Operativo (COMPLETADO ✅)
 
-El siguiente hito crítico es HDT-002.
+El núcleo operativo del sistema fue completado e incluye todos los componentes del alcance original.
 
-## Objetivo
+## Alcance Completado HDT-002
 
-Construir el núcleo operativo mínimo del sistema sobre PostgreSQL, backend Quarkus y frontend web.
-
-## Alcance HDT-002
-
-| Orden | Componente | Justificación |
+| Orden | Componente | Estado |
 |---|---|---|
-| 1 | `dim_tipos_equipo` | Catálogo base para registrar equipos |
-| 2 | `dim_proveedores` | Catálogo obligatorio para equipos |
-| 3 | `dim_marcas` | Catálogo auxiliar de equipos |
-| 4 | `fac_equipos` | Entidad central del negocio |
-| 5 | `fac_psr` | Documento operativo de solicitud |
-| 6 | `fac_osr` | Documento operativo asociado a PSR/equipo |
-| 7 | `fac_averias` | Control de inactividad y reparaciones |
+| 1 | `dim_tipos_equipo` | ✅ Implementado |
+| 2 | `dim_proveedores` | ✅ Implementado |
+| 3 | `dim_marcas` | ✅ Implementado |
+| 4 | `fac_equipos` | ✅ Implementado |
+| 5 | `fac_psr` | ✅ Implementado |
+| 6 | `fac_osr` | ✅ Implementado |
+| 7 | `fac_averias` | ✅ Implementado |
 
-## Criterio de finalización
+## Extensiones Post-HDT-002
 
-HDT-002 se considera terminado cuando existan:
-
-- migraciones PostgreSQL/Flyway,
-- entidades backend,
-- repositorios,
-- servicios,
-- resources REST,
-- DTOs,
-- validaciones,
-- pantallas web CRUD,
-- endpoints protegidos por JWT,
-- pruebas manuales básicas,
-- actualización documental del hito.
+| Orden | Componente | Estado |
+|---|---|---|
+| 8 | Migración mobile Expo → React Native CLI | ✅ Completado |
+| 9 | Componentes UI reutilizables mobile (14 componentes) | ✅ Completado |
+| 10 | Sistema de tema mobile con design tokens | ✅ Completado |
+| 11 | Pantalla PSR/OSR mobile con CRUD completo | ✅ Completado |
+| 12 | Pantalla crear PSR mobile (React Hook Form + Zod + date picker) | ✅ Completado |
+| 13 | Catálogos integrados en mobile (sedes, motivos, campañas) | ✅ Completado |
+| 14 | Auditoría operacional (tablas V10-V11) | ✅ Completado |
 
 ---
 

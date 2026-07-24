@@ -10,8 +10,8 @@
 | Documento | 04_IMPLEMENTATION.md |
 | Proyecto | Sistema de Control Operativo de Equipos de Apilamiento |
 | Estado | En desarrollo sincronizado con repositorio |
-| Versión | 1.4 |
-| Fecha | 2026-07-21 |
+| Versión | 1.5 |
+| Fecha | 2026-07-24 |
 | Responsable | Jose Anyarin |
 | Base de Datos Oficial | PostgreSQL 18 |
 
@@ -39,7 +39,7 @@ No se usará MySQL en este proyecto.
 | Capa | Tecnología |
 |---|---|
 | Frontend Web | React 18, Vite, MUI |
-| Frontend Mobile | Expo React Native SDK 54 |
+| Frontend Mobile | React Native CLI 0.81 + Hermes (migrado desde Expo) |
 | Backend | Quarkus Java 3.14.4 |
 | API | REST versionada en /api/v1 |
 | Seguridad | JWT propio + BCrypt |
@@ -53,37 +53,45 @@ No se usará MySQL en este proyecto.
 # 4. Módulos Implementados
 
 | Módulo | Estado |
-|---|---|
+|---|---|---|
 | Autenticación local BCrypt | Validado |
 | JWT propio | Validado |
 | Usuarios (seed local) | Validado |
 | Roles | Validado |
-| Sedes | Validado |
-| Campañas | Validado |
-| Frontend web base | Validado |
+| Sedes | Validado (mobile + web) |
+| Campañas | Validado (mobile + web) |
+| PSR / OSR | Validado (CRUD mobile + web) |
+| Equipos | Validado |
+| Tipos de Equipo | Validado |
+| Proveedores | Validado |
+| Marcas | Validado |
+| Averías | Validado (mobile + web) |
+| Auditoría | Validado |
+| Configuración | Validado |
+| Frontend web (Nginx) | Validado |
 | Mobile login local | Validado |
 | APK inicial | Validado |
 | Docker + PostgreSQL + Nginx | Validado |
 | Migración V8: login_local | Validado |
 | Migración V9: seed_usuarios_local | Validado |
+| Migraciones V10-V11: auditoría | Validado |
+| Mobile migrado Expo → React Native CLI | Validado |
+| Componentes UI reutilizables mobile (14) | Validado |
+| Sistema de tema mobile (Design Tokens) | Validado |
+| Pantalla PSR/OSR mobile | Validado |
+| Pantalla crear PSR mobile (React Hook Form + Zod + date picker) | Validado |
 
 ---
 
 # 5. Módulos Pendientes
 
 | Módulo | Prioridad |
-|---|---|
-| Tipos de Equipo | Inmediata |
-| Proveedores | Inmediata |
-| Marcas | Inmediata |
-| Equipos | Crítica |
-| PSR / OSR | ✅ Implementada |
-| Averías | Crítica |
-| Evidencias Fotográficas | Alta |
-| Auditoría Operacional | Alta |
-| Reportes PDF | Media |
-| Dashboard KPI | Media |
-| CI/CD | Media |
+|---|---|---|
+| Evidencias Fotográficas | Pendiente |
+| Dashboard KPI | Pendiente |
+| Reportes PDF | Pendiente |
+| QA Integral | Pendiente |
+| Despliegue Producción | Pendiente |
 
 ---
 
@@ -141,26 +149,66 @@ Según el perfil del usuario, se muestran hasta 5 botones:
 
 ---
 
-# 8. HDT-002 — Siguiente Hito
+# 8. HDT-002 — Núcleo Operativo (COMPLETADO ✅)
 
-El siguiente hito debe construir el núcleo operativo mínimo del sistema.
+El núcleo operativo fue completado incluyendo todos los catálogos, entidades operativas y pantallas mobile/web.
 
-Orden recomendado:
-
-1. Diseñar ERD operativo PostgreSQL.
-2. Crear migraciones Flyway de catálogos.
-3. Implementar backend de tipos de equipo.
-4. Implementar backend de proveedores.
-5. Implementar backend de marcas.
-6. Implementar frontend web de catálogos.
-7. Implementar equipos.
-8. Implementar PSR / OSR.
-9. Implementar averías.
-10. Documentar HDT-002.
+Extensión mobile: migración a React Native CLI, 14 componentes UI reutilizables, sistema de tema, CRUD PSR/OSR con date picker nativo y catálogos integrados.
 
 ---
 
-# 9. Criterios de Implementación
+# 9. Módulo PSR/OSR Mobile (2026-07-24)
+
+## 9.1 Pantallas Implementadas
+
+| Pantalla | Archivo | Funcionalidad |
+|---|---|---|
+| Listado PSR/OSR | `mobile/src/screens/PsrOsrScreen.js` | Tabla con scroll, botón + crear, lápiz editar, filtros por campaña |
+| Crear/Editar PSR | `mobile/src/screens/CreatePsrScreen.js` | Formulario React Hook Form + Zod, date picker nativo, catálogos embebidos |
+
+## 9.2 Formulario CreatePsrScreen
+
+**Tecnologías usadas:**
+- React Hook Form (`useForm`) para manejo de formulario
+- Zod (`z.object`) para validación de esquema
+- `@react-native-community/datetimepicker` para selección de fecha nativa
+- Navigation params para modo creación vs edición
+
+**Campos del formulario:**
+| Campo | Tipo | Validación | Fuente de datos |
+|---|---|---|---|
+| Campaña | Select (Picker) | Requerido | API `/campanas` (autodetecta activa) |
+| Sede | Select | Requerido | API `/sedes` |
+| Fecha de ingreso | DatePicker | Requerido, no futuro | Nativo Android/iOS |
+| Mes de ingreso | Select (meses) | Requerido | Generado desde fecha |
+| Año de ingreso | Select (años) | Requerido | Generado desde fecha |
+| Motivo de PSR | Select | Requerido | API `/motivos-psr` |
+| Observación | TextInput multilinea | Opcional, máx. 500 chars | — |
+
+**Formato de fechas:**
+- Display: `dd/MM/yyyy`
+- Envío API: `yyyy-MM-dd`
+- Calculan automáticamente mes y año al seleccionar fecha
+
+## 9.3 Integración con API
+
+| Acción | Método | Endpoint | Códigos |
+|---|---|---|---|
+| Listar PSR | GET | `/api/v1/psr` | 200 OK |
+| Crear PSR | POST | `/api/v1/psr` | 201 Created |
+| Editar PSR | PUT | `/api/v1/psr/{id}` | 200 OK |
+| Obtener catálogos | GET | `/api/v1/sedes`, `/api/v1/campanas`, `/api/v1/motivos-psr` | 200 OK |
+
+## 9.4 Navegación
+
+- Botón `+` en `headerRight` de PsrOsrScreen → navega a CreatePsr con `mode='create'`
+- Botón lápiz en cada fila → navega a CreatePsr con `mode='edit'` y datos precargados
+- Submit exitoso → `navigation.goBack()` retorna al listado
+- Título dinámico: "Crear PSR" o "Editar PSR"
+
+---
+
+# 10. Criterios de Implementación
 
 Cada módulo debe incluir:
 
@@ -177,9 +225,9 @@ Cada módulo debe incluir:
 
 ---
 
-# 10. Frontend Web — Acceso y Diagnóstico
+# 11. Frontend Web — Acceso y Diagnóstico
 
-## 10.1 Acceso
+## 11.1 Acceso
 
 El frontend web se sirve a través de Nginx (contenedor `apilamiento-nginx`) en las siguientes URLs:
 
@@ -192,7 +240,7 @@ El frontend web se sirve a través de Nginx (contenedor `apilamiento-nginx`) en 
 
 **Nota:** El frontend usa `BrowserRouter` de React Router v6. No hay soporte HTTPS configurado en Nginx. Usar siempre `http://localhost`.
 
-## 10.2 Stack de Contenedores
+## 11.2 Stack de Contenedores
 
 | Contenedor | Puerto Host | Puerto Contenedor | Estado |
 |---|---|---|---|
@@ -200,7 +248,7 @@ El frontend web se sirve a través de Nginx (contenedor `apilamiento-nginx`) en 
 | `apilamiento-backend` | 8082 | 8082 | API Quarkus |
 | `apilamiento-postgres` | 5433 | 5432 | PostgreSQL 18 |
 
-## 10.3 Diagnóstico Aplicado (2026-07-21)
+## 11.3 Diagnóstico Aplicado (2026-07-21)
 
 **Síntoma reportado:** Servicios Docker levantados pero frontend web no visible.
 
@@ -228,11 +276,11 @@ docker compose up -d --force-recreate nginx
 
 ---
 
-# 11. Configuración Operativa Congelada
+# 12. Configuración Operativa Congelada
 
 La siguiente configuración de infraestructura está validada y en funcionamiento. NO MODIFICAR.
 
-## 11.1 Mapa de Puertos Docker (HOST → Contenedor)
+## 12.1 Mapa de Puertos Docker (HOST → Contenedor)
 
 | Servicio | Puerto Host | Puerto Contenedor | Protocolo |
 |---|---|---|---|
@@ -241,7 +289,7 @@ La siguiente configuración de infraestructura está validada y en funcionamient
 | Backend Quarkus | 8082 | 8082 | HTTP |
 | PostgreSQL 18 | 5433 | 5432 | TCP |
 
-## 11.2 URLs de Acceso (Entorno Local Docker)
+## 12.2 URLs de Acceso (Entorno Local Docker)
 
 | Servicio | URL |
 |---|---|
@@ -253,7 +301,7 @@ La siguiente configuración de infraestructura está validada y en funcionamient
 | Conexión DB (externo) | `localhost:5433` |
 | Conexión DB (Docker) | `postgres:5432` |
 
-## 11.3 Cadena de Conexión a Base de Datos
+## 12.3 Cadena de Conexión a Base de Datos
 
 | Contexto | Cadena |
 |---|---|
@@ -261,16 +309,23 @@ La siguiente configuración de infraestructura está validada y en funcionamient
 | Backend (dev local) | `jdbc:postgresql://localhost:5432/repo_control_equipos_apilamiento` |
 | Cliente externo | `jdbc:postgresql://localhost:5433/repo_control_equipos_apilamiento` |
 
-## 11.4 Configuración Mobile (APK)
+## 12.4 Configuración Mobile (APK)
 
 | Parámetro | Valor |
 |---|---|
+| Framework | React Native CLI 0.81 + Hermes (migrado desde Expo SDK 54) |
 | API URL (LAN) | `http://10.13.18.168:8082/api/v1` |
 | API URL (debug) | `http://127.0.0.1:8082/api/v1` |
-| Almacenamiento de token | `react-native-keychain` (SecureStore) |
+| Almacenamiento de token | `react-native-keychain` (Keychain/secure storage) |
 | Timeout de API | 15000ms |
+| Navegación | React Navigation 7 (NativeStackNavigator + BottomTabNavigator) |
+| Formularios | React Hook Form + Zod + `@react-native-community/datetimepicker` |
+| UI Components | 14 componentes reutilizables + sistema de tema (design tokens) |
+| Theme | MD3 con claro/oscuro + modo Vanguard |
+| Pantallas totales | 19 (login, home, equipos, PSR/OSR, averías, perfil, etc.) |
+| Build local | Bloqueado por Sophos Endpoint (sin permisos admin). Usar EAS Cloud |
 
-## 11.5 Configuración Backend
+## 12.5 Configuración Backend
 
 | Parámetro | Valor |
 |---|---|
@@ -282,7 +337,7 @@ La siguiente configuración de infraestructura está validada y en funcionamient
 | Tamaño máximo body | 10MB |
 | Pool conexiones DB | min:2, max:20 |
 
-## 11.6 Nombres de Contenedores
+## 12.6 Nombres de Contenedores
 
 | Contenedor | Imagen |
 |---|---|
@@ -290,7 +345,7 @@ La siguiente configuración de infraestructura está validada y en funcionamient
 | `apilamiento-backend` | `quarkus:3.14` (build local) |
 | `apilamiento-postgres` | `postgres:18` |
 
-## 11.7 Dependencias de Orquestación
+## 12.7 Dependencias de Orquestación
 
 ```
 postgres (healthcheck) → backend → nginx
@@ -298,6 +353,6 @@ postgres (healthcheck) → backend → nginx
 
 ---
 
-# 12. Cierre
+# 13. Cierre
 
-Este documento queda sincronizado con PostgreSQL 18 como base oficial y con el frontend web accesible en `http://localhost/`. La configuración de red, puertos y conexiones queda documentada y congelada en la sección 11.
+Este documento queda sincronizado con PostgreSQL 18 como base oficial, frontend web accesible en `http://localhost/`, y módulo PSR/OSR mobile funcional con formulario React Hook Form + Zod + date picker nativo. La configuración de red, puertos y conexiones queda documentada y congelada en la sección 12.

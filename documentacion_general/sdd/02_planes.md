@@ -95,7 +95,7 @@ La comunicación entre clientes y backend se realizará mediante HTTPS utilizand
 |---|---|---|
 | Backend | Quarkus Java 3.14.4 | ✅ Implementado |
 | Runtime Backend | Java 17 / Docker | ✅ Implementado |
-| Frontend Mobile | Expo React Native SDK 54 | ✅ Base implementada / login validado |
+| Frontend Mobile | React Native CLI 0.81 + Hermes | ✅ Migrado de Expo. CRUD operativo: PSR/OSR, catálogos, averías. Build local bloqueado por Sophos, usar EAS Cloud |
 | Frontend Web | React 18 SPA, Vite 5, MUI 6 | ✅ Implementado |
 | Base de Datos | PostgreSQL 18 | ✅ Oficial / Implementado |
 | Migraciones | Flyway | ✅ Implementado |
@@ -130,23 +130,23 @@ No se usará MySQL en este proyecto.
 # 6. Estructura de Módulos
 
 | Código | Módulo | Estado Actual |
-|---|---|---|
+|---|---|---|---|
 | MOD-01 | Autenticación | ✅ Validado (local BCrypt) |
 | MOD-02 | Usuarios | ✅ Validado |
-| MOD-03 | Sedes | ✅ Validado |
-| MOD-04 | Campañas | ✅ Validado |
-| MOD-05 | PSR / OSR | ✅ Validado |
+| MOD-03 | Sedes | ✅ Validado (mobile + web) |
+| MOD-04 | Campañas | ✅ Validado (mobile + web) |
+| MOD-05 | PSR / OSR | ✅ Validado (CRUD mobile con formulario, date picker, catálogos) |
 | MOD-06 | Equipos | ✅ Validado |
 | MOD-07 | Tipos de Equipos | ✅ Validado |
 | MOD-08 | Proveedores | ✅ Validado |
-| MOD-09 | Averías | ✅ Validado |
+| MOD-09 | Averías | ✅ Validado (mobile + web) |
 | MOD-10 | Evidencias Fotográficas | ⏳ Pendiente |
 | MOD-11 | Dashboard KPI | ⏳ Pendiente |
 | MOD-12 | Reportes PDF | ⏳ Pendiente |
-| MOD-13 | Auditoría | ⏳ Pendiente |
-| MOD-14 | Catálogos | ⏳ Parcial |
-| MOD-15 | Configuración | ⏳ Pendiente |
-| MOD-16 | Mobile App | ✅ Login local validado / pantallas operativas pendientes |
+| MOD-13 | Auditoría | ✅ Validado |
+| MOD-14 | Catálogos | ✅ Validado (mobile: sedes, campañas, motivos PSR) |
+| MOD-15 | Configuración | ✅ Validado |
+| MOD-16 | Mobile App | ✅ Migrado de Expo a React Native CLI. 14 componentes UI reutilizables. Sistema de tema. 19 pantallas. CRUD PSR/OSR, averías, catálogos, navegación completa. Build local bloqueado por Sophos, usar EAS Cloud |
 
 ---
 
@@ -161,7 +161,11 @@ No se usará MySQL en este proyecto.
 | Fase 5 | Frontend web administrativo base | ✅ Completado |
 | Fase 6 | Mobile login + APK inicial | ✅ Validado |
 | Fase 7 | Migración a autenticación local BCrypt | ✅ Completado |
-| Fase 8 | Módulos operativos núcleo | ⏳ Pendiente crítico |
+| Fase 8 | Módulos operativos núcleo | ✅ Completado (PSR/OSR, averías, catálogos, equipos en mobile + web) |
+| Fase 8.1 | Migración mobile Expo → React Native CLI | ✅ Completado |
+| Fase 8.2 | Componentes UI reutilizables mobile (14 componentes) | ✅ Completado |
+| Fase 8.3 | Sistema de tema mobile (design tokens) | ✅ Completado |
+| Fase 8.4 | CRUD PSR/OSR mobile con date picker nativo | ✅ Completado |
 | Fase 9 | Evidencias, PDF, dashboard y auditoría | ⏳ Pendiente |
 | Fase 10 | Integración general | ⏳ Pendiente |
 | Fase 11 | QA y pruebas operativas | ⏳ Pendiente |
@@ -188,8 +192,8 @@ No se usará MySQL en este proyecto.
 | 12 | Tipos de Equipos | ✅ Completado |
 | 13 | Proveedores | ✅ Completado |
 | 14 | Equipos | ✅ Completado |
-| 15 | PSR / OSR | ✅ Completado |
-| 16 | Averías | ✅ Completado |
+| 15 | PSR / OSR | ✅ Completado (CRUD mobile + web) |
+| 16 | Averías | ✅ Completado (mobile + web) |
 | 17 | Evidencias Fotográficas | ⏳ Pendiente |
 | 18 | Dashboard KPI | ⏳ Pendiente |
 | 19 | Reportes PDF | ⏳ Pendiente |
@@ -198,6 +202,11 @@ No se usará MySQL en este proyecto.
 | 22 | CI/CD | ⏳ Pendiente |
 | 23 | QA Integral | ⏳ Pendiente |
 | 24 | Despliegue Producción | ⏳ Pendiente |
+| 25 | Migración mobile Expo → React Native CLI | ✅ Completado |
+| 26 | Componentes UI reutilizables mobile | ✅ Completado |
+| 27 | Sistema de tema mobile (Design Tokens) | ✅ Completado |
+| 28 | Pantalla PSR/OSR mobile con date picker, catálogos y CRUD | ✅ Completado |
+| 29 | Pantalla crear PSR mobile (React Hook Form + Zod + date picker nativo) | ✅ Completado |
 
 ---
 
@@ -363,23 +372,23 @@ La estrategia de despliegue considerará:
 
 ---
 
-# 17. Punto Crítico Actual
+# 17. Punto Crítico Actual (HDT-002 COMPLETADO ✅)
 
-El punto crítico actual es iniciar el núcleo operativo HDT-002:
+El núcleo operativo HDT-002 fue completado exitosamente:
 
-1. Tipos de Equipo.
-2. Proveedores.
-3. Equipos.
-4. PSR / OSR.
-5. Averías.
+1. Tipos de Equipo ✅
+2. Proveedores ✅
+3. Equipos ✅
+4. PSR / OSR ✅ (CRUD mobile + web)
+5. Averías ✅ (mobile + web)
 
-La secuencia recomendada es:
+Extensiones realizadas:
+- Migración mobile Expo → React Native CLI ✅
+- 14 componentes UI reutilizables ✅
+- Sistema de tema (Design Tokens) ✅
+- CRUD PSR/OSR mobile con date picker nativo ✅
 
-1. Implementar catálogos base: tipos de equipo y proveedores.
-2. Implementar equipos, porque es la entidad central del negocio.
-3. Implementar PSR/OSR y asociación con equipo.
-4. Implementar averías y cálculo de inactividad.
-5. Implementar evidencias fotográficas.
+**Próximo foco:** Evidencias Fotográficas, Dashboard KPI, Reportes PDF, QA Integral y build APK vía EAS Cloud.
 
 ---
 
@@ -413,4 +422,4 @@ El proyecto depende de:
 
 PostgreSQL 18 queda establecido como base de datos oficial del proyecto.
 
-La arquitectura actual ya permite continuar con los módulos operativos críticos. El siguiente avance debe enfocarse en HDT-002, evitando seguir extendiendo infraestructura antes de implementar el flujo real de negocio.
+HDT-002 (núcleo operativo) fue completado incluyendo extensiones mobile. El próximo avance debe enfocarse en evidencias fotográficas, dashboard KPI, reportes PDF, QA integral y build APK vía EAS Cloud.
