@@ -12,7 +12,7 @@ public class Proveedor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(name = "razon_social", nullable = false, unique = true, length = 255)
     private String razonSocial;
 
     @Column(nullable = false, unique = true, length = 100)
