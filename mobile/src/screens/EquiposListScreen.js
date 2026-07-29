@@ -1,27 +1,35 @@
-import React, { useState, useCallback } from 'react'
-import { View, FlatList, RefreshControl, StyleSheet } from 'react-native'
-import { Text, TouchableRipple, Searchbar } from 'react-native-paper'
-import { useNavigation, useFocusEffect } from '@react-navigation/native'
+import React, { useCallback, useState } from 'react'
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native'
+import { Searchbar, Text, TouchableRipple } from 'react-native-paper'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import api from '../api'
-import LoadingScreen from '../components/LoadingScreen'
+import { useAuth } from '../AuthContext'
+import AppButton from '../components/AppButton'
+import AppCard from '../components/AppCard'
+import AppIconButton from '../components/AppIconButton'
 import EmptyState from '../components/EmptyState'
 import ErrorBoundary from '../components/ErrorBoundary'
-import AppCard from '../components/AppCard'
-import StatusChip from '../components/StatusChip'
 import ErrorState from '../components/ErrorState'
+import LoadingScreen from '../components/LoadingScreen'
+import StatusChip from '../components/StatusChip'
 import { theme } from '../theme'
+import { isAdminOrSuperAdmin } from '../utils/roles'
 
 export default function EquiposListScreen() {
+  const navigation = useNavigation()
+  const { user } = useAuth()
+  const insets = useSafeAreaInsets()
   const [equipos, setEquipos] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
-  const navigation = useNavigation()
+  const canEdit = isAdminOrSuperAdmin(user)
 
   const fetchEquipos = useCallback(async () => {
     try {
-      setError(null)
+      setError('')
       const { data } = await api.get('/equipos')
       const list = data?.data || data || []
       setEquipos(Array.isArray(list) ? list : [])
@@ -33,84 +41,83 @@ export default function EquiposListScreen() {
     }
   }, [])
 
-  useFocusEffect(
-    useCallback(() => {
-      setLoading(true)
-      fetchEquipos()
-    }, [fetchEquipos])
-  )
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true)
+  useFocusEffect(useCallback(() => {
+    setLoading(true)
     fetchEquipos()
-  }, [fetchEquipos])
+  }, [fetchEquipos]))
 
-  const filteredEquipos = equipos.filter((e) => {
-    if (!search) return true
-    const q = search.toLowerCase()
-    return (
-      (e.codigo || '').toLowerCase().includes(q) ||
-      (e.modelo || '').toLowerCase().includes(q)
-    )
+  const filtered = equipos.filter(item => {
+    const query = search.trim().toLowerCase()
+    if (!query) return true
+    return [item.codigo, item.modelo, item.marcaNombre, item.proveedorNombre]
+      .some(value => String(value || '').toLowerCase().includes(query))
   })
 
-  const statusType = (estado) => estado === 'OPERATIVO' ? 'active' : estado === 'AVERIADO' ? 'fault' : 'cancelled'
+  const statusType = estado => estado === 'OPERATIVO'
+    ? 'active'
+    : estado === 'AVERIADO' ? 'fault' : 'cancelled'
 
-  const renderItem = ({ item }) => (
-    <TouchableRipple
-      onPress={() => navigation.navigate('EquipoDetail', { id: item.id })}
-      style={styles.cardWrapper}
-    >
-      <AppCard style={styles.card} accessibilityLabel={`Equipo ${item.codigo || 'sin código'}`}>
-        <View style={styles.cardContent}>
-          <View style={styles.cardHeader}>
-            <Text variant="titleMedium" style={styles.cardTitle}>
-              {item.codigo || 'Sin código'}
-            </Text>
-            <StatusChip status={statusType(item.estadoOperativo)} label={item.estadoOperativo || 'DESCONOCIDO'} />
-          </View>
-          <Text variant="bodyMedium" style={styles.cardModel}>
-            {item.modelo || 'Sin modelo'}
-          </Text>
-          {item.tipoEquipo?.nombre ? (
-            <Text variant="bodySmall" style={styles.cardMeta}>
-              {item.tipoEquipo.nombre}
-            </Text>
-          ) : null}
-        </View>
-      </AppCard>
-    </TouchableRipple>
-  )
-
-  if (loading && equipos.length === 0) return <LoadingScreen />
+  if (loading && equipos.length === 0) return <LoadingScreen message="Cargando equipos" />
 
   return (
     <ErrorBoundary>
       <View style={styles.container}>
+        <View style={styles.toolbar}>
+          <Text style={styles.title}>Equipos ingresados</Text>
+          <AppButton icon="plus" onPress={() => navigation.navigate('SelectPsrEquipment')}>
+            Nuevo ingreso
+          </AppButton>
+        </View>
         <Searchbar
-          placeholder="Buscar por código o modelo"
+          placeholder="Buscar por código, modelo o proveedor"
           onChangeText={setSearch}
           value={search}
           style={styles.searchbar}
         />
-        {error ? (
-          <ErrorState title="Error al cargar equipos" message={error} onRetry={fetchEquipos} />
-        ) : (
+        {error ? <ErrorState title="Error al cargar equipos" message={error} onRetry={fetchEquipos} /> : (
           <FlatList
-            data={filteredEquipos}
-            keyExtractor={(item) => String(item.id)}
-            renderItem={renderItem}
-            contentContainerStyle={styles.list}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.action.primary]} />
-            }
-            ListEmptyComponent={
+            data={filtered}
+            keyExtractor={item => String(item.id)}
+            contentContainerStyle={[styles.list, { paddingBottom: theme.spacing[6] + insets.bottom + 68 }]}
+            refreshControl={(
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={() => { setRefreshing(true); fetchEquipos() }}
+                colors={[theme.colors.action.primary]}
+              />
+            )}
+            ListEmptyComponent={(
               <EmptyState
                 icon="warehouse"
                 title={search ? 'Sin resultados' : 'No hay equipos'}
-                subtitle={search ? 'Intenta con otro término de búsqueda' : 'Aún no se han registrado equipos'}
+                subtitle={search ? 'Intenta con otro término' : 'Aún no se han registrado equipos'}
               />
-            }
+            )}
+            renderItem={({ item }) => (
+              <AppCard style={styles.card}>
+                <TouchableRipple onPress={() => navigation.navigate('EquipoDetail', { id: item.id })}>
+                  <View style={styles.cardContent}>
+                    <View style={styles.cardHeader}>
+                      <View style={styles.heading}>
+                        <Text style={styles.cardTitle}>{item.codigo || 'Sin código'}</Text>
+                        <Text style={styles.cardModel}>{item.marcaNombre || 'Sin marca'} · {item.modelo || 'Sin modelo'}</Text>
+                      </View>
+                      <StatusChip status={statusType(item.estadoOperativo)} label={item.estadoOperativo || 'DESCONOCIDO'} />
+                    </View>
+                    <Text style={styles.cardMeta}>{item.proveedorNombre || 'Sin proveedor'} · {item.tipoEquipoNombre || 'Sin tipo'}</Text>
+                  </View>
+                </TouchableRipple>
+                {canEdit ? (
+                  <View style={styles.actions}>
+                    <AppIconButton
+                      icon="pencil-outline"
+                      accessibilityLabel={`Editar equipo ${item.codigo}`}
+                      onPress={() => navigation.navigate('EquipmentForm', { mode: 'edit', equipo: item })}
+                    />
+                  </View>
+                ) : null}
+              </AppCard>
+            )}
           />
         )}
       </View>
@@ -119,48 +126,23 @@ export default function EquiposListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background.page,
+  container: { flex: 1, backgroundColor: theme.colors.background.page },
+  toolbar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: theme.spacing[4], gap: theme.spacing[2],
   },
+  title: { ...theme.typography.subtitle1, color: theme.colors.text.primary, flex: 1 },
   searchbar: {
-    margin: theme.spacing[4],
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.background.paper,
+    marginHorizontal: theme.spacing[4], marginBottom: theme.spacing[4],
+    borderRadius: theme.radius.md, backgroundColor: theme.colors.background.paper,
   },
-  list: {
-    paddingHorizontal: theme.spacing[4],
-    paddingBottom: theme.spacing[6],
-  },
-  cardWrapper: {
-    marginBottom: theme.spacing[3],
-    borderRadius: theme.radius.md,
-  },
-  card: {
-    padding: 0,
-  },
-  cardContent: {
-    padding: theme.spacing[4],
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing[1],
-  },
-  cardTitle: {
-    ...theme.typography.subtitle,
-    color: theme.colors.text.primary,
-    flex: 1,
-    marginRight: theme.spacing[2],
-  },
-  cardModel: {
-    ...theme.typography.body,
-    color: theme.colors.text.secondary,
-  },
-  cardMeta: {
-    ...theme.typography.caption,
-    color: theme.colors.text.tertiary,
-    marginTop: theme.spacing[1],
-  },
+  list: { paddingHorizontal: theme.spacing[4], paddingBottom: theme.spacing[6] },
+  card: { padding: 0, marginBottom: theme.spacing[3], overflow: 'hidden' },
+  cardContent: { padding: theme.spacing[4], paddingBottom: theme.spacing[6] },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing[2] },
+  heading: { flex: 1, marginRight: theme.spacing[2] },
+  cardTitle: { ...theme.typography.subtitle1, color: theme.colors.text.primary },
+  cardModel: { ...theme.typography.body2, color: theme.colors.text.secondary, marginTop: theme.spacing[1] },
+  cardMeta: { ...theme.typography.caption, color: theme.colors.text.tertiary },
+  actions: { position: 'absolute', right: theme.spacing[2], bottom: theme.spacing[1] },
 })

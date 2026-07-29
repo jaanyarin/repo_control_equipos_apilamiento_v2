@@ -1,8 +1,14 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import {
-  Box, Drawer, AppBar, Toolbar, Typography, List, ListItemButton,
-  ListItemIcon, ListItemText, Divider,
-} from '@mui/material'
+import AppBar from '@mui/material/AppBar'
+import Box from '@mui/material/Box'
+import Divider from '@mui/material/Divider'
+import Drawer from '@mui/material/Drawer'
+import List from '@mui/material/List'
+import ListItemButton from '@mui/material/ListItemButton'
+import ListItemIcon from '@mui/material/ListItemIcon'
+import ListItemText from '@mui/material/ListItemText'
+import Toolbar from '@mui/material/Toolbar'
+import Typography from '@mui/material/Typography'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import PeopleIcon from '@mui/icons-material/People'
 import LockIcon from '@mui/icons-material/Lock'

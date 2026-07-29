@@ -25,6 +25,9 @@ import UsuariosScreen from '../screens/UsuariosScreen'
 import PsrOsrScreen from '../screens/PsrOsrScreen'
 import CreatePsrScreen from '../screens/CreatePsrScreen'
 import CreateEditUserScreen from '../screens/CreateEditUserScreen'
+import SelectPsrEquipmentScreen from '../screens/SelectPsrEquipmentScreen'
+import EquipmentFormScreen from '../screens/EquipmentFormScreen'
+import EquipmentPhotosScreen from '../screens/EquipmentPhotosScreen'
 import MotivosPsrScreen from '../screens/MotivosPsrScreen'
 import AuditoriaScreen from '../screens/AuditoriaScreen'
 import LoadingScreen from '../components/LoadingScreen'
@@ -46,7 +49,7 @@ function CatalogoTabScreen() {
     { label: 'Configuración', icon: 'cog-outline', screen: 'Settings' },
   ]
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: theme.colors.background.page }} contentContainerStyle={{ padding: theme.spacing[4], paddingBottom: theme.spacing[8] }}>
+    <ScrollView style={{ flex: 1, backgroundColor: theme.colors.background.page }} contentContainerStyle={{ padding: theme.spacing[4], paddingBottom: theme.spacing[8] + insets.bottom + 68 }}>
       <Text variant="titleMedium" style={{ ...theme.typography.title, color: theme.colors.text.primary, marginBottom: theme.spacing[4] }}>Catálogos y Administración</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing[3] }}>
         {catalogItems.map(item => (
@@ -133,6 +136,11 @@ function MainNavigator() {
     >
       <MainStack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
       <MainStack.Screen name="EquipoDetail" component={EquipoDetailScreen} options={{ title: 'Detalle de Equipo' }} />
+      <MainStack.Screen name="SelectPsrEquipment" component={SelectPsrEquipmentScreen} options={{ title: 'Seleccionar PSR / OSR' }} />
+      <MainStack.Screen name="EquipmentForm" component={EquipmentFormScreen} options={({ route }) => ({
+        title: route.params?.mode === 'edit' ? 'Editar equipo' : 'Ingreso de equipo',
+      })} />
+      <MainStack.Screen name="EquipmentPhotos" component={EquipmentPhotosScreen} options={{ title: 'Fotografías de ingreso', headerBackVisible: false }} />
       <MainStack.Screen name="PsrOsr" component={PsrOsrScreen} options={({ navigation }) => ({
         title: 'PSR',
         headerRight: canManagePsr ? () => (

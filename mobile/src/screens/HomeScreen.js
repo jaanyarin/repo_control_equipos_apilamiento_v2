@@ -2,6 +2,7 @@ import React from 'react'
 import { View, ScrollView, StyleSheet } from 'react-native'
 import { Avatar, Icon, Text, TouchableRipple } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAuth } from '../AuthContext'
 import AppCard from '../components/AppCard'
 import ErrorBoundary from '../components/ErrorBoundary'
@@ -19,6 +20,7 @@ const menuActions = [
 export default function HomeScreen() {
   const { user, loading } = useAuth()
   const navigation = useNavigation()
+  const insets = useSafeAreaInsets()
 
   if (loading) return <LoadingScreen />
 
@@ -26,7 +28,7 @@ export default function HomeScreen() {
 
   return (
     <ErrorBoundary>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: theme.spacing[6] + insets.bottom + 68 }]}>
         <AppCard style={styles.headerCard}>
           <Avatar.Icon size={56} icon="account" color={theme.colors.text.inverse} style={styles.avatar} />
           <Text style={styles.welcomeText}>Bienvenido, {user?.nombre || 'Usuario'}</Text>

@@ -11,7 +11,6 @@ public class AveriaDTO {
     private Long equipoId;
 
     @NotBlank(message = "La descripción de la falla es obligatoria")
-    @NotBlank(message = "La descripción de la falla es obligatoria")
     private String descripcionFalla;
     private OffsetDateTime fechaHoraAveria;
     private OffsetDateTime fechaHoraAtencion;

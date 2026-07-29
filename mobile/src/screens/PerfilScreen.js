@@ -2,12 +2,14 @@ import React from 'react'
 import { View, ScrollView, StyleSheet, Alert } from 'react-native'
 import { Text, Surface, Button, Avatar, IconButton, Divider } from 'react-native-paper'
 import { useAuth } from '../AuthContext'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { removeToken } from '../api'
 import ErrorBoundary from '../components/ErrorBoundary'
 import { theme } from '../theme'
 
 export default function PerfilScreen() {
   const { user, logout } = useAuth()
+  const insets = useSafeAreaInsets()
 
   const handleLogout = () => {
     Alert.alert('Cerrar sesión', '¿Estás seguro de cerrar sesión?', [
@@ -25,7 +27,7 @@ export default function PerfilScreen() {
 
   return (
     <ErrorBoundary>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: 32 + insets.bottom + 68 }]}>
         <Surface style={styles.profileCard}>
           <Avatar.Icon size={72} icon="account" color={theme.colors.text.inverse} style={styles.avatar} />
           <Text variant="titleLarge" style={styles.name}>

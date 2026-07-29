@@ -77,10 +77,10 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: npx eslint src/ --ext .js,.jsx || true
+        run: npx eslint src/ --ext .js,.jsx
 
       - name: Test
-        run: npx jest --passWithNoTests || true
+        run: npx jest
 
       - name: Build
         run: npm run build
@@ -106,10 +106,10 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: npx eslint src/ --ext .js,.jsx || true
+        run: npx eslint src/ --ext .js,.jsx
 
       - name: Test
-        run: npx jest --passWithNoTests || true
+        run: npx jest
 
   mobile-cli-bootstrap:
     name: Mobile CLI Bootstrap - Build & Test

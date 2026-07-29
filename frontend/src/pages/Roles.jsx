@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import {
-  Box, Typography, CircularProgress, Alert,
-} from '@mui/material'
+import Alert from '@mui/material/Alert'
+import Box from '@mui/material/Box'
+import CircularProgress from '@mui/material/CircularProgress'
+import Typography from '@mui/material/Typography'
 import api from '../api'
 import RoleChip from '../components/RoleChip'
 import DataTable from '../components/DataTable'

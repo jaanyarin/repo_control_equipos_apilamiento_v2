@@ -1,10 +1,27 @@
 import { useState, useMemo } from 'react'
-import {
-  createTheme, ThemeProvider, CssBaseline, useTheme, Box, Typography, Button, TextField,
-  Switch, Checkbox, Chip, Card, CardContent, Divider, Stack,
-  Slider, Radio, RadioGroup, ToggleButtonGroup, ToggleButton,
-  FormControlLabel, Badge, Avatar, LinearProgress, Alert,
-} from '@mui/material'
+import { createTheme, ThemeProvider, useTheme } from '@mui/material/styles'
+import Alert from '@mui/material/Alert'
+import Avatar from '@mui/material/Avatar'
+import Badge from '@mui/material/Badge'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import Checkbox from '@mui/material/Checkbox'
+import Chip from '@mui/material/Chip'
+import CssBaseline from '@mui/material/CssBaseline'
+import Divider from '@mui/material/Divider'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import LinearProgress from '@mui/material/LinearProgress'
+import Radio from '@mui/material/Radio'
+import RadioGroup from '@mui/material/RadioGroup'
+import Slider from '@mui/material/Slider'
+import Stack from '@mui/material/Stack'
+import Switch from '@mui/material/Switch'
+import TextField from '@mui/material/TextField'
+import ToggleButton from '@mui/material/ToggleButton'
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
+import Typography from '@mui/material/Typography'
 import DarkModeIcon from '@mui/icons-material/DarkMode'
 import LightModeIcon from '@mui/icons-material/LightMode'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
