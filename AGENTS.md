@@ -448,7 +448,12 @@ Uso alternado según disponibilidad. Definir con:
 $serial = "qctoduvsa6v4cyhi"  # o 85ijey5tdax8ob5p
 ```
 
-Comandos comunes:
+Script automatizado (selector interactivo de serial):
+```powershell
+.\deploy-mobile.ps1
+```
+
+Comandos comunes (manual):
 ```powershell
 adb devices -l
 adb -s $serial reverse tcp:8081 tcp:8081

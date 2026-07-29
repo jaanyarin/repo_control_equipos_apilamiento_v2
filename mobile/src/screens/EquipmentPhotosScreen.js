@@ -4,6 +4,7 @@ import { Icon, Text } from 'react-native-paper'
 import { launchCamera } from 'react-native-image-picker'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import * as FileSystem from 'expo-file-system'
 import api, { loadApiUrl, getToken } from '../api'
 import AppButton from '../components/AppButton'
 import AppCard from '../components/AppCard'
@@ -52,14 +53,10 @@ export default function EquipmentPhotosScreen() {
     const baseUrl = await loadApiUrl()
     const token = await getToken()
     const uri = `${baseUrl}/ingresos-equipo/${equipoId}/evidencias/${tipo}/archivo`
-    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    const fileUri = FileSystem.cacheDirectory + `evidencia_${tipo}_${Date.now()}.jpg`
     try {
-      const response = await fetch(uri, { headers })
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
-      const blob = await response.blob()
-      const reader = new FileReader()
-      reader.onloadend = () => setViewer({ tipo, source: { uri: reader.result } })
-      reader.readAsDataURL(blob)
+      const result = await FileSystem.downloadAsync(uri, fileUri, token ? { headers: { Authorization: `Bearer ${token}` } } : {})
+      setViewer({ tipo, source: { uri: result.uri } })
     } catch (e) {
       Alert.alert('Error al cargar imagen', e.message)
     }
