@@ -436,6 +436,26 @@ postgres (healthcheck) → backend → nginx
 - Nginx depende del backend para el proxy inverso.
 - El frontend web se sirve estáticamente desde Nginx.
 
+### 13.10 Dispositivos ADB para Pruebas Mobile
+
+| Dispositivo | Serial ADB | Modelo | Conexión |
+|---|---|---|---|
+| Xiaomi (principal) | `qctoduvsa6v4cyhi` | 25100RA69G | USB/Wi-Fi |
+| Xiaomi (alterno) | `85ijey5tdax8ob5p` | — | USB/Wi-Fi |
+
+Uso alternado según disponibilidad. Definir con:
+```powershell
+$serial = "qctoduvsa6v4cyhi"  # o 85ijey5tdax8ob5p
+```
+
+Comandos comunes:
+```powershell
+adb devices -l
+adb -s $serial reverse tcp:8081 tcp:8081
+adb -s $serial reverse tcp:8082 tcp:8082
+adb -s $serial install -r $apk
+```
+
 ---
 
 ## 14. Referencias
