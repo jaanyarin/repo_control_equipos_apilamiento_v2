@@ -33,4 +33,8 @@ public class EquipoRepository implements PanacheRepository<Equipo> {
     public List<Equipo> listByEstadoOperativo(String estadoOperativo) {
         return list("estadoOperativo", estadoOperativo);
     }
+
+    public List<Equipo> listCompletos() {
+        return list("ingresoCompleto = true and estadoActivo = true order by id");
+    }
 }

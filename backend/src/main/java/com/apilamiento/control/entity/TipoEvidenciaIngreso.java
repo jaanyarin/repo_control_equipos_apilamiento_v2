@@ -1,0 +1,22 @@
+package com.apilamiento.control.entity;
+
+public enum TipoEvidenciaIngreso {
+    LATERAL_IZQUIERDO,
+    LATERAL_DERECHO,
+    FRONTAL,
+    POSTERIOR,
+    BATERIA_1,
+    BATERIA_2,
+    CONO,
+    BOTIQUIN,
+    CARGADOR,
+    TRANSFORMADOR,
+    CABLE_ADICIONAL,
+    MESA_RODILLOS,
+    ELEVADOR_BATERIA,
+    CONECTOR_ADICIONAL,
+    GUIA_REMISION,
+    DETALLE_1,
+    DETALLE_2,
+    DETALLE_3
+}

@@ -8,6 +8,9 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.SecurityContext;
+import com.apilamiento.control.security.SecurityUtil;
 
 @Path("/equipos")
 @RolesAllowed({"Super Admin", "Admin", "Usuario"})
@@ -76,7 +79,10 @@ public class EquipoResource {
 
     @PUT
     @Path("/{id}")
-    public Response actualizar(@PathParam("id") Long id, @Valid EquipoDTO dto) {
+    @RolesAllowed({"Super Admin", "Admin"})
+    public Response actualizar(@PathParam("id") Long id, @Valid EquipoDTO dto,
+            @Context SecurityContext context) {
+        dto.setUsuarioActualizacion(SecurityUtil.getUsuarioId(context));
         EquipoDTO actualizado = service.actualizar(id, dto);
         if (actualizado == null) {
             return Response.status(Response.Status.NOT_FOUND)

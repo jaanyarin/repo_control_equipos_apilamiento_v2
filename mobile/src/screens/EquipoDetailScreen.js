@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { View, ScrollView, StyleSheet, Alert } from 'react-native'
+import { View, ScrollView, StyleSheet, Alert, Image } from 'react-native'
 import { Text, Divider } from 'react-native-paper'
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native'
-import api from '../api'
+import api, { getToken, loadApiUrl } from '../api'
 import LoadingScreen from '../components/LoadingScreen'
 import ErrorBoundary from '../components/ErrorBoundary'
 import EmptyState from '../components/EmptyState'
@@ -12,6 +12,7 @@ import AppIconButton from '../components/AppIconButton'
 import StatusChip from '../components/StatusChip'
 import ErrorState from '../components/ErrorState'
 import { theme } from '../theme'
+import { accessoryFields } from '../utils/equipmentForm'
 
 export default function EquipoDetailScreen() {
   const route = useRoute()
@@ -23,12 +24,21 @@ export default function EquipoDetailScreen() {
   const [averias, setAverias] = useState([])
   const [showAverias, setShowAverias] = useState(false)
   const [loadingAverias, setLoadingAverias] = useState(false)
+  const [evidencias, setEvidencias] = useState([])
+  const [imageAuth, setImageAuth] = useState(null)
 
   const fetchEquipo = useCallback(async () => {
     try {
       setError(null)
-      const { data } = await api.get(`/equipos/${id}`)
-      setEquipo(data?.data || data)
+      const [equipmentResponse, evidenceResponse] = await Promise.all([
+        api.get(`/equipos/${id}`),
+        api.get(`/ingresos-equipo/${id}/evidencias`),
+      ])
+      setEquipo(equipmentResponse.data?.data || equipmentResponse.data)
+      const evidenceList = evidenceResponse.data?.data || evidenceResponse.data || []
+      setEvidencias(Array.isArray(evidenceList) ? evidenceList : [])
+      const [baseUrl, token] = await Promise.all([loadApiUrl(), getToken()])
+      setImageAuth({ baseUrl, token })
     } catch (e) {
       setError(e.response?.data?.error || e.message || 'Error al cargar equipo')
     } finally {
@@ -83,6 +93,14 @@ export default function EquipoDetailScreen() {
             <Text variant="bodyMedium" style={styles.value}>{equipo.numeroSerie || '-'}</Text>
           </View>
           <View style={styles.row}>
+            <Text variant="bodySmall" style={styles.label}>Fecha de ingreso</Text>
+            <Text variant="bodyMedium" style={styles.value}>{equipo.fechaIngreso || '-'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text variant="bodySmall" style={styles.label}>Guía de remisión</Text>
+            <Text variant="bodyMedium" style={styles.value}>{equipo.numeroGuiaRemision || '-'}</Text>
+          </View>
+          <View style={styles.row}>
             <Text variant="bodySmall" style={styles.label}>Capacidad</Text>
             <Text variant="bodyMedium" style={styles.value}>
               {equipo.capacidad != null ? `${equipo.capacidad} ${equipo.unidadCapacidad || ''}` : '-'}
@@ -108,35 +126,53 @@ export default function EquipoDetailScreen() {
           <Divider style={styles.divider} />
           <View style={styles.row}>
             <Text variant="bodySmall" style={styles.label}>Proveedor</Text>
-            <Text variant="bodyMedium" style={styles.value}>{equipo.proveedor?.nombre || '-'}</Text>
+            <Text variant="bodyMedium" style={styles.value}>{equipo.proveedorNombre || '-'}</Text>
           </View>
           <View style={styles.row}>
             <Text variant="bodySmall" style={styles.label}>Marca</Text>
-            <Text variant="bodyMedium" style={styles.value}>{equipo.marca?.nombre || '-'}</Text>
+            <Text variant="bodyMedium" style={styles.value}>{equipo.marcaNombre || '-'}</Text>
           </View>
           <View style={styles.row}>
             <Text variant="bodySmall" style={styles.label}>Tipo</Text>
-            <Text variant="bodyMedium" style={styles.value}>{equipo.tipoEquipo?.nombre || '-'}</Text>
+            <Text variant="bodyMedium" style={styles.value}>{equipo.tipoEquipoNombre || '-'}</Text>
           </View>
         </AppCard>
 
-        {equipo.accesorios && equipo.accesorios.length > 0 ? (
+        <AppCard style={styles.section}>
+          <Text variant="titleMedium" style={styles.sectionTitle}>Accesorios</Text>
+          <Divider style={styles.divider} />
+          {accessoryFields.map(item => (
+            <View key={item.key} style={styles.accesorioRow}>
+              <AppIconButton
+                icon={equipo[item.key] ? 'check-circle' : 'close-circle'}
+                size={20}
+                iconColor={equipo[item.key] ? theme.colors.status.success : theme.colors.text.tertiary}
+                accessibilityLabel={`${item.label}: ${equipo[item.key] ? 'incluido' : 'no incluido'}`}
+              />
+              <Text variant="bodyMedium">{item.label}</Text>
+            </View>
+          ))}
+        </AppCard>
+
+        {evidencias.length > 0 && imageAuth ? (
           <AppCard style={styles.section}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
-              Accesorios
-            </Text>
+            <Text variant="titleMedium" style={styles.sectionTitle}>Evidencias de ingreso</Text>
             <Divider style={styles.divider} />
-            {equipo.accesorios.map((acc, index) => (
-              <View key={index} style={styles.accesorioRow}>
-                <AppIconButton
-                  icon={acc.tiene ? 'check-circle' : 'close-circle'}
-                  size={20}
-                  iconColor={acc.tiene ? theme.colors.status.success : theme.colors.status.error}
-                  accessibilityLabel={`${acc.nombre || acc.accesorio?.nombre || 'Accesorio'}: ${acc.tiene ? 'incluido' : 'no incluido'}`}
-                />
-                <Text variant="bodyMedium">{acc.nombre || acc.accesorio?.nombre || '-'}</Text>
-              </View>
-            ))}
+            <View style={styles.gallery}>
+              {evidencias.map(item => (
+                <View key={item.tipo} style={styles.photoItem}>
+                  <Image
+                    style={styles.photo}
+                    source={{
+                      uri: `${imageAuth.baseUrl}/ingresos-equipo/${id}/evidencias/${item.tipo}/archivo`,
+                      headers: { Authorization: `Bearer ${imageAuth.token}` },
+                    }}
+                    resizeMode="cover"
+                  />
+                  <Text style={styles.photoLabel}>{item.tipo.replaceAll('_', ' ')}</Text>
+                </View>
+              ))}
+            </View>
           </AppCard>
         ) : null}
 
@@ -246,6 +282,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: theme.spacing[1],
   },
+  gallery: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing[2] },
+  photoItem: { width: '48%' },
+  photo: { width: '100%', aspectRatio: 1.25, borderRadius: theme.radius.sm, backgroundColor: theme.colors.background.page },
+  photoLabel: { ...theme.typography.caption, color: theme.colors.text.secondary, marginTop: theme.spacing[1] },
   actions: {
     marginTop: theme.spacing[2],
     marginBottom: theme.spacing[3],

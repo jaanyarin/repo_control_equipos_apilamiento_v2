@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 public class EquipoDTO {
     private Long id;
@@ -16,10 +17,15 @@ public class EquipoDTO {
 
     @NotNull(message = "El tipo de equipo es obligatorio")
     private Long tipoEquipoId;
+    private String proveedorNombre;
+    private String marcaNombre;
+    private String tipoEquipoNombre;
 
     @NotBlank(message = "El modelo es obligatorio")
     private String modelo;
+    @NotBlank(message = "El código es obligatorio")
     private String codigo;
+    @NotBlank(message = "El número de serie es obligatorio")
     private String numeroSerie;
     private String capacidad;
     private String alturaMaxima;
@@ -42,6 +48,9 @@ public class EquipoDTO {
     private BigDecimal horometroFin;
     private String estadoOperativo;
     private String observaciones;
+    private LocalDate fechaIngreso;
+    private String numeroGuiaRemision;
+    private Boolean ingresoCompleto;
     private Boolean estadoActivo;
     private Long usuarioCreacion;
     private Long usuarioActualizacion;
@@ -59,6 +68,12 @@ public class EquipoDTO {
 
     public Long getTipoEquipoId() { return tipoEquipoId; }
     public void setTipoEquipoId(Long tipoEquipoId) { this.tipoEquipoId = tipoEquipoId; }
+    public String getProveedorNombre() { return proveedorNombre; }
+    public void setProveedorNombre(String proveedorNombre) { this.proveedorNombre = proveedorNombre; }
+    public String getMarcaNombre() { return marcaNombre; }
+    public void setMarcaNombre(String marcaNombre) { this.marcaNombre = marcaNombre; }
+    public String getTipoEquipoNombre() { return tipoEquipoNombre; }
+    public void setTipoEquipoNombre(String tipoEquipoNombre) { this.tipoEquipoNombre = tipoEquipoNombre; }
 
     public String getModelo() { return modelo; }
     public void setModelo(String modelo) { this.modelo = modelo; }
@@ -131,6 +146,12 @@ public class EquipoDTO {
 
     public String getObservaciones() { return observaciones; }
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
+    public LocalDate getFechaIngreso() { return fechaIngreso; }
+    public void setFechaIngreso(LocalDate fechaIngreso) { this.fechaIngreso = fechaIngreso; }
+    public String getNumeroGuiaRemision() { return numeroGuiaRemision; }
+    public void setNumeroGuiaRemision(String numeroGuiaRemision) { this.numeroGuiaRemision = numeroGuiaRemision; }
+    public Boolean getIngresoCompleto() { return ingresoCompleto; }
+    public void setIngresoCompleto(Boolean ingresoCompleto) { this.ingresoCompleto = ingresoCompleto; }
 
     public Boolean getEstadoActivo() { return estadoActivo; }
     public void setEstadoActivo(Boolean estadoActivo) { this.estadoActivo = estadoActivo; }

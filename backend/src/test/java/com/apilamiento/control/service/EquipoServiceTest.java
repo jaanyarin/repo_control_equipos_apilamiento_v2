@@ -4,6 +4,9 @@ import com.apilamiento.control.dto.EquipoDTO;
 import com.apilamiento.control.entity.Equipo;
 import com.apilamiento.control.mapper.EquipoMapper;
 import com.apilamiento.control.repository.EquipoRepository;
+import com.apilamiento.control.repository.MarcaRepository;
+import com.apilamiento.control.repository.ProveedorRepository;
+import com.apilamiento.control.repository.TipoEquipoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +24,9 @@ class EquipoServiceTest {
 
     @Mock
     EquipoRepository repository;
+    @Mock ProveedorRepository proveedorRepository;
+    @Mock MarcaRepository marcaRepository;
+    @Mock TipoEquipoRepository tipoEquipoRepository;
 
     EquipoMapper mapper = new EquipoMapper();
 
@@ -28,12 +34,12 @@ class EquipoServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new EquipoService(repository, mapper);
+        service = new EquipoService(repository, mapper, proveedorRepository, marcaRepository, tipoEquipoRepository);
     }
 
     @Test
     void listarTodos_deberiaRetornarLista() {
-        when(repository.listAll()).thenReturn(List.of(new Equipo()));
+        when(repository.listCompletos()).thenReturn(List.of(new Equipo()));
 
         List<EquipoDTO> resultado = service.listarTodos();
 

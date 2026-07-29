@@ -52,6 +52,12 @@ ApilamientoMobileCli/.gradle-home-single/
 # Docker volumes
 postgres-data/
 
+# Gradle cache local
+.gradle-short/
+
+# Archivos temporales de Office
+~$*
+
 # Proyectos duplicados / backup (no activos)
 android/
 mobile_cli/

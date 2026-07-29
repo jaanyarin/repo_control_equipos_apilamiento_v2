@@ -2,6 +2,7 @@ package com.apilamiento.control.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
@@ -93,6 +94,15 @@ public class Equipo {
 
     @Column(columnDefinition = "TEXT")
     private String observaciones;
+
+    @Column(name = "fecha_ingreso")
+    private LocalDate fechaIngreso;
+
+    @Column(name = "numero_guia_remision", length = 100)
+    private String numeroGuiaRemision;
+
+    @Column(name = "ingreso_completo", nullable = false)
+    private Boolean ingresoCompleto = true;
 
     @Column(name = "estado_activo", nullable = false)
     private Boolean estadoActivo = true;
@@ -195,6 +205,12 @@ public class Equipo {
 
     public String getObservaciones() { return observaciones; }
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
+    public LocalDate getFechaIngreso() { return fechaIngreso; }
+    public void setFechaIngreso(LocalDate fechaIngreso) { this.fechaIngreso = fechaIngreso; }
+    public String getNumeroGuiaRemision() { return numeroGuiaRemision; }
+    public void setNumeroGuiaRemision(String numeroGuiaRemision) { this.numeroGuiaRemision = numeroGuiaRemision; }
+    public Boolean getIngresoCompleto() { return ingresoCompleto; }
+    public void setIngresoCompleto(Boolean ingresoCompleto) { this.ingresoCompleto = ingresoCompleto; }
 
     public Boolean getEstadoActivo() { return estadoActivo; }
     public void setEstadoActivo(Boolean estadoActivo) { this.estadoActivo = estadoActivo; }

@@ -4,6 +4,11 @@ import com.apilamiento.control.dto.EquipoDTO;
 import com.apilamiento.control.entity.Equipo;
 import com.apilamiento.control.mapper.EquipoMapper;
 import com.apilamiento.control.repository.EquipoRepository;
+import com.apilamiento.control.repository.MarcaRepository;
+import com.apilamiento.control.repository.ProveedorRepository;
+import com.apilamiento.control.repository.TipoEquipoRepository;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
@@ -15,45 +20,53 @@ public class EquipoService {
 
     private final EquipoRepository repository;
     private final EquipoMapper mapper;
+    private final ProveedorRepository proveedorRepository;
+    private final MarcaRepository marcaRepository;
+    private final TipoEquipoRepository tipoEquipoRepository;
 
-    public EquipoService(EquipoRepository repository, EquipoMapper mapper) {
+    public EquipoService(EquipoRepository repository, EquipoMapper mapper,
+            ProveedorRepository proveedorRepository, MarcaRepository marcaRepository,
+            TipoEquipoRepository tipoEquipoRepository) {
         this.repository = repository;
         this.mapper = mapper;
+        this.proveedorRepository = proveedorRepository;
+        this.marcaRepository = marcaRepository;
+        this.tipoEquipoRepository = tipoEquipoRepository;
     }
 
     public List<EquipoDTO> listarTodos() {
-        return repository.listAll().stream()
-                .map(mapper::toDTO)
+        return repository.listCompletos().stream()
+                .map(this::toDTO)
                 .toList();
     }
 
     public EquipoDTO buscarPorId(Long id) {
         return repository.findByIdOptional(id)
-                .map(mapper::toDTO)
+                .map(this::toDTO)
                 .orElse(null);
     }
 
     public List<EquipoDTO> listarPorProveedor(Long proveedorId) {
         return repository.list("proveedorId", proveedorId).stream()
-                .map(mapper::toDTO)
+                .map(this::toDTO)
                 .toList();
     }
 
     public List<EquipoDTO> listarPorMarca(Long marcaId) {
         return repository.list("marcaId", marcaId).stream()
-                .map(mapper::toDTO)
+                .map(this::toDTO)
                 .toList();
     }
 
     public List<EquipoDTO> listarPorTipoEquipo(Long tipoEquipoId) {
         return repository.list("tipoEquipoId", tipoEquipoId).stream()
-                .map(mapper::toDTO)
+                .map(this::toDTO)
                 .toList();
     }
 
     public List<EquipoDTO> listarPorEstadoOperativo(String estadoOperativo) {
         return repository.list("estadoOperativo", estadoOperativo).stream()
-                .map(mapper::toDTO)
+                .map(this::toDTO)
                 .toList();
     }
 
@@ -61,19 +74,22 @@ public class EquipoService {
         return listarTodos();
     }
 
-    private String generarCodigo(String modelo, String numeroSerie) {
-        String base = modelo != null ? modelo : "EQ";
-        if (numeroSerie != null && !numeroSerie.isBlank()) {
-            base = base + "_" + numeroSerie;
-        }
-        return base.toUpperCase().replaceAll("\\s+", "_").replaceAll("[^A-Z0-9_]", "");
+    private EquipoDTO toDTO(Equipo entity) {
+        EquipoDTO dto = mapper.toDTO(entity);
+        proveedorRepository.findByIdOptional(entity.getProveedorId())
+                .ifPresent(value -> dto.setProveedorNombre(value.getRazonSocial()));
+        marcaRepository.findByIdOptional(entity.getMarcaId())
+                .ifPresent(value -> dto.setMarcaNombre(value.getNombre()));
+        tipoEquipoRepository.findByIdOptional(entity.getTipoEquipoId())
+                .ifPresent(value -> dto.setTipoEquipoNombre(value.getNombre()));
+        return dto;
     }
 
     @Transactional
     public EquipoDTO crear(EquipoDTO dto) {
         Equipo entity = new Equipo();
         entity.setModelo(dto.getModelo());
-        entity.setCodigo(generarCodigo(dto.getModelo(), dto.getNumeroSerie()));
+        entity.setCodigo(dto.getCodigo().trim().toUpperCase());
         entity.setNumeroSerie(dto.getNumeroSerie());
         entity.setCapacidad(dto.getCapacidad());
         entity.setAlturaMaxima(dto.getAlturaMaxima());
@@ -96,13 +112,16 @@ public class EquipoService {
         entity.setHorometroFin(dto.getHorometroFin());
         entity.setEstadoOperativo(dto.getEstadoOperativo());
         entity.setObservaciones(dto.getObservaciones());
+        entity.setFechaIngreso(dto.getFechaIngreso());
+        entity.setNumeroGuiaRemision(dto.getNumeroGuiaRemision());
+        entity.setIngresoCompleto(dto.getIngresoCompleto() == null || dto.getIngresoCompleto());
         entity.setProveedorId(dto.getProveedorId());
         entity.setMarcaId(dto.getMarcaId());
         entity.setTipoEquipoId(dto.getTipoEquipoId());
         entity.setEstadoActivo(true);
         entity.setUsuarioCreacion(dto.getUsuarioCreacion() != null ? dto.getUsuarioCreacion() : 1L);
         repository.persist(entity);
-        return mapper.toDTO(entity);
+        return toDTO(entity);
     }
 
     @Transactional
@@ -111,8 +130,17 @@ public class EquipoService {
         if (entity == null) return null;
         if (dto.getModelo() != null) {
             entity.setModelo(dto.getModelo());
-            entity.setCodigo(generarCodigo(dto.getModelo(), dto.getNumeroSerie()));
         }
+        String requestedCode = dto.getCodigo().trim().toUpperCase();
+        repository.findByCodigo(requestedCode)
+                .filter(found -> !found.getId().equals(id))
+                .ifPresent(found -> { throw new WebApplicationException(
+                        "El código del equipo ya está registrado", Response.Status.CONFLICT); });
+        repository.findByNumeroSerie(dto.getNumeroSerie().trim())
+                .filter(found -> !found.getId().equals(id))
+                .ifPresent(found -> { throw new WebApplicationException(
+                        "El número de serie ya está registrado", Response.Status.CONFLICT); });
+        entity.setCodigo(requestedCode);
         if (dto.getNumeroSerie() != null) entity.setNumeroSerie(dto.getNumeroSerie());
         if (dto.getCapacidad() != null) entity.setCapacidad(dto.getCapacidad());
         if (dto.getAlturaMaxima() != null) entity.setAlturaMaxima(dto.getAlturaMaxima());
@@ -135,13 +163,15 @@ public class EquipoService {
         if (dto.getHorometroFin() != null) entity.setHorometroFin(dto.getHorometroFin());
         if (dto.getEstadoOperativo() != null) entity.setEstadoOperativo(dto.getEstadoOperativo());
         if (dto.getObservaciones() != null) entity.setObservaciones(dto.getObservaciones());
+        if (dto.getFechaIngreso() != null) entity.setFechaIngreso(dto.getFechaIngreso());
+        if (dto.getNumeroGuiaRemision() != null) entity.setNumeroGuiaRemision(dto.getNumeroGuiaRemision());
         if (dto.getProveedorId() != null) entity.setProveedorId(dto.getProveedorId());
         if (dto.getMarcaId() != null) entity.setMarcaId(dto.getMarcaId());
         if (dto.getTipoEquipoId() != null) entity.setTipoEquipoId(dto.getTipoEquipoId());
         if (dto.getEstadoActivo() != null) entity.setEstadoActivo(dto.getEstadoActivo());
         entity.setUsuarioActualizacion(dto.getUsuarioActualizacion() != null ? dto.getUsuarioActualizacion() : 1L);
         entity.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
-        return mapper.toDTO(entity);
+        return toDTO(entity);
     }
 
     @Transactional
