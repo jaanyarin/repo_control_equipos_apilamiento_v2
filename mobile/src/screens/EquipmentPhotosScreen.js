@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, FlatList, StyleSheet, View } from 'react-native'
+import { Alert, FlatList, Image, Modal, Pressable, StyleSheet, View } from 'react-native'
 import { Icon, Text } from 'react-native-paper'
 import { launchCamera } from 'react-native-image-picker'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import api from '../api'
+import api, { loadApiUrl, getToken } from '../api'
 import AppButton from '../components/AppButton'
 import AppCard from '../components/AppCard'
 import ErrorState from '../components/ErrorState'
@@ -24,6 +24,7 @@ export default function EquipmentPhotosScreen() {
   const [loading, setLoading] = useState(true)
   const [finishing, setFinishing] = useState(false)
   const [error, setError] = useState('')
+  const [viewer, setViewer] = useState(null) // { tipo, source: { uri, headers } }
 
   const load = useCallback(async () => {
     try {
@@ -46,6 +47,23 @@ export default function EquipmentPhotosScreen() {
 
   const required = useMemo(() => requiredEvidenceFor(equipment), [equipment])
   const missing = [...required].filter(type => !evidence[type])
+
+  const handleView = async (tipo) => {
+    const baseUrl = await loadApiUrl()
+    const token = await getToken()
+    const uri = `${baseUrl}/ingresos-equipo/${equipoId}/evidencias/${tipo}/archivo`
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    try {
+      const response = await fetch(uri, { headers })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      const blob = await response.blob()
+      const reader = new FileReader()
+      reader.onloadend = () => setViewer({ tipo, source: { uri: reader.result } })
+      reader.readAsDataURL(blob)
+    } catch (e) {
+      Alert.alert('Error al cargar imagen', e.message)
+    }
+  }
 
   const takePhoto = async item => {
     const result = await launchCamera({
@@ -149,10 +167,10 @@ export default function EquipmentPhotosScreen() {
           return (
             <AppButton
               tone={saved ? 'secondary' : 'primary'}
-              icon={uploading[item.key] ? 'progress-clock' : saved ? 'check-circle' : 'camera'}
-              onPress={() => takePhoto(item)}
+              icon={uploading[item.key] ? 'progress-clock' : saved ? 'check-circle-outline' : 'camera'}
+              onPress={() => saved ? handleView(item.key) : takePhoto(item)}
               loading={Boolean(uploading[item.key])}
-              disabled={Object.values(uploading).some(Boolean)}
+              disabled={Object.values(uploading).some(Boolean) && !saved}
               style={styles.photoButton}
             >
               {item.label}{isRequired ? ' *' : ''}
@@ -174,6 +192,14 @@ export default function EquipmentPhotosScreen() {
           Cancelar ingreso
         </AppButton>
       </View>
+      <Modal visible={!!viewer} transparent animationType="fade" onRequestClose={() => setViewer(null)}>
+        <Pressable style={styles.viewerOverlay} onPress={() => setViewer(null)}>
+          <Pressable onPress={e => e.stopPropagation()}>
+            {viewer && <Image source={viewer.source} style={styles.viewerImage} resizeMode="contain" />}
+            <Text style={styles.viewerLabel}>{viewer?.tipo}</Text>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   )
 }
@@ -194,5 +220,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing[4], paddingTop: theme.spacing[3],
     backgroundColor: theme.colors.background.paper,
     borderTopWidth: 1, borderTopColor: theme.colors.border.subtle,
+  },
+  viewerOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.92)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  viewerImage: {
+    width: '100%', height: '80%',
+  },
+  viewerLabel: {
+    ...theme.typography.caption, color: theme.colors.text.inverse,
+    textAlign: 'center', marginTop: theme.spacing[2],
   },
 })
