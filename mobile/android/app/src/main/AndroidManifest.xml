@@ -1,5 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Cámara para toma de fotos de evidencias de ingreso -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Almacenamiento para descargar imágenes al dispositivo (solo necesario hasta Android 9) -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <!-- Lectura de almacenamiento externo hasta Android 12 (scoped storage desde API 33) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
     <application
         android:name=".MainApplication"

@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, FlatList, Image, Modal, Pressable, StyleSheet, View } from 'react-native'
+import { Alert, FlatList, Image, Modal, PermissionsAndroid, Platform, Pressable, StatusBar, StyleSheet, View } from 'react-native'
 import { Icon, Text } from 'react-native-paper'
 import { launchCamera } from 'react-native-image-picker'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import * as FileSystem from 'expo-file-system'
+import ReactNativeBlobUtil from 'react-native-blob-util'
 import api, { loadApiUrl, getToken } from '../api'
 import AppButton from '../components/AppButton'
 import AppCard from '../components/AppCard'
+import ZoomableImage from '../components/ZoomableImage'
 import ErrorState from '../components/ErrorState'
 import LoadingScreen from '../components/LoadingScreen'
 import { evidenceTypes, requiredEvidenceFor } from '../utils/equipmentForm'
@@ -25,7 +26,7 @@ export default function EquipmentPhotosScreen() {
   const [loading, setLoading] = useState(true)
   const [finishing, setFinishing] = useState(false)
   const [error, setError] = useState('')
-  const [viewer, setViewer] = useState(null) // { tipo, source: { uri, headers } }
+  const [viewer, setViewer] = useState(null) // { tipo, uri, headers }
 
   const load = useCallback(async () => {
     try {
@@ -44,21 +45,58 @@ export default function EquipmentPhotosScreen() {
     }
   }, [equipoId])
 
+
+
   useEffect(() => { load() }, [load])
+
+  useEffect(() => { if (viewer) console.error('VIEWER_SET:' + viewer.tipo + '|' + viewer.uri) }, [viewer])
 
   const required = useMemo(() => requiredEvidenceFor(equipment), [equipment])
   const missing = [...required].filter(type => !evidence[type])
 
   const handleView = async (tipo) => {
-    const baseUrl = await loadApiUrl()
-    const token = await getToken()
-    const uri = `${baseUrl}/ingresos-equipo/${equipoId}/evidencias/${tipo}/archivo`
-    const fileUri = FileSystem.cacheDirectory + `evidencia_${tipo}_${Date.now()}.jpg`
+    console.error('VIEWER_OPEN:' + tipo)
     try {
-      const result = await FileSystem.downloadAsync(uri, fileUri, token ? { headers: { Authorization: `Bearer ${token}` } } : {})
-      setViewer({ tipo, source: { uri: result.uri } })
+      const baseUrl = await loadApiUrl()
+      const token = await getToken()
+      const uri = `${baseUrl}/ingresos-equipo/${equipoId}/evidencias/${tipo}/archivo`
+      console.error('VIEWER_URI:' + uri)
+      setViewer({ tipo, uri, headers: token ? { Authorization: `Bearer ${token}` } : {} })
     } catch (e) {
-      Alert.alert('Error al cargar imagen', e.message)
+      console.error('VIEWER_ERR:' + (e.message || e))
+    }
+  }
+
+  const handleDownload = async (tipo) => {
+    try {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          { title: 'Permiso de almacenamiento', message: 'Necesitamos acceso al almacenamiento para guardar la foto' }
+        )
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert('Permiso denegado', 'No se puede guardar la foto sin permiso de almacenamiento.')
+          return
+        }
+      }
+      const baseUrl = await loadApiUrl()
+      const token = await getToken()
+      const uri = `${baseUrl}/ingresos-equipo/${equipoId}/evidencias/${tipo}/archivo`
+      const { dirs } = ReactNativeBlobUtil.fs
+      const destPath = `${dirs.PictureDir || dirs.DownloadDir}/evidencia_${tipo}_${Date.now()}.jpg`
+      const res = await ReactNativeBlobUtil
+        .config({
+          path: destPath,
+          addAndroidDownloads: { useDownloadManager: true, notification: true, path: destPath },
+        })
+        .fetch('GET', uri, token ? { Authorization: `Bearer ${token}` } : {})
+      if (res.info().statusCode === 200) {
+        Alert.alert('Foto guardada', `Se guardó en: ${destPath}`)
+      } else {
+        Alert.alert('Error', 'No se pudo descargar la foto. Código: ' + res.info().statusCode)
+      }
+    } catch (e) {
+      Alert.alert('Error al descargar', e.message || 'Intente nuevamente')
     }
   }
 
@@ -189,13 +227,29 @@ export default function EquipmentPhotosScreen() {
           Cancelar ingreso
         </AppButton>
       </View>
-      <Modal visible={!!viewer} transparent animationType="fade" onRequestClose={() => setViewer(null)}>
-        <Pressable style={styles.viewerOverlay} onPress={() => setViewer(null)}>
-          <Pressable onPress={e => e.stopPropagation()}>
-            {viewer && <Image source={viewer.source} style={styles.viewerImage} resizeMode="contain" />}
-            <Text style={styles.viewerLabel}>{viewer?.tipo}</Text>
-          </Pressable>
-        </Pressable>
+      {/*
+       * Visor de imagen a pantalla completa (Modal).
+       * - Barra superior: flecha de retroceso + nombre del tipo de evidencia
+       * - Centro: ZoomableImage con soporte pinza, arrastre y doble tap
+       * - Barra inferior: botón para descargar la imagen al dispositivo
+       */}
+      <Modal visible={!!viewer} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setViewer(null)}>
+        <StatusBar hidden />
+        <View style={styles.viewerRoot}>
+          <View style={[styles.viewerHeader, { paddingTop: insets.top + theme.spacing[1] }]}>
+            <Pressable onPress={() => setViewer(null)} style={styles.viewerBack}>
+              <Icon source="arrow-left" size={24} color="#fff" />
+            </Pressable>
+            <Text style={styles.viewerTitle}>{viewer?.tipo || ''}</Text>
+            <View style={{ width: 44 }} />
+          </View>
+          <ZoomableImage uri={viewer?.uri} headers={viewer?.headers} />
+          <View style={[styles.viewerFooter, { paddingBottom: insets.bottom + theme.spacing[2] }]}>
+            <AppButton icon="download" onPress={() => viewer && handleDownload(viewer.tipo)} fullWidth>
+              Descargar al dispositivo
+            </AppButton>
+          </View>
+        </View>
       </Modal>
     </View>
   )
@@ -218,15 +272,25 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.paper,
     borderTopWidth: 1, borderTopColor: theme.colors.border.subtle,
   },
-  viewerOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.92)',
-    justifyContent: 'center', alignItems: 'center',
+  // Visor a pantalla completa — fondo negro translúcido con barras semitransparentes
+  viewerRoot: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.95)',
   },
-  viewerImage: {
-    width: '100%', height: '80%',
+  viewerHeader: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: theme.spacing[2],
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  viewerLabel: {
-    ...theme.typography.caption, color: theme.colors.text.inverse,
-    textAlign: 'center', marginTop: theme.spacing[2],
+  viewerBack: {
+    width: 44, height: 44,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  viewerTitle: {
+    flex: 1, textAlign: 'center',
+    ...theme.typography.subtitle1, color: '#fff',
+  },
+  viewerFooter: {
+    paddingHorizontal: theme.spacing[4], paddingTop: theme.spacing[2],
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
 })

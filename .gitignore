@@ -58,6 +58,12 @@ postgres-data/
 # Archivos temporales de Office
 ~$*
 
+# Token JWT de pruebas (generado por adb logcat)
+token.txt
+
+# Imágenes de prueba descargadas manualmente
+evidencia_*.jpg
+
 # Proyectos duplicados / backup (no activos)
 android/
 mobile_cli/

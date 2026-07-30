@@ -39,8 +39,11 @@ export const baseRequiredEvidence = [
   'LATERAL_IZQUIERDO', 'LATERAL_DERECHO', 'FRONTAL', 'POSTERIOR', 'GUIA_REMISION',
 ]
 
-export function requiredEvidenceFor(equipment = {}) {
+// Retorna el conjunto de tipos de evidencia obligatorios según los accesorios del equipo.
+// Si equipment es null/undefined, retorna solo las evidencias base (no crashea).
+export function requiredEvidenceFor(equipment) {
   const required = new Set(baseRequiredEvidence)
+  if (!equipment) return required
   accessoryFields.forEach(item => {
     if (item.evidence && equipment[item.key]) required.add(item.evidence)
   })
