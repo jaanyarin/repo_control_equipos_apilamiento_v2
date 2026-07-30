@@ -36,6 +36,7 @@ import { hasPsrAdminRole } from '../utils/roles'
 
 function CatalogoTabScreen() {
   const navigation = useNavigation()
+  const insets = useSafeAreaInsets()
   const catalogItems = [
     { label: 'Marcas', icon: 'trademark', screen: 'Marcas' },
     { label: 'Proveedores', icon: 'truck', screen: 'Proveedores' },

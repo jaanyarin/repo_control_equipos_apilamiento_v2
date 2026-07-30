@@ -12,9 +12,9 @@
 | Plataforma | Web SPA + Android APK |
 | Backend | Quarkus Java |
 | Base de Datos Oficial | PostgreSQL 18 |
-| Versión Documento | 1.6 |
-| Estado | En desarrollo — frontend web funcional, migración mobile a React Native CLI completada |
-| Fecha | 2026-07-24 |
+| Versión Documento | 1.7 |
+| Estado | En desarrollo — frontend web funcional, mobile Expo SDK 54, backend completo con todos los módulos operativos |
+| Fecha | 2026-07-30 |
 | Responsable | Jose Anyarin |
 
 ---
@@ -111,23 +111,23 @@ No se usará MySQL en este proyecto.
 # 7. Módulos del Sistema
 
 | Código | Módulo | Descripción | Estado Actual |
-|---|---|---|---|
-| MOD-01 | Autenticación | Login local con selección de perfil, usuario y contraseña + cambio de contraseña obligatorio en primer ingreso | Validado |
-| MOD-02 | Usuarios | Administración de usuarios, roles y accesos | Validado |
-| MOD-03 | Sedes | Gestión de sedes operativas | Validado |
-| MOD-04 | Campañas | Gestión de campañas operativas | Validado |
-| MOD-05 | PSR / OSR | Registro y control documental | Pendiente crítico |
-| MOD-06 | Equipos | Gestión operativa de equipos alquilados | Pendiente crítico |
-| MOD-07 | Tipos de Equipos | Administración de categorías y tipos | Pendiente inmediato |
-| MOD-08 | Proveedores | Gestión de proveedores | Pendiente inmediato |
-| MOD-09 | Averías | Registro, seguimiento y atención de averías | Pendiente crítico |
-| MOD-10 | Evidencias Fotográficas | Gestión de fotografías asociadas | Pendiente |
-| MOD-11 | Dashboard KPI | Indicadores operativos | Pendiente |
-| MOD-12 | Reportes PDF | Generación y exportación PDF | Pendiente |
-| MOD-13 | Auditoría | Trazabilidad de eventos | Pendiente |
-| MOD-14 | Catálogos | Datos maestros auxiliares | Parcial |
-| MOD-15 | Configuración | Parámetros generales | Pendiente |
-| MOD-16 | Mobile App | Aplicación Android operativa | Login local validado / operación pendiente |
+|---|---|---|---|---|
+| MOD-01 | Autenticación | Login local con selección de perfil, usuario y contraseña + cambio de contraseña obligatorio en primer ingreso | ✅ Validado |
+| MOD-02 | Usuarios | Administración de usuarios, roles y accesos | ✅ Validado (backend + web + mobile CRUD) |
+| MOD-03 | Sedes | Gestión de sedes operativas | ✅ Validado (backend + web + mobile CRUD) |
+| MOD-04 | Campañas | Gestión de campañas operativas | ✅ Validado (backend + web + mobile CRUD) |
+| MOD-05 | PSR / OSR | Registro y control documental | ✅ Validado (backend + web + mobile CRUD con CreatePsrScreen) |
+| MOD-06 | Equipos | Gestión operativa de equipos alquilados | ✅ Validado (backend + web + mobile CRUD) |
+| MOD-07 | Tipos de Equipos | Administración de categorías y tipos | ✅ Validado (backend + web + mobile CRUD) |
+| MOD-08 | Proveedores | Gestión de proveedores | ✅ Validado (backend + web + mobile CRUD) |
+| MOD-09 | Averías | Registro, seguimiento y atención de averías | ✅ Validado (backend + web + mobile). Incluye Finalización del Servicio con restauración de estado operativo del equipo |
+| MOD-10 | Evidencias Fotográficas | Gestión de fotografías asociadas | ⏳ Parcial (1 foto en atención de avería). Pendiente integración completa |
+| MOD-11 | Dashboard KPI | Indicadores operativos | ⏳ Pendiente |
+| MOD-12 | Reportes PDF | Generación y exportación PDF | ⏳ Pendiente |
+| MOD-13 | Auditoría | Trazabilidad de eventos | ✅ Validado (tablas V10-V11, backend package audit/, mobile screen) |
+| MOD-14 | Catálogos | Datos maestros auxiliares | ✅ Validado (mobile con CatalogScreen genérico) |
+| MOD-15 | Configuración | Parámetros generales | ✅ Validado (mobile SettingsScreen con URL configurable) |
+| MOD-16 | Mobile App | Aplicación Android operativa (Expo SDK 54) | ✅ Validado — 19+ pantallas, navegación completa, CRUDs operativos, tema MD3 |
 
 ---
 
@@ -141,51 +141,60 @@ No se usará MySQL en este proyecto.
 - Nginx reverse proxy.
 - Frontend web base.
 - Autenticación local con BCrypt (login por selección de perfil → usuario → contraseña).
-- Cambio de contraseña obligatorio en primer ingreso (password por defecto → DNI).
+- Cambio de contraseña obligatorio en primer ingreso (password por defecto → DNI/00000000).
 - JWT propio.
-- Roles.
-- Usuarios (seed local con datos de prueba).
-- Sedes.
-- Campañas.
+- Roles (backend + web + mobile CRUD).
+- Usuarios (seed local con datos de prueba, CRUD mobile con permisos por rol).
+- Sedes (backend + web + mobile CRUD).
+- Campañas (backend + web + mobile con activar/cerrar).
 - Mobile login local.
-- APK inicial validado.
+- APK inicial validado (Expo SDK 54, EAS Cloud).
 - Menú principal post-login con 5 botones según perfil.
+- Tipos de equipo (backend + web + mobile CRUD).
+- Proveedores (backend + web + mobile CRUD).
+- Marcas (backend + web + mobile CRUD).
+- Equipos (backend + web + mobile CRUD + detalle).
+- PSR / OSR (backend + web + mobile CRUD con CreatePsrScreen con date picker nativo + Zod).
+- Averías (backend + web + mobile: registrar, atender con foto).
+- **Finalización del Servicio**: al atender una avería, el equipo restaura su `estadoOperativo = "OPERATIVO"`. Mobile: 1 foto, botón "Finalizar Servicio".
+- Auditoría operacional (tablas V10-V11, backend package audit/, mobile screen).
+- Configuración mobile (URL API configurable en runtime).
+- CatalogScreen genérico para CRUD de catálogos mobile.
+- Componentes UI reutilizables mobile (14 componentes).
+- Sistema de tema MD3 con design tokens.
+- Navegación mobile completa (AuthStack + MainStack + BottomTabs con 4 tabs).
+- Tests backend (7 archivos JUnit/Mockito), frontend web (2), mobile (3).
+- CI/CD GitHub Actions.
+- Modo claro/oscuro frontend web.
 
-## Pendiente crítico
+## Pendiente
 
-- Tipos de equipo.
-- Proveedores.
-- Marcas.
-- Equipos.
-- PSR / OSR.
-- Averías.
-- Evidencias fotográficas.
+- Evidencias fotográficas (integración completa).
 - Reportes PDF.
 - Dashboard KPI.
-- Auditoría operacional.
+- QA Integral.
+- Firebase Crashlytics.
+- Build APK producción.
 
 ---
 
-# 9. Entidades Principales Esperadas
-
-## Implementadas o base existente
+# 9. Entidades Principales Implementadas
 
 - `dim_roles`
 - `dim_usuarios`
 - `dim_sedes`
 - `dim_campanas`
-
-## Pendientes para HDT-002
-
 - `dim_tipos_equipo`
 - `dim_proveedores`
 - `dim_marcas`
+- `fac_equipos`
 - `fac_psr`
 - `fac_osr`
-- `fac_equipos`
 - `fac_averias`
 - `fac_evidencias`
 - `auditoria_eventos`
+- `login_local` (tabla de autenticación local V8)
+- `auditoria_tipos` (catálogo de tipos de eventos V11)
 
 ---
 
@@ -201,7 +210,9 @@ No se usará MySQL en este proyecto.
 - Cada equipo debe tener proveedor obligatorio.
 - Cada equipo debe tener número de serie único.
 - Cada equipo debe tener código interno único.
-- Los estados operativos iniciales de equipo son Operativo y Averiado.
+- Los estados operativos de equipo son: `OPERATIVO` y `AVERIADO`.
+- Un equipo en estado `AVERIADO` no permite registrar una nueva avería hasta que sea atendido.
+- Al atender una avería (marcar `ATENDIDA`), el equipo se restaura automáticamente a `OPERATIVO`.
 - Un equipo con historial no debe eliminarse físicamente.
 - Las evidencias fotográficas son obligatorias para ingreso y devolución de equipos.
 - Las averías deben registrar fecha/hora de reporte y fecha/hora de atención.
@@ -211,74 +222,74 @@ No se usará MySQL en este proyecto.
 
 ---
 
-# 11. Flujos Operativos Objetivo
+# 11. Flujos Operativos Implementados
 
-1. Login local (seleccionar perfil → seleccionar usuario → ingresar contraseña).
-2. Si es primer ingreso (password por defecto), forzar cambio de contraseña (DNI).
-3. Validación de usuario autorizado.
-4. Menú principal con 5 botones según perfil.
-5. Gestión de campaña activa.
-6. Registro de PSR.
-7. Registro de OSR.
-8. Registro de proveedor, marca y tipo de equipo.
-9. Registro de equipo.
-10. Asociación equipo con PSR/OSR.
-11. Registro de evidencias de ingreso.
-12. Registro de avería.
-13. Atención de avería.
-14. Cálculo de tiempo inactivo.
-15. Finalización del servicio.
-16. Registro de evidencias de devolución.
-17. Consulta de historial.
-18. Generación de PDF.
-19. Visualización de indicadores.
+1. ✅ Login local (seleccionar perfil → seleccionar usuario → ingresar contraseña).
+2. ✅ Cambio de contraseña obligatorio en primer ingreso (password por defecto → DNI/00000000).
+3. ✅ Validación de usuario autorizado + menú principal con 5 botones según perfil.
+4. ✅ Gestión de campaña activa.
+5. ✅ Registro de PSR y OSR (mobile con date picker nativo + Zod).
+6. ✅ CRUD de proveedores, marcas y tipos de equipo.
+7. ✅ Registro de equipos (CRUD completo).
+8. ✅ Registro de avería (mobile con 2 fotos).
+9. ✅ Atención de avería (mobile con 1 foto, acción realizada).
+10. ✅ Finalización del Servicio: restaura `estadoOperativo = "OPERATIVO"` al atender.
+11. ✅ Cálculo automático de tiempo inactivo (días calendario).
+12. ✅ Consulta de historial de equipos.
+13. ✅ Auditoría de eventos (backend + mobile).
+14. ⏳ Registro de evidencias de devolución.
+15. ⏳ Generación de PDF.
+16. ⏳ Dashboard de indicadores KPI.
 
 ---
 
 # 12. Punto Crítico de Desarrollo
 
-El siguiente punto crítico es HDT-002:
+HDT-002 (Núcleo Operativo) fue completado: tipos de equipo, proveedores, marcas, equipos, PSR/OSR, averías — todo implementado en backend, web y mobile.
 
-1. Tipos de equipo.
-2. Proveedores.
-3. Marcas.
-4. Equipos.
-5. PSR / OSR.
-6. Averías.
+HDT-003 (Calidad, Despliegue y Auditoría) completado: tests, CI/CD, auditoría, modo claro/oscuro.
 
-La implementación debe iniciar por el modelo de datos operativo en PostgreSQL mediante migraciones Flyway.
+HDT-004 (Pantallas Mobile Faltantes) completado: catálogos mobile, configuración, auditoría screen.
+
+HDT-006 (Gestión móvil PSR/OSR) completado: CreatePsrScreen con date picker nativo + Zod.
+
+HDT-007 (CRUD Usuarios Mobile) completado: CreateEditUserScreen con permisos por rol.
+
+**Feature Finalización del Servicio** completado: backend restaura estado operativo, mobile con foto + botón "Finalizar Servicio".
+
+**Próximo foco:** Evidencias fotográficas completas, Dashboard KPI, Reportes PDF, QA Integral, rebuild APK EAS Cloud, Firebase Crashlytics.
 
 ---
 
 # 13. Consideraciones Técnicas
 
-- Backend: Quarkus Java.
+- Backend: Quarkus Java 3.14.4.
 - Base de datos: PostgreSQL 18.
 - Persistencia: Hibernate ORM Panache.
-- Migraciones: Flyway.
+- Migraciones: Flyway (V1-V11).
 - Seguridad: JWT propio + BCrypt para hash de contraseñas.
-- Frontend web: React + Vite + MUI.
-- Mobile: Expo React Native.
+- Frontend web: React 18 + Vite 5 + MUI 6.
+- Mobile: Expo React Native SDK ~54.0.35 (NO React Native CLI).
+- UI Mobile: react-native-paper (MD3).
+- Formularios mobile: React Hook Form + Zod.
+- Navegación mobile: React Navigation (NativeStackNavigator + BottomTabNavigator).
 - Proxy: Nginx.
 - Contenedores: Docker Compose.
 - Archivos: filesystem controlado con rutas en PostgreSQL.
 - Timezone: America/Lima.
+- Build APK: EAS Cloud (no local por restricción Sophos).
 
 ---
 
 # 14. Pendientes Funcionales
 
-- Definir y crear tablas operativas del núcleo.
-- Implementar CRUD backend para catálogos operativos.
-- Implementar pantallas web para catálogos operativos.
-- Implementar CRUD de equipos.
-- Implementar PSR/OSR.
-- Implementar flujo de averías.
-- Implementar flujo de evidencias.
-- Implementar reportes PDF.
-- Implementar dashboard KPI.
-- Implementar auditoría operacional.
-- Implementar pantallas operativas mobile.
+- Evidencias fotográficas: integración completa (ingreso/devolución de equipos).
+- Reportes PDF (iText PDF).
+- Dashboard KPI.
+- QA Integral.
+- Firebase Crashlytics.
+- Rebuild APK producción (AAB).
+- Fix de preview fotográfica en dispositivo Xiaomi/HyperOS.
 
 ---
 

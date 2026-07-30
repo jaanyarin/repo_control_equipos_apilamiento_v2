@@ -12,9 +12,9 @@ import { theme } from '../theme'
 const menuActions = [
   { label: 'Ingreso de PSR', description: 'Registra y consulta movimientos PSR.', icon: 'file-document-outline', screen: 'PsrOsr', roles: ['Super Admin', 'Admin'] },
   { label: 'Ingreso de Equipo', description: 'Gestiona los equipos de apilamiento.', icon: 'warehouse', screen: 'EquiposList', roles: ['Super Admin', 'Admin', 'Usuario'] },
-  { label: 'Registro de Avería', description: 'Reporta incidencias operativas.', icon: 'alert-outline', screen: 'RegistrarAveria', roles: ['Super Admin', 'Admin', 'Usuario'] },
+  { label: 'Registro de Avería', description: 'Selecciona un equipo y reporta incidencias.', icon: 'alert-outline', screen: 'EquiposList', roles: ['Super Admin', 'Admin', 'Usuario'] },
   { label: 'Detalles de Equipo', description: 'Consulta información e historial.', icon: 'information-outline', screen: 'EquiposList', roles: ['Super Admin', 'Admin', 'Usuario'] },
-  { label: 'Finalización del Servicio', description: 'Atiende y finaliza averías pendientes.', icon: 'check-circle-outline', screen: 'AtenderAveria', roles: ['Super Admin', 'Admin', 'Usuario'] },
+  { label: 'Finalización del Servicio', description: 'Selecciona un equipo averiado y atiende averías.', icon: 'check-circle-outline', screen: 'EquiposList', params: { filterEstado: 'AVERIADO' }, roles: ['Super Admin', 'Admin', 'Usuario'] },
 ]
 
 export default function HomeScreen() {
@@ -41,7 +41,7 @@ export default function HomeScreen() {
         {visibleActions.map(action => (
           <TouchableRipple
             key={action.label}
-            onPress={() => navigation.navigate(action.screen)}
+            onPress={() => navigation.navigate(action.screen, action.params)}
             accessibilityRole="button"
             accessibilityLabel={`${action.label}. ${action.description}`}
             style={styles.actionWrapper}

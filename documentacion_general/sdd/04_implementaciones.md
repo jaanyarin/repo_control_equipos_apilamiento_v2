@@ -39,7 +39,7 @@ No se usará MySQL en este proyecto.
 | Capa | Tecnología |
 |---|---|
 | Frontend Web | React 18, Vite, MUI |
-| Frontend Mobile | React Native CLI 0.81 + Hermes (migrado desde Expo) |
+| Frontend Mobile | Expo React Native SDK ~54.0.35 (NO migrado a CLI) |
 | Backend | Quarkus Java 3.14.4 |
 | API | REST versionada en /api/v1 |
 | Seguridad | JWT propio + BCrypt |
@@ -54,32 +54,40 @@ No se usará MySQL en este proyecto.
 
 | Módulo | Estado |
 |---|---|---|
-| Autenticación local BCrypt | Validado |
-| JWT propio | Validado |
-| Usuarios (seed local) | Validado |
-| Roles | Validado |
-| Sedes | Validado (mobile + web) |
-| Campañas | Validado (mobile + web) |
-| PSR / OSR | Validado (CRUD mobile + web) |
-| Equipos | Validado |
-| Tipos de Equipo | Validado |
-| Proveedores | Validado |
-| Marcas | Validado |
-| Averías | Validado (mobile + web) |
-| Auditoría | Validado |
-| Configuración | Validado |
-| Frontend web (Nginx) | Validado |
-| Mobile login local | Validado |
-| APK inicial | Validado |
-| Docker + PostgreSQL + Nginx | Validado |
-| Migración V8: login_local | Validado |
-| Migración V9: seed_usuarios_local | Validado |
-| Migraciones V10-V11: auditoría | Validado |
-| Mobile migrado Expo → React Native CLI | Validado |
-| Componentes UI reutilizables mobile (14) | Validado |
-| Sistema de tema mobile (Design Tokens) | Validado |
-| Pantalla PSR/OSR mobile | Validado |
-| Pantalla crear PSR mobile (React Hook Form + Zod + date picker) | Validado |
+| Autenticación local BCrypt | ✅ Validado |
+| JWT propio | ✅ Validado |
+| Usuarios (seed local + CRUD mobile con permisos) | ✅ Validado |
+| Roles (Service + DTO + Mapper + CRUD mobile) | ✅ Validado |
+| Sedes | ✅ Validado (mobile + web CRUD) |
+| Campañas | ✅ Validado (mobile + web + activar/cerrar) |
+| PSR / OSR | ✅ Validado (CRUD mobile + web + CreatePsrScreen con date picker) |
+| Equipos | ✅ Validado (mobile + web + detalle con botón dinámico) |
+| Tipos de Equipo | ✅ Validado (mobile + web CRUD) |
+| Proveedores | ✅ Validado (mobile + web CRUD) |
+| Marcas | ✅ Validado (mobile + web CRUD) |
+| Averías | ✅ Validado (mobile + web + Finalización del Servicio) |
+| Auditoría (backend audit/ + mobile screen + V10-V11) | ✅ Validado |
+| Configuración (mobile SettingsScreen URL) | ✅ Validado |
+| Frontend web (Nginx) | ✅ Validado |
+| Mobile login local | ✅ Validado |
+| APK inicial (Expo SDK 54, EAS Cloud) | ✅ Validado |
+| Docker + PostgreSQL + Nginx | ✅ Validado |
+| Migración V8: login_local | ✅ Validado |
+| Migración V9: seed_usuarios_local | ✅ Validado |
+| Migraciones V10-V11: auditoría | ✅ Validado |
+| Componentes UI reutilizables mobile (14) | ✅ Validado |
+| Sistema de tema mobile (Design Tokens + MD3) | ✅ Validado |
+| Pantalla PSR/OSR mobile (listado + editar) | ✅ Validado |
+| Pantalla crear PSR mobile (React Hook Form + Zod + date picker) | ✅ Validado |
+| Pantallas catálogos mobile (CatalogScreen genérico) | ✅ Validado |
+| Pantalla auditoría mobile | ✅ Validado |
+| Pantalla configuración mobile | ✅ Validado |
+| CreateEditUserScreen mobile (CRUD usuarios con permisos) | ✅ Validado |
+| Finalización del Servicio (backend + mobile) | ✅ Validado |
+| Navegación mobile (AuthStack + MainStack + BottomTabs 4 tabs) | ✅ Validado |
+| Tests backend (7), web (2), mobile (3) | ✅ Validado |
+| CI/CD GitHub Actions | ✅ Validado |
+| Modo claro/oscuro frontend web | ✅ Validado |
 
 ---
 
@@ -87,11 +95,13 @@ No se usará MySQL en este proyecto.
 
 | Módulo | Prioridad |
 |---|---|---|
-| Evidencias Fotográficas | Pendiente |
+| Evidencias Fotográficas (integración completa ingreso/devolución) | Pendiente |
 | Dashboard KPI | Pendiente |
 | Reportes PDF | Pendiente |
 | QA Integral | Pendiente |
-| Despliegue Producción | Pendiente |
+| Firebase Crashlytics | Pendiente |
+| Build APK producción (AAB) | Pendiente |
+| Fix preview foto Xiaomi/HyperOS | Pendiente |
 
 ---
 
@@ -139,13 +149,13 @@ Tablas esperadas para el núcleo operativo:
 
 Según el perfil del usuario, se muestran hasta 5 botones:
 
-| Botón | Perfiles |
-|---|---|
-| Ingreso de PSR y OSR | Super Admin, Admin |
-| Ingreso de Equipo | Super Admin, Admin, Usuario |
-| Registro de Avería | Super Admin, Admin, Usuario |
-| Detalles de Equipo | Super Admin, Admin, Usuario |
-| Finalización del Servicio | Super Admin, Admin, Usuario |
+| Botón | Perfiles | Pantalla destino |
+|---|---|---|---|
+| Ingreso de PSR y OSR | Super Admin, Admin | PsrOsrScreen |
+| Ingreso de Equipo | Super Admin, Admin, Usuario | EquiposList (todos) |
+| Registro de Avería | Super Admin, Admin, Usuario | EquiposList (todos) |
+| Detalles de Equipo | Super Admin, Admin, Usuario | EquiposList (todos) |
+| Finalización del Servicio | Super Admin, Admin, Usuario | EquiposList (filtro AVERIADO) → EquipoDetail → AtenderAveria |
 
 ---
 
@@ -153,7 +163,14 @@ Según el perfil del usuario, se muestran hasta 5 botones:
 
 El núcleo operativo fue completado incluyendo todos los catálogos, entidades operativas y pantallas mobile/web.
 
-Extensión mobile: migración a React Native CLI, 14 componentes UI reutilizables, sistema de tema, CRUD PSR/OSR con date picker nativo y catálogos integrados.
+Extensiones post-HDT-002:
+- 14 componentes UI reutilizables mobile
+- Sistema de tema MD3 con design tokens
+- CRUD PSR/OSR con date picker nativo y catálogos integrados
+- HDT-004: Catálogos, roles, usuarios, auditoría, settings screens mobile
+- HDT-006: CreatePsrScreen con React Hook Form + Zod + date picker
+- HDT-007: CreateEditUserScreen con permisos por rol
+- Finalización del Servicio (backend + mobile)
 
 ---
 
@@ -313,7 +330,7 @@ La siguiente configuración de infraestructura está validada y en funcionamient
 
 | Parámetro | Valor |
 |---|---|
-| Framework | React Native CLI 0.81 + Hermes (migrado desde Expo SDK 54) |
+| Framework | Expo React Native SDK ~54.0.35 (NO migrado a CLI — se mantiene Expo) |
 | API URL (LAN) | `http://10.13.18.168:8082/api/v1` |
 | API URL (debug) | `http://127.0.0.1:8082/api/v1` |
 | Almacenamiento de token | `react-native-keychain` (Keychain/secure storage) |
@@ -353,6 +370,101 @@ postgres (healthcheck) → backend → nginx
 
 ---
 
-# 13. Cierre
+# 13. Módulo Finalización del Servicio (2026-07-30)
 
-Este documento queda sincronizado con PostgreSQL 18 como base oficial, frontend web accesible en `http://localhost/`, y módulo PSR/OSR mobile funcional con formulario React Hook Form + Zod + date picker nativo. La configuración de red, puertos y conexiones queda documentada y congelada en la sección 12.
+## 13.1 Objetivo
+
+Implementar el flujo completo de atención de averías: al marcar una avería como `ATENDIDA`, el equipo asociado debe restaurar su `estadoOperativo` a `OPERATIVO`, registrar la acción realizada, la fecha/hora de atención y los días de inactividad. Adicionalmente, la pantalla mobile debe permitir tomar 1 foto como evidencia y subirla al finalizar.
+
+## 13.2 Problema Resuelto
+
+Anteriormente, al atender una avería en mobile (`AtenderAveriaScreen`), el backend solo actualizaba el estado de la avería pero **no restauraba el estado operativo del equipo**. El equipo quedaba en `AVERIADO` incluso después de haber sido reparado. Esto impedía registrar una nueva avería sobre el mismo equipo.
+
+Además, el endpoint `PUT /averias/{id}` tenía `@Valid` que forzaba `@NotNull equipoId` y `@NotBlank descripcionFalla` en toda actualización, incluso en actualizaciones parciales como la atención donde solo se envía `estadoAveria` y `accionRealizada`.
+
+## 13.3 Backend — Capas Modificadas
+
+### 13.3.1 AveriaService.java
+
+| Método | Cambio |
+|---|---|
+| `actualizar(id, dto)` | Cuando `dto.estadoAveria == "ATENDIDA"`, además restaura `equipo.estadoOperativo = "OPERATIVO"` dentro de la misma transacción `@Transactional`. Calcula automáticamente `fechaHoraAtencion` (hora actual) y `diasInactividad` (diferencia entre fecha de atención y fecha de avería). |
+
+### 13.3.2 AveriaResource.java
+
+| Método | Cambio |
+|---|---|
+| `actualizar(id, dto)` | Removido `@Valid` del parámetro para permitir actualizaciones parciales. El service maneja nulos adecuadamente. |
+
+### 13.3.3 Flujo Backend
+
+```
+PUT /averias/{id} { estadoAveria: "ATENDIDA", accionRealizada: "..." }
+  → Service.actualizar()
+    → Calcula fechaHoraAtencion = now
+    → Calcula diasInactividad = diff(fechaHoraAtencion - fechaHoraAveria)
+    → Actualiza avería
+    → equipo.estadoOperativo = "OPERATIVO"
+    → equipo.fechaActualizacion = now
+    → Commit transaccional
+```
+
+## 13.4 Mobile — Pantallas Modificadas
+
+### 13.4.1 AtenderAveriaScreen.js — Simplificación y Correcciones
+
+| Aspecto | Antes | Después |
+|---|---|---|
+| Fotos solicitadas | 3 fotos | 1 foto (Evidencia) |
+| Botón foto | Siempre "Tomar foto" | "Tomar foto" / "Cambiar foto" según estado |
+| Texto botón submit | "Guardar Reparacición" | "Finalizar Servicio" |
+| Preview de foto | Usaba URI copiada a caché con `ReactNativeBlobUtil.fs.cp()` | Usa `asset.uri` directo (mismo patrón que RegistrarAveriaScreen) |
+| Upload de foto | Inmediato al tomar foto | Al hacer submit con "Finalizar Servicio" |
+| Estado de foto | `evidencias` integrado con datos del servidor | `localPhotoUri` separado del servidor |
+| Dependencias | `ReactNativeBlobUtil`, `loadApiUrl`, `getToken`, `ZoomableImage`, Modal viewer | Solo `api` y componentes básicos |
+
+**Estructura actual de la pantalla:**
+1. InfoCard: descripción, fecha, estado de la avería
+2. PhotoCard: 1 slot con preview local + botón "Tomar foto"/"Cambiar foto"
+3. FormCard: campo "Acción realizada" (React Hook Form + Zod, min 10 caracteres) + botón "Finalizar Servicio"
+4. Submit: sube la foto (si existe) vía `PUT /averias/{id}/evidencias/1`, luego `PUT /averias/{id}` con `estadoAveria: "ATENDIDA"`, navega back
+
+### 13.4.2 HomeScreen.js
+
+| Cambio | Detalle |
+|---|---|
+| Menú "Finalización del Servicio" | Pasa `params: { filterEstado: 'AVERIADO' }` a `EquiposList` |
+
+### 13.4.3 EquiposListScreen.js
+
+| Cambio | Detalle |
+|---|---|
+| Filtro por estado | Lee `route.params?.filterEstado`. Si es `'AVERIADO'` usa endpoint `/equipos/por-estado/AVERIADO` |
+
+### 13.4.4 EquipoDetailScreen.js
+
+| Cambio | Detalle |
+|---|---|
+| Botón dinámico | Si `estadoOperativo === 'AVERIADO'`: muestra "Registrar Reparación", busca avería `REPORTADA` del equipo, navega a `AtenderAveria` con su ID |
+| Botón dinámico | Si `estadoOperativo === 'OPERATIVO'`: muestra "Registrar Avería", navega a `RegistrarAveria` (comportamiento original) |
+
+## 13.5 Archivos Modificados
+
+| Archivo | Cambio |
+|---|---|
+| `backend/src/main/java/.../service/AveriaService.java` | `actualizar()` restaura `estadoOperativo = "OPERATIVO"` |
+| `backend/src/main/java/.../controller/AveriaResource.java` | Removido `@Valid` del PUT |
+| `mobile/src/screens/AtenderAveriaScreen.js` | Simplificado a 1 foto, preview local, upload en submit, botón "Finalizar Servicio" |
+| `mobile/src/screens/HomeScreen.js` | Menú con `filterEstado: 'AVERIADO'` |
+| `mobile/src/screens/EquiposListScreen.js` | Filtro por `filterEstado` en route params |
+| `mobile/src/screens/EquipoDetailScreen.js` | Botón condicional "Registrar Reparación" vs "Registrar Avería" |
+
+## 13.6 Problema Conocido
+
+La preview de foto en `AtenderAveriaScreen` no se muestra en el dispositivo Xiaomi/HyperOS a pesar de usar el mismo patrón que `RegistrarAveriaScreen.js` (que sí funciona). Pendiente de debuggear si `launchCamera` devuelve una URI no renderizable por `<Image>` en este dispositivo específico.
+
+---
+
+# 14. Cierre
+
+Este documento queda sincronizado con PostgreSQL 18 como base oficial, frontend web accesible en `http://localhost/`, y módulo PSR/OSR mobile funcional con formulario React Hook Form + Zod + date picker nativo. La configuración de red, puertos y conexiones queda documentada y congelada en la sección 12. Adicionalmente, el flujo de Finalización del Servicio (atención de averías con restauración de estado operativo) queda implementado en backend y mobile.

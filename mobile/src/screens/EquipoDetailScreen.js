@@ -91,9 +91,7 @@ export default function EquipoDetailScreen() {
     }
   }, [id])
 
-  useEffect(() => {
-    fetchEquipo()
-  }, [fetchEquipo])
+  useFocusEffect(useCallback(() => { fetchEquipo() }, [fetchEquipo]))
 
   const fetchAverias = async () => {
     if (showAverias) {
@@ -222,15 +220,40 @@ export default function EquipoDetailScreen() {
         ) : null}
 
         <View style={styles.actions}>
-          <AppButton
-            variant="primary"
-            icon="alert"
-            onPress={() => navigation.navigate('RegistrarAveria', { equipoId: equipo.id })}
-            style={styles.actionButton}
-            fullWidth
-          >
-            Registrar Avería
-          </AppButton>
+          {equipo.estadoOperativo === 'AVERIADO' ? (
+            <AppButton
+              variant="primary"
+              icon="wrench"
+              onPress={async () => {
+                try {
+                  const { data } = await api.get(`/averias/por-equipo/${equipo.id}`)
+                  const list = data?.data || data || []
+                  const pendiente = Array.isArray(list) ? list.find(a => a.estadoAveria === 'REPORTADA') : null
+                  if (pendiente) {
+                    navigation.navigate('AtenderAveria', { averiaId: pendiente.id })
+                  } else {
+                    Alert.alert('Sin averías pendientes', 'No hay averías pendientes para este equipo.')
+                  }
+                } catch (e) {
+                  Alert.alert('Error', e.response?.data?.error || e.message || 'Error al buscar averías')
+                }
+              }}
+              style={styles.actionButton}
+              fullWidth
+            >
+              Registrar Reparación
+            </AppButton>
+          ) : (
+            <AppButton
+              variant="primary"
+              icon="alert"
+              onPress={() => navigation.navigate('RegistrarAveria', { equipoId: equipo.id })}
+              style={styles.actionButton}
+              fullWidth
+            >
+              Registrar Avería
+            </AppButton>
+          )}
           <AppButton
             variant="secondary"
             icon="file-document"

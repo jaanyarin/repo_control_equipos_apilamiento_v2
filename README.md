@@ -1,0 +1,102 @@
+# Sistema de Control de Equipos de Apilamiento
+
+Plataforma full-stack para la gestión operativa de equipos de apilamiento alquilados en campañas agrícolas. Controla el ciclo completo: solicitud, asignación, operación, averías, atención y trazabilidad documental.
+
+---
+
+## Stack Tecnológico
+
+| Capa | Tecnología |
+|---|---|
+| **Backend** | Quarkus Java 3.14.4 — Hibernate ORM Panache — REST `/api/v1` |
+| **Frontend Web** | React 18 + Vite 5 + Material UI 6 |
+| **Mobile** | Expo React Native SDK ~54.0.35 + react-native-paper (MD3) + React Navigation |
+| **Base de Datos** | PostgreSQL 18 — Flyway migrations |
+| **Autenticación** | BCrypt + JWT propio |
+| **Infraestructura** | Docker Compose + Nginx |
+| **Build APK** | EAS Cloud (local bloqueado por Sophos) |
+| **CI/CD** | GitHub Actions |
+
+---
+
+## Estado del Proyecto
+
+| Hito | Estado |
+|---|---|
+| HDT-001 — Base del Sistema (Docker, PostgreSQL, Backend, Auth) | ✅ Cerrado |
+| HDT-002 — Núcleo Operativo (catálogos, equipos, averías) | ✅ Cerrado |
+| HDT-003 — Calidad, Despliegue y Auditoría | ✅ En auditoría |
+| HDT-004 — Catálogos y screens mobile faltantes | ✅ Cerrado |
+| HDT-005 — Migración a React Native CLI | ❌ Cancelado (se mantiene Expo) |
+| HDT-006 — Gestión móvil PSR/OSR | ✅ Cerrado |
+| HDT-007 — CRUD Usuarios Mobile | ✅ Cerrado |
+
+**Feature adicional:** Finalización del Servicio — al atender una avería se restaura automáticamente el estado operativo del equipo.
+
+---
+
+## Módulos Implementados
+
+| Módulo | Backend | Web | Mobile |
+|---|---|---|---|
+| Autenticación local BCrypt | ✅ | ✅ | ✅ |
+| Usuarios (CRUD + permisos por rol) | ✅ | ✅ | ✅ |
+| Roles | ✅ | ✅ | ✅ |
+| Sedes | ✅ | ✅ | ✅ |
+| Campañas (activar/cerrar) | ✅ | ✅ | ✅ |
+| Tipos de Equipo | ✅ | ✅ | ✅ |
+| Proveedores | ✅ | ✅ | ✅ |
+| Marcas | ✅ | ✅ | ✅ |
+| Equipos (con detalle + estado dinámico) | ✅ | ✅ | ✅ |
+| PSR / OSR (con date picker nativo) | ✅ | ✅ | ✅ |
+| Averías (registrar + atender + finalizar) | ✅ | ✅ | ✅ |
+| Finalización del Servicio | ✅ | — | ✅ |
+| Evidencias Fotográficas (1 foto) | ✅ | — | ✅ |
+| Auditoría de Eventos | ✅ | ✅ | ✅ |
+| Configuración (URL API) | — | — | ✅ |
+
+---
+
+## Puerto de Inicio Rápido
+
+```bash
+# Clonar
+git clone <repo-url>
+cd repo_control_equipos_apilamiento_v2
+
+# Backend (Docker)
+docker compose up -d
+
+# Frontend Web (dev)
+cd frontend
+npm install
+npm run dev
+
+# Mobile
+cd mobile
+npx expo start
+
+# Build APK
+cd mobile
+npm run build:android:apk   # EAS Cloud
+```
+
+## URLs de Acceso (Local)
+
+| Servicio | URL |
+|---|---|
+| Frontend SPA | `http://localhost/` |
+| API REST | `http://localhost/api/v1/` |
+| Swagger UI | `http://localhost/swagger` |
+| Health Check | `http://localhost/health` |
+| DB (externo) | `localhost:5433` |
+
+---
+
+## Documentación
+
+- Especificaciones: `documentacion_general/sdd/01_epecificaciones.md`
+- Plan de desarrollo: `documentacion_general/sdd/02_planes.md`
+- Tareas y roadmap: `documentacion_general/sdd/03_tareas.md`
+- Implementación detallada: `documentacion_general/sdd/04_implementaciones.md`
+- Convenciones del proyecto: `AGENTS.md`

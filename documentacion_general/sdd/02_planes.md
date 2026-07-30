@@ -95,7 +95,7 @@ La comunicación entre clientes y backend se realizará mediante HTTPS utilizand
 |---|---|---|
 | Backend | Quarkus Java 3.14.4 | ✅ Implementado |
 | Runtime Backend | Java 17 / Docker | ✅ Implementado |
-| Frontend Mobile | React Native CLI 0.81 + Hermes | ✅ Migrado de Expo. CRUD operativo: PSR/OSR, catálogos, averías. Build local bloqueado por Sophos, usar EAS Cloud |
+| Frontend Mobile | Expo React Native SDK ~54.0.35 | ✅ Activo. CRUD operativo: PSR/OSR, catálogos, averías, usuarios, auditoría. Build EAS Cloud (local bloqueado por Sophos). NO migrado a CLI |
 | Frontend Web | React 18 SPA, Vite 5, MUI 6 | ✅ Implementado |
 | Base de Datos | PostgreSQL 18 | ✅ Oficial / Implementado |
 | Migraciones | Flyway | ✅ Implementado |
@@ -130,23 +130,23 @@ No se usará MySQL en este proyecto.
 # 6. Estructura de Módulos
 
 | Código | Módulo | Estado Actual |
-|---|---|---|---|
+|---|---|---|---|---|
 | MOD-01 | Autenticación | ✅ Validado (local BCrypt) |
-| MOD-02 | Usuarios | ✅ Validado |
-| MOD-03 | Sedes | ✅ Validado (mobile + web) |
-| MOD-04 | Campañas | ✅ Validado (mobile + web) |
+| MOD-02 | Usuarios | ✅ Validado (backend + web + mobile CRUD con CreateEditUserScreen) |
+| MOD-03 | Sedes | ✅ Validado (mobile + web + mobile CRUD) |
+| MOD-04 | Campañas | ✅ Validado (mobile + web + mobile activar/cerrar) |
 | MOD-05 | PSR / OSR | ✅ Validado (CRUD mobile con formulario, date picker, catálogos) |
-| MOD-06 | Equipos | ✅ Validado |
-| MOD-07 | Tipos de Equipos | ✅ Validado |
-| MOD-08 | Proveedores | ✅ Validado |
-| MOD-09 | Averías | ✅ Validado (mobile + web) |
-| MOD-10 | Evidencias Fotográficas | ⏳ Pendiente |
+| MOD-06 | Equipos | ✅ Validado (backend + web + mobile, detalle con botón dinámico) |
+| MOD-07 | Tipos de Equipos | ✅ Validado (backend + web + mobile CRUD) |
+| MOD-08 | Proveedores | ✅ Validado (backend + web + mobile CRUD) |
+| MOD-09 | Averías | ✅ Validado (mobile + web). Incluye Finalización del Servicio (restaura estado OPERATIVO) |
+| MOD-10 | Evidencias Fotográficas | ⏳ Parcial (1 foto en atención de avería) |
 | MOD-11 | Dashboard KPI | ⏳ Pendiente |
 | MOD-12 | Reportes PDF | ⏳ Pendiente |
-| MOD-13 | Auditoría | ✅ Validado |
-| MOD-14 | Catálogos | ✅ Validado (mobile: sedes, campañas, motivos PSR) |
-| MOD-15 | Configuración | ✅ Validado |
-| MOD-16 | Mobile App | ✅ Migrado de Expo a React Native CLI. 14 componentes UI reutilizables. Sistema de tema. 19 pantallas. CRUD PSR/OSR, averías, catálogos, navegación completa. Build local bloqueado por Sophos, usar EAS Cloud |
+| MOD-13 | Auditoría | ✅ Validado (backend audit/ + mobile screen) |
+| MOD-14 | Catálogos | ✅ Validado (mobile con CatalogScreen genérico) |
+| MOD-15 | Configuración | ✅ Validado (mobile SettingsScreen con URL configurable) |
+| MOD-16 | Mobile App | ✅ Expo SDK 54. 14 componentes UI reutilizables. Sistema de tema MD3. 19+ pantallas. Navegación completa (AuthStack+MainStack+BottomTabs). Build EAS Cloud (local bloqueado por Sophos). NO migrado a CLI |
 
 ---
 
@@ -166,7 +166,7 @@ No se usará MySQL en este proyecto.
 | Fase 8.2 | Componentes UI reutilizables mobile (14 componentes) | ✅ Completado |
 | Fase 8.3 | Sistema de tema mobile (design tokens) | ✅ Completado |
 | Fase 8.4 | CRUD PSR/OSR mobile con date picker nativo | ✅ Completado |
-| Fase 9 | Evidencias, PDF, dashboard y auditoría | ⏳ Pendiente |
+| Fase 9 | Evidencias, PDF, dashboard | ⏳ Pendiente (auditoría ya completada) |
 | Fase 10 | Integración general | ⏳ Pendiente |
 | Fase 11 | QA y pruebas operativas | ⏳ Pendiente |
 | Fase 12 | Despliegue controlado | ⏳ Pendiente |
@@ -194,7 +194,7 @@ No se usará MySQL en este proyecto.
 | 14 | Equipos | ✅ Completado |
 | 15 | PSR / OSR | ✅ Completado (CRUD mobile + web) |
 | 16 | Averías | ✅ Completado (mobile + web) |
-| 17 | Evidencias Fotográficas | ⏳ Pendiente |
+| 17 | Evidencias Fotográficas | ⏳ Parcial (1 foto en atención) |
 | 18 | Dashboard KPI | ⏳ Pendiente |
 | 19 | Reportes PDF | ⏳ Pendiente |
 | 20 | Auditoría | ✅ Completado |
@@ -207,6 +207,7 @@ No se usará MySQL en este proyecto.
 | 27 | Sistema de tema mobile (Design Tokens) | ✅ Completado |
 | 28 | Pantalla PSR/OSR mobile con date picker, catálogos y CRUD | ✅ Completado |
 | 29 | Pantalla crear PSR mobile (React Hook Form + Zod + date picker nativo) | ✅ Completado |
+| 30 | Finalización del Servicio (atención de averías con restauración estado equipo) | ✅ Completado |
 
 ---
 
@@ -372,23 +373,69 @@ La estrategia de despliegue considerará:
 
 ---
 
-# 17. Punto Crítico Actual (HDT-002 COMPLETADO ✅)
+# 17. Estado Actual del Desarrollo
 
-El núcleo operativo HDT-002 fue completado exitosamente:
+## HDT-002 — Núcleo Operativo ✅ (CERRADO)
 
 1. Tipos de Equipo ✅
 2. Proveedores ✅
-3. Equipos ✅
-4. PSR / OSR ✅ (CRUD mobile + web)
-5. Averías ✅ (mobile + web)
+3. Marcas ✅
+4. Equipos ✅
+5. PSR / OSR ✅ (CRUD mobile + web)
+6. Averías ✅ (mobile + web)
 
-Extensiones realizadas:
-- Migración mobile Expo → React Native CLI ✅
+## HDT-003 — Calidad, Despliegue y Auditoría ✅ (EN AUDITORÍA)
+
+1. Tests backend (JUnit 5 + Mockito, 7 archivos) ✅
+2. Tests frontend web (Jest, 2 archivos) ✅
+3. Tests mobile (Jest + RNTL, 3 archivos) ✅
+4. Módulo Rol completo ✅
+5. Paquete audit/ (entidad, repositorio, servicio, API) ✅
+6. Paquete config/ (CORS, AppConfig) ✅
+7. Paquete security/ (JwtFilter, SecurityUtil) ✅
+8. Migraciones V10 (auditoria_eventos) + V11 (seed) ✅
+9. GitHub Actions CI/CD ✅
+10. Modo claro/oscuro frontend ✅
+
+## HDT-004 — Pantallas Mobile Faltantes ✅ (CERRADO)
+
+1. CatalogScreen genérico reutilizable ✅
+2. Marcas, Proveedores, TiposEquipo, Sedes Screens (CRUD) ✅
+3. Roles, Usuarios, Auditoría, Settings Screens ✅
+4. Tab Catálogos con menú de 9 botones ✅
+5. PSR/OSR backend + web + mobile ✅
+
+## HDT-006 — Gestión móvil PSR/OSR ✅ (CERRADO)
+
+1. CreatePsrScreen con React Hook Form + Zod + date picker nativo ✅
+2. Edición PSR/OSR con atomicidad transaccional ✅
+3. Catálogos integrados (campañas, sedes, motivos) ✅
+
+## HDT-007 — CRUD Usuarios Mobile ✅ (CERRADO)
+
+1. CreateEditUserScreen (crear/editar usuarios) ✅
+2. Permisos por rol (solo Super Admin edita Super Admin) ✅
+3. Correcciones de autenticación (race condition en login, logout robusto) ✅
+
+## Feature: Finalización del Servicio ✅ (COMPLETADO)
+
+- Backend: al marcar `ATENDIDA`, restaura `equipo.estadoOperativo = "OPERATIVO"`
+- Backend: removido `@Valid` del PUT para permitir actualizaciones parciales
+- Mobile: AtenderAveriaScreen simplificado a 1 foto, botón "Finalizar Servicio"
+- Mobile: foto se sube en submit junto con la atención
+- Mobile: EquipoDetail muestra "Registrar Reparación" si `AVERIADO`, "Registrar Avería" si `OPERATIVO`
+- Mobile: HomeScreen menú "Finalización del Servicio" filtra equipos AVERIADOS
+
+## Extensiones realizadas (post-HDT-002)
+
 - 14 componentes UI reutilizables ✅
 - Sistema de tema (Design Tokens) ✅
 - CRUD PSR/OSR mobile con date picker nativo ✅
+- Catálogos integrados en mobile (sedes, motivos, campañas) ✅
 
-**Próximo foco:** Evidencias Fotográficas, Dashboard KPI, Reportes PDF, QA Integral y build APK vía EAS Cloud.
+## Próximo foco
+
+Evidencias Fotográficas (integración completa), Dashboard KPI, Reportes PDF, QA Integral, rebuild APK EAS Cloud, Firebase Crashlytics, fix preview foto Xiaomi/HyperOS. Fix de preview fotográfica en dispositivo Xiaomi/HyperOS.
 
 ---
 

@@ -20,7 +20,7 @@ La planificación queda sincronizada con el repositorio actual y con la decisió
 | Persistencia | Hibernate ORM Panache |
 | Migraciones | Flyway |
 | Frontend web | React 18 + Vite + MUI |
-| Mobile | React Native CLI 0.81 + Hermes (migrado desde Expo) |
+| Mobile | Expo React Native SDK ~54.0.35 (NO migrado a CLI) |
 | Autenticación | Local BCrypt + JWT propio |
 | Infraestructura | Docker Compose + Nginx |
 
@@ -63,18 +63,22 @@ No se usará MySQL en este proyecto.
 | 16 | Equipos | ✅ Completado |
 | 17 | PSR / OSR | ✅ Completado (CRUD mobile + web) |
 | 18 | Averías | ✅ Completado (mobile + web) |
-| 19 | Evidencias Fotográficas | Pendiente |
+| 19 | Evidencias Fotográficas | ✅ Parcial (1 foto en atención de avería) |
 | 20 | Dashboard KPI | Pendiente |
 | 21 | Reportes PDF | Pendiente |
 | 22 | Auditoría | ✅ Completado |
 | 23 | Configuración | ✅ Completado |
 | 24 | QA Integral | Pendiente |
 | 25 | Despliegue Producción | Pendiente |
-| 26 | Migración Expo → React Native CLI | ✅ Completado |
+| 26 | Migración Expo → React Native CLI | ❌ Cancelado (se mantiene Expo) |
 | 27 | Componentes UI reutilizables mobile (14) | ✅ Completado |
 | 28 | Sistema de tema mobile (Design Tokens) | ✅ Completado |
 | 29 | Pantalla PSR/OSR mobile (date picker, catálogos, CRUD) | ✅ Completado |
 | 30 | Pantalla crear PSR mobile (React Hook Form + Zod) | ✅ Completado |
+| 31 | HDT-004: Catálogos, roles, usuarios, auditoría, settings mobile | ✅ Completado |
+| 32 | HDT-006: CreatePsrScreen con date picker nativo | ✅ Completado |
+| 33 | HDT-007: CreateEditUserScreen con permisos por rol | ✅ Completado |
+| 34 | Finalización del Servicio (backend + mobile) | ✅ Completado |
 
 ---
 
@@ -113,17 +117,17 @@ No se usará MySQL en este proyecto.
 | DB-006 | Diseñar modelo operativo HDT-002 | Crítica | ⏳ |
 | DB-007 | V8 login_local: password_hash, dni, password_reset_required | Crítica | ✅ |
 | DB-008 | V9 seed_usuarios_local: datos de prueba | Crítica | ✅ |
-| DB-009 | Crear migración `dim_tipos_equipo` | Crítica | ⏳ |
-| DB-010 | Crear migración `dim_proveedores` | Crítica | ⏳ |
-| DB-011 | Crear migración `dim_marcas` | Alta | ⏳ |
-| DB-012 | Crear migración `fac_equipos` | Crítica | ✅ |
-| DB-013 | Crear migración `fac_psr` | Crítica | ✅ |
-| DB-014 | Crear migración `fac_osr` | Crítica | ✅ |
-| DB-015 | Crear migración `fac_averias` | Alta | ⏳ |
-| DB-016 | Crear migración `fac_evidencias` | Alta | ⏳ |
-| DB-017 | Crear migración `auditoria_eventos` (V10) | Alta | ⏳ |
-| DB-018 | Configurar índices y relaciones | Alta | ⏳ |
-| DB-019 | Configurar restricciones de integridad | Alta | ⏳ |
+| DB-009 | Crear migración `dim_tipos_equipo` (V4) | Crítica | ✅ |
+| DB-010 | Crear migración `dim_proveedores` (V4) | Crítica | ✅ |
+| DB-011 | Crear migración `dim_marcas` (V4) | Alta | ✅ |
+| DB-012 | Crear migración `fac_equipos` (V5) | Crítica | ✅ |
+| DB-013 | Crear migración `fac_psr` (V6) | Crítica | ✅ |
+| DB-014 | Crear migración `fac_osr` (V6) | Crítica | ✅ |
+| DB-015 | Crear migración `fac_averias` (V7) | Alta | ✅ |
+| DB-016 | Crear migración `fac_evidencias` (V7) | Alta | ✅ |
+| DB-017 | Crear migración `auditoria_eventos` (V10) | Alta | ✅ |
+| DB-018 | Configurar índices y relaciones | Alta | ✅ |
+| DB-019 | Configurar restricciones de integridad | Alta | ✅ |
 
 ---
 
@@ -143,16 +147,17 @@ No se usará MySQL en este proyecto.
 | BE-010 | Implementar módulo campañas | Alta | ✅ |
 | BE-011 | Implementar LocalAuthService | Alta | ✅ |
 | BE-012 | Endpoints: /auth/roles, /auth/usuarios-by-rol, /auth/local-login, /auth/change-password | Alta | ✅ |
-| BE-013 | Implementar módulo tipos equipos | Alta | ⏳ |
-| BE-014 | Implementar módulo proveedores | Alta | ⏳ |
-| BE-015 | Implementar módulo marcas | Alta | ⏳ |
-| BE-016 | Implementar módulo equipos | Crítica | ⏳ |
+| BE-013 | Implementar módulo tipos equipos | Alta | ✅ |
+| BE-014 | Implementar módulo proveedores | Alta | ✅ |
+| BE-015 | Implementar módulo marcas | Alta | ✅ |
+| BE-016 | Implementar módulo equipos | Crítica | ✅ |
 | BE-017 | Implementar módulo PSR / OSR | Crítica | ✅ |
-| BE-018 | Implementar módulo averías | Alta | ⏳ |
-| BE-019 | Implementar módulo evidencias | Alta | ⏳ |
-| BE-020 | Implementar auditoría operacional | Alta | ⏳ |
+| BE-018 | Implementar módulo averías | Alta | ✅ |
+| BE-019 | Implementar módulo evidencias | Alta | ✅ |
+| BE-020 | Implementar auditoría operacional | Alta | ✅ |
 | BE-021 | Implementar generación PDF | Media | ⏳ |
 | BE-022 | Implementar APIs dashboard KPI | Media | ⏳ |
+| BE-023 | Finalización del Servicio: restaurar estado operativo del equipo al atender avería | Alta | ✅ |
 | BE-023 | Configurar manejo global de errores | Alta | ✅ |
 | BE-024 | Configurar validaciones backend | Alta | ✅ |
 | BE-025 | Configurar logs backend | Alta | ✅ |
@@ -176,12 +181,12 @@ No se usará MySQL en este proyecto.
 | WEB-009 | Implementar roles | Alta | ✅ |
 | WEB-010 | Implementar sedes | Alta | ✅ |
 | WEB-011 | Implementar campañas | Alta | ✅ |
-| WEB-012 | Implementar tipos de equipo | Alta | ⏳ |
-| WEB-013 | Implementar proveedores | Alta | ⏳ |
-| WEB-014 | Implementar marcas | Alta | ⏳ |
-| WEB-015 | Implementar equipos | Crítica | ⏳ |
+| WEB-012 | Implementar tipos de equipo | Alta | ✅ |
+| WEB-013 | Implementar proveedores | Alta | ✅ |
+| WEB-014 | Implementar marcas | Alta | ✅ |
+| WEB-015 | Implementar equipos | Crítica | ✅ |
 | WEB-016 | Implementar PSR / OSR | Crítica | ✅ |
-| WEB-017 | Implementar averías | Alta | ⏳ |
+| WEB-017 | Implementar averías | Alta | ✅ |
 | WEB-018 | Implementar evidencias | Alta | ⏳ |
 | WEB-019 | Implementar dashboard KPI | Media | ⏳ |
 | WEB-020 | Implementar reportes PDF | Media | ⏳ |
@@ -205,7 +210,12 @@ No se usará MySQL en este proyecto.
 | AND-011 | Implementar listado de equipos | Crítica | ✅ |
 | AND-012 | Implementar registro de averías | Alta | ✅ |
 | AND-013 | Implementar atención de averías | Alta | ✅ |
-| AND-014 | Implementar captura de fotografías | Alta | ⏳ Pendiente |
+| AND-013.1 | Finalización del Servicio: restaurar estado operativo del equipo al atender | Alta | ✅ |
+| AND-013.2 | Finalización del Servicio: 1 foto evidencia + botón "Finalizar Servicio" | Alta | ✅ |
+| AND-013.3 | Finalización del Servicio: botón "Registrar Reparación" en EquipoDetail cuando AVERIADO | Alta | ✅ |
+| AND-013.4 | Backend: remover `@Valid` del PUT para permitir actualizaciones parciales | Alta | ✅ |
+| AND-013.5 | Backend: restaurar `estadoOperativo = "OPERATIVO"` al marcar ATENDIDA | Alta | ✅ |
+| AND-014 | Implementar captura de fotografías | Alta | ⏳ Parcial (1 foto en atención) |
 | AND-015 | Implementar consumo de APIs operativas | Crítica | ✅ |
 | AND-016 | Implementar manejo global de errores | Alta | ✅ |
 | AND-017 | Implementar visualización de PDF | Media | ⏳ Pendiente |
@@ -244,28 +254,14 @@ El núcleo operativo del sistema fue completado e incluye todos los componentes 
 | 11 | Pantalla PSR/OSR mobile con CRUD completo | ✅ Completado |
 | 12 | Pantalla crear PSR mobile (React Hook Form + Zod + date picker) | ✅ Completado |
 | 13 | Catálogos integrados en mobile (sedes, motivos, campañas) | ✅ Completado |
-| 14 | Auditoría operacional (tablas V10-V11) | ✅ Completado |
+| 14 | Auditoría operacional (tablas V10-V11 + backend audit/ + mobile screen) | ✅ Completado |
+| 15 | Finalización del Servicio (backend restaura OPERATIVO, mobile 1 foto + "Finalizar Servicio") | ✅ Completado |
+| 16 | HDT-004: Pantallas mobile catálogos, roles, usuarios, auditoría, settings | ✅ Completado |
+| 17 | HDT-006: CreatePsrScreen con date picker nativo + Zod | ✅ Completado |
+| 18 | HDT-007: CreateEditUserScreen con permisos por rol | ✅ Completado |
 
 ---
 
-# 11. Secuencia Recomendada de Implementación
-
-1. Diseñar ERD operativo PostgreSQL.
-2. Crear migraciones Flyway para catálogos.
-3. Implementar backend de tipos de equipo.
-4. Implementar backend de proveedores.
-5. Implementar backend de marcas.
-6. Implementar pantallas web de catálogos.
-7. Crear migración de equipos.
-8. Implementar backend y web de equipos.
-9. Crear migraciones PSR/OSR.
-10. Implementar backend y web PSR/OSR.
-11. Crear migración averías.
-12. Implementar backend y web de averías.
-13. Documentar HDT-002.
-
----
-
-# 12. Cierre
+# 11. Cierre
 
 Este documento queda sincronizado con el estado actual del repositorio y con PostgreSQL 18 como motor oficial del sistema.

@@ -66,7 +66,7 @@ public class AveriaResource {
 
     @PUT
     @Path("/{id}")
-    public Response actualizar(@PathParam("id") Long id, @Valid AveriaDTO dto) {
+    public Response actualizar(@PathParam("id") Long id, AveriaDTO dto) {
         AveriaDTO actualizado = service.actualizar(id, dto);
         if (actualizado == null) {
             return Response.status(Response.Status.NOT_FOUND)

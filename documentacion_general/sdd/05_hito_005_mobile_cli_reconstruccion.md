@@ -1,53 +1,42 @@
-# HDT-005 — Reconstrucción Mobile React Native CLI
+# HDT-005 — Reconstrucción Mobile React Native CLI (CANCELADO ❌)
 
 | Campo | Valor |
 |---|---|
-| Estado | Planificado — pendiente de plan-review del Auditor AI |
-| Responsable de desarrollo | Codex |
-| Gate keeper | Auditor AI |
-| Rama | `refactor/mobile-react-native-cli` |
+| Estado | **CANCELADO** — No se ejecutó la migración |
+| Fecha de cancelación | 2026-07-30 |
+| Responsable | Jose Anyarin |
 | Dependencia | ADR-A005 aprobado |
 
-## Objetivo
+## Motivo de Cancelación
 
-Construir una nueva aplicación Android con React Native CLI, sin reutilizar el
-código Expo existente, que consuma la API actual y recupere los flujos
-operativos aprobados del sistema.
+Este hito proponía reconstruir la aplicación mobile desde cero usando React Native CLI puro, abandonando Expo. Sin embargo, se determinó que:
 
-## Alcance de reconstrucción
+1. **Expo SDK 54 cumple con todos los requisitos operativos** actuales (navegación, formularios, cámara, almacenamiento seguro, APK).
+2. **El build local está bloqueado por Sophos** de todos modos, por lo que migrar a CLI no resolvería la restricción de build local.
+3. **EAS Cloud** proporciona build en la nube para Expo, eliminando la necesidad de build local.
+4. **El esfuerzo de reconstrucción** (reescribir 19+ pantallas, navegación, tema, componentes) no se justifica para el valor agregado actual.
+5. **No hay requerimiento funcional** que Expo no pueda satisfacer.
 
-1. Base Android React Native CLI, APK debug y ejecución en dispositivo.
-2. Arquitectura modular, tema MD3, navegación y manejo de errores.
-3. Autenticación local, cambio de contraseña, sesión JWT y API configurable.
-4. Flujos: Home, equipos, averías, campañas, catálogos, usuarios, roles,
-   auditoría, PSR/OSR y configuración.
-5. Pruebas, CI Android y documentación de operación.
+## Decisión
 
-## Secuencia y gates
+El proyecto **se mantiene con Expo React Native SDK ~54.0.35** como stack mobile oficial.
 
-| Fase | Entregable | Gates del Auditor AI |
+| Aspecto | Decisión |
+|---|---|
+| Stack mobile | Expo SDK 54 (NO CLI) |
+| Build APK | EAS Cloud (perfiles: preview, production) |
+| Almacenamiento seguro | expo-secure-store |
+| Navegación | React Navigation v7 (NativeStackNavigator + BottomTabNavigator) |
+| Formularios | React Hook Form + Zod |
+| UI | react-native-paper (MD3) |
+| Tema | Design tokens con modo claro/oscuro |
+
+## Archivos de Configuración Congelados (NO MODIFICAR)
+
+| Archivo | Clave | Valor |
 |---|---|---|
-| A | ADR, alcance, riesgos y criterios de aceptación | G-DOC |
-| B | Base CLI y APK debug generado en CI | G-MOB-BUILD, G-DEVOPS |
-| C | Navegación, tema, red, AuthContext y Keychain | G-MOB, G-MOB-NAV, G-MOB-SEC, G-MOB-UI |
-| D | Login, cambio de contraseña y configuración API | G-MOB-FORM, G-TEST-FE |
-| E | Módulos operativos por prioridad | G-MOB, G-MOB-FORM, G-TEST-FE |
-| F | Release candidate, CI, pruebas dispositivo y auditoría | G-MOB-BUILD, G-DEVOPS, G-DOC |
-
-## Criterios de aceptación del hito
-
-- `mobile/` no contiene dependencias ni configuración Expo.
-- La app usa React Native CLI, `index.js` y Android versionado.
-- `com.apilamiento.mobile` y el deep link `com.apilamiento://callback/` se mantienen.
-- JWT se persiste con `react-native-keychain`.
-- Jest, lint, Gradle `assembleDebug` en GitHub Actions y CI finalizan correctamente.
-- Se descarga e instala `app-debug.apk` en dispositivo Android y se prueban los flujos críticos.
-- No existen hallazgos críticos abiertos del Auditor AI.
-
-## Riesgos iniciales
-
-- El bloqueo Windows/Sophos sobre cachés Gradle impide actualmente el primer build.
-- El build Android se valida en GitHub Actions/Linux, no en la estación local bloqueada.
-- La reconstrucción completa puede introducir diferencias funcionales; cada flujo
-  requiere evidencia de prueba contra la API.
-- El alcance offline permanece excluido por el plan oficial del proyecto.
+| `package.json` | `main` | `"expo/AppEntry"` |
+| `app.json` | `jsEngine` | `"hermes"` |
+| `app.json` | `platforms` | `["android"]` |
+| `android/gradle.properties` | `hermesEnabled` | `true` |
+| `android/gradle.properties` | `newArchEnabled` | `true` |

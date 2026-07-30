@@ -54,6 +54,7 @@ postgres-data/
 
 # Gradle cache local
 .gradle-short/
+.g/
 
 # Archivos temporales de Office
 ~$*

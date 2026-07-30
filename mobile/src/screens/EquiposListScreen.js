@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react'
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native'
 import { Searchbar, Text, TouchableRipple } from 'react-native-paper'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import api from '../api'
 import { useAuth } from '../AuthContext'
@@ -18,8 +18,10 @@ import { isAdminOrSuperAdmin } from '../utils/roles'
 
 export default function EquiposListScreen() {
   const navigation = useNavigation()
+  const route = useRoute()
   const { user } = useAuth()
   const insets = useSafeAreaInsets()
+  const filterEstado = route.params?.filterEstado
   const [equipos, setEquipos] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -30,7 +32,8 @@ export default function EquiposListScreen() {
   const fetchEquipos = useCallback(async () => {
     try {
       setError('')
-      const { data } = await api.get('/equipos')
+      const endpoint = filterEstado ? `/equipos/por-estado/${filterEstado}` : '/equipos'
+      const { data } = await api.get(endpoint)
       const list = data?.data || data || []
       setEquipos(Array.isArray(list) ? list : [])
     } catch (e) {
@@ -39,7 +42,7 @@ export default function EquiposListScreen() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [])
+  }, [filterEstado])
 
   useFocusEffect(useCallback(() => {
     setLoading(true)
@@ -63,7 +66,7 @@ export default function EquiposListScreen() {
     <ErrorBoundary>
       <View style={styles.container}>
         <View style={styles.toolbar}>
-          <Text style={styles.title}>Equipos ingresados</Text>
+          <Text style={styles.title}>{filterEstado === 'AVERIADO' ? 'Equipos averiados' : 'Equipos ingresados'}</Text>
           <AppButton icon="plus" onPress={() => navigation.navigate('SelectPsrEquipment')}>
             Nuevo ingreso
           </AppButton>
@@ -89,8 +92,8 @@ export default function EquiposListScreen() {
             ListEmptyComponent={(
               <EmptyState
                 icon="warehouse"
-                title={search ? 'Sin resultados' : 'No hay equipos'}
-                subtitle={search ? 'Intenta con otro término' : 'Aún no se han registrado equipos'}
+                title={search ? 'Sin resultados' : filterEstado === 'AVERIADO' ? 'No hay equipos averiados' : 'No hay equipos'}
+                subtitle={search ? 'Intenta con otro término' : filterEstado === 'AVERIADO' ? 'Todos los equipos están operativos' : 'Aún no se han registrado equipos'}
               />
             )}
             renderItem={({ item }) => (

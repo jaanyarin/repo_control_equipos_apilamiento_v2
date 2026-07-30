@@ -3,10 +3,12 @@ package com.apilamiento.control.service;
 import com.apilamiento.control.dto.AveriaDTO;
 import com.apilamiento.control.dto.EvidenciaAveriaDTO;
 import com.apilamiento.control.entity.Averia;
+import com.apilamiento.control.entity.Equipo;
 import com.apilamiento.control.entity.EvidenciaAveria;
 import com.apilamiento.control.mapper.AveriaMapper;
 import com.apilamiento.control.mapper.EvidenciaAveriaMapper;
 import com.apilamiento.control.repository.AveriaRepository;
+import com.apilamiento.control.repository.EquipoRepository;
 import com.apilamiento.control.repository.EvidenciaAveriaRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -27,14 +29,17 @@ public class AveriaService {
 
     private final AveriaRepository repository;
     private final AveriaMapper mapper;
+    private final EquipoRepository equipoRepository;
     private final EvidenciaAveriaRepository evidenciaRepository;
     private final EvidenciaAveriaMapper evidenciaMapper;
 
     public AveriaService(AveriaRepository repository, AveriaMapper mapper,
+            EquipoRepository equipoRepository,
             EvidenciaAveriaRepository evidenciaRepository,
             EvidenciaAveriaMapper evidenciaMapper) {
         this.repository = repository;
         this.mapper = mapper;
+        this.equipoRepository = equipoRepository;
         this.evidenciaRepository = evidenciaRepository;
         this.evidenciaMapper = evidenciaMapper;
     }
@@ -125,6 +130,12 @@ public class AveriaService {
         entity.setEstadoActivo(true);
         entity.setUsuarioCreacion(dto.getUsuarioCreacion() != null ? dto.getUsuarioCreacion() : 1L);
         repository.persist(entity);
+        Equipo equipo = equipoRepository.findById(dto.getEquipoId());
+        if (equipo != null) {
+            equipo.setEstadoOperativo("AVERIADO");
+            equipo.setUsuarioActualizacion(dto.getUsuarioCreacion() != null ? dto.getUsuarioCreacion() : 1L);
+            equipo.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+        }
         return mapper.toDTO(entity);
     }
 
@@ -141,6 +152,11 @@ public class AveriaService {
             entity.setEstadoAveria("ATENDIDA");
             entity.setFechaHoraAtencion(OffsetDateTime.now(ZoneId.of("America/Lima")));
             entity.setDiasInactividad((int) calcularDiasInactividad(entity.getFechaHoraAveria(), entity.getFechaHoraAtencion()));
+            Equipo equipo = equipoRepository.findById(entity.getEquipoId());
+            if (equipo != null) {
+                equipo.setEstadoOperativo("OPERATIVO");
+                equipo.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+            }
         } else if (dto.getEstadoAveria() != null) {
             entity.setEstadoAveria(dto.getEstadoAveria());
         }

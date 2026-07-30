@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import { ScrollView, StyleSheet, Alert, View, Image, Pressable } from 'react-native'
+import { ScrollView, StyleSheet, Alert, View, Image } from 'react-native'
 import { Text } from 'react-native-paper'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { launchCamera } from 'react-native-image-picker'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import api from '../api'
 import ErrorBoundary from '../components/ErrorBoundary'
 import AppCard from '../components/AppCard'
@@ -14,22 +15,42 @@ import AppInput from '../components/AppInput'
 import AppButton from '../components/AppButton'
 import { theme } from '../theme'
 
+const formatDateTime = (date) => {
+  const d = new Date(date)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const seconds = String(d.getSeconds()).padStart(2, '0')
+  return `${day}/${month}/${year} - ${hours}:${minutes}:${seconds}`
+}
+
+const parseToISO = (displayDate) => {
+  const [datePart, timePart] = displayDate.split(' - ')
+  if (!datePart || !timePart) return new Date().toISOString()
+  const [day, month, year] = datePart.split('/')
+  const [hours, minutes, seconds] = timePart.split(':')
+  return `${year}-${month}-${day}T${hours || '00'}:${minutes || '00'}:${seconds || '00'}-05:00`
+}
+
 const schema = z.object({
   descripcionFalla: z.string().min(10, 'La descripción debe tener al menos 10 caracteres'),
   fechaHoraAveria: z.string().min(1, 'La fecha es requerida'),
 })
 
-const FOTO_LABELS = { 1: 'Foto 1', 2: 'Foto 2', 3: 'Foto 3' }
+const FOTO_LABELS = { 1: 'Foto 1', 2: 'Foto 2' }
 
 export default function RegistrarAveriaScreen() {
   const route = useRoute()
   const navigation = useNavigation()
+  const insets = useSafeAreaInsets()
   const { equipoId } = route.params
   const [submitting, setSubmitting] = useState(false)
   const [averiaId, setAveriaId] = useState(null)
   const [uploading, setUploading] = useState({})
   const [evidencias, setEvidencias] = useState({})
-  const currentDate = new Date().toISOString().slice(0, 16)
+  const currentDate = formatDateTime(new Date())
 
   const { control, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
@@ -42,7 +63,7 @@ export default function RegistrarAveriaScreen() {
       const res = await api.post('/averias', {
         equipoId,
         descripcionFalla: formData.descripcionFalla,
-        fechaHoraAveria: formData.fechaHoraAveria,
+        fechaHoraAveria: parseToISO(formData.fechaHoraAveria),
       })
       const created = res.data?.data || res.data
       setAveriaId(created.id || created)
@@ -79,8 +100,7 @@ export default function RegistrarAveriaScreen() {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 30000,
       })
-      const saved = res.data?.data || res.data
-      setEvidencias(current => ({ ...current, [numero]: saved }))
+      setEvidencias(current => ({ ...current, [numero]: { uri: asset.uri } }))
     } catch (e) {
       Alert.alert('No se guardó la foto', e.response?.data?.error || e.message || 'Intente nuevamente')
     } finally {
@@ -88,10 +108,12 @@ export default function RegistrarAveriaScreen() {
     }
   }
 
+  const allPhotosDone = [1, 2].every(n => evidencias[n])
+
   if (!averiaId) {
     return (
       <ErrorBoundary>
-        <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: theme.spacing[8] + insets.bottom }]} keyboardShouldPersistTaps="handled">
           <AppCard style={styles.formCard} accessibilityLabel="Formulario para registrar avería">
             <Text variant="titleMedium" style={styles.title}>Registrar Avería</Text>
 
@@ -136,12 +158,12 @@ export default function RegistrarAveriaScreen() {
 
   return (
     <ErrorBoundary>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: theme.spacing[8] + insets.bottom }]} keyboardShouldPersistTaps="handled">
         <AppCard style={styles.formCard}>
           <Text variant="titleMedium" style={styles.title}>Fotografías de la Avería</Text>
-          <Text style={styles.hint}>Tome hasta 3 fotografías como evidencia de la falla.</Text>
+          <Text style={styles.hint}>Tome 2 fotografías como evidencia de la falla. Se guardan automáticamente.</Text>
           <View style={styles.photoGrid}>
-            {[1, 2, 3].map(num => (
+            {[1, 2].map(num => (
               <View key={num} style={styles.photoSlot}>
                 {evidencias[num] ? (
                   <Image source={{ uri: evidencias[num].uri }} style={styles.photoThumb} resizeMode="cover" />
@@ -151,9 +173,9 @@ export default function RegistrarAveriaScreen() {
                   </View>
                 )}
                 <AppButton
-                  variant={evidencias[num] ? 'secondary' : 'primary'}
-                  tone={evidencias[num] ? 'secondary' : undefined}
-                  icon={uploading[num] ? 'progress-clock' : evidencias[num] ? 'camera' : 'camera'}
+                  mode="contained"
+                  tone={evidencias[num] ? undefined : 'primary'}
+                  icon={uploading[num] ? 'progress-clock' : 'camera'}
                   onPress={() => takePhoto(num)}
                   loading={Boolean(uploading[num])}
                   disabled={Object.values(uploading).some(Boolean)}
@@ -165,8 +187,8 @@ export default function RegistrarAveriaScreen() {
               </View>
             ))}
           </View>
-          <AppButton variant="primary" onPress={() => navigation.goBack()} fullWidth style={styles.button}>
-            Finalizar
+          <AppButton variant="primary" onPress={() => navigation.goBack()} fullWidth style={styles.button} disabled={!allPhotosDone}>
+            {allPhotosDone ? 'Finalizar' : 'Tome ambas fotos para finalizar'}
           </AppButton>
         </AppCard>
       </ScrollView>
@@ -176,7 +198,7 @@ export default function RegistrarAveriaScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background.page },
-  content: { padding: theme.spacing[4], paddingBottom: theme.spacing[8] },
+  content: { padding: theme.spacing[4] },
   formCard: { padding: theme.spacing[6] },
   title: { ...theme.typography.title, color: theme.colors.text.primary, marginBottom: theme.spacing[2] },
   hint: { ...theme.typography.caption, color: theme.colors.text.tertiary, marginBottom: theme.spacing[4] },
