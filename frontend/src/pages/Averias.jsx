@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
@@ -7,12 +7,18 @@ import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
 import IconButton from '@mui/material/IconButton'
+import ImageList from '@mui/material/ImageList'
+import ImageListItem from '@mui/material/ImageListItem'
+import ImageListItemBar from '@mui/material/ImageListItemBar'
 import TextField from '@mui/material/TextField'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
+import CircularProgress from '@mui/material/CircularProgress'
+import Alert from '@mui/material/Alert'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary'
 import api from '../api'
 import DataTable from '../components/DataTable'
 
@@ -26,6 +32,55 @@ export default function Averias() {
   const [saving, setSaving] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null)
+
+  const [evidenceOpen, setEvidenceOpen] = useState(false)
+  const [evidenceAveriaId, setEvidenceAveriaId] = useState(null)
+  const [evidenceItems, setEvidenceItems] = useState([])
+  const [evidenceLoading, setEvidenceLoading] = useState(false)
+  const [evidenceError, setEvidenceError] = useState(null)
+  const [evidenceImages, setEvidenceImages] = useState({})
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerUrl, setViewerUrl] = useState(null)
+  const evidenceUrls = useRef([])
+
+  const revokeUrls = () => { evidenceUrls.current.forEach(u => URL.revokeObjectURL(u)); evidenceUrls.current = [] }
+
+  const loadEvidence = async (averiaId) => {
+    setEvidenceAveriaId(averiaId)
+    setEvidenceOpen(true)
+    setEvidenceLoading(true)
+    setEvidenceError(null)
+    setEvidenceImages({})
+    revokeUrls()
+    try {
+      const res = await api.get(`/averias/${averiaId}/evidencias`)
+      const list = res.data?.data || res.data || []
+      setEvidenceItems(list)
+      const images = {}
+      for (const item of list) {
+        try {
+          const imgRes = await api.get(`/averias/${averiaId}/evidencias/${item.numeroFoto}/archivo`, {
+            responseType: 'blob',
+          })
+          const blob = imgRes.data instanceof Blob ? imgRes.data : new Blob([imgRes.data], { type: item.tipoMime || 'image/jpeg' })
+          const url = URL.createObjectURL(blob)
+          evidenceUrls.current.push(url)
+          images[item.numeroFoto] = url
+        } catch { /* skip failed image */ }
+      }
+      setEvidenceImages(images)
+    } catch (err) {
+      setEvidenceError(err.response?.data?.error || err.message || 'Error al cargar evidencias')
+    } finally {
+      setEvidenceLoading(false)
+    }
+  }
+
+  const closeEvidence = () => {
+    setEvidenceOpen(false)
+    revokeUrls()
+    setEvidenceImages({})
+  }
 
   const loadData = useCallback(async () => {
     try {
@@ -142,6 +197,11 @@ export default function Averias() {
 
   const renderActions = (item) => (
     <>
+      <Tooltip title="Evidencias">
+        <IconButton size="small" onClick={() => loadEvidence(item.id)}>
+          <PhotoLibraryIcon fontSize="small" color="info" />
+        </IconButton>
+      </Tooltip>
       <Tooltip title="Editar">
         <IconButton size="small" onClick={() => openEdit(item)}>
           <EditIcon fontSize="small" color="primary" />
@@ -245,6 +305,57 @@ export default function Averias() {
           <Button onClick={() => { setDeleteDialogOpen(false); setItemToDelete(null) }}>Cancelar</Button>
           <Button variant="contained" color="error" onClick={handleDelete}>Eliminar</Button>
         </DialogActions>
+      </Dialog>
+
+      <Dialog open={evidenceOpen} onClose={closeEvidence} maxWidth="md" fullWidth>
+        <DialogTitle>Evidencias Fotográficas — Avería #{evidenceAveriaId}</DialogTitle>
+        <DialogContent>
+          {evidenceLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box>
+          ) : evidenceError ? (
+            <Alert severity="info">{evidenceError}</Alert>
+          ) : evidenceItems.length === 0 ? (
+            <Typography color="text.secondary" sx={{ py: 2 }}>No hay evidencias registradas para esta avería.</Typography>
+          ) : (
+            <ImageList cols={3} gap={8}>
+              {evidenceItems.map(item => (
+                <ImageListItem key={item.numeroFoto} sx={{ cursor: 'pointer' }}
+                  onClick={() => {
+                    const url = evidenceImages[item.numeroFoto]
+                    if (url) { setViewerUrl(url); setViewerOpen(true) }
+                  }}>
+                  {evidenceImages[item.numeroFoto] ? (
+                    <img src={evidenceImages[item.numeroFoto]} alt={`Foto ${item.numeroFoto}`}
+                      style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 4 }} />
+                  ) : (
+                    <Box sx={{ width: '100%', height: 180, bgcolor: 'grey.100', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Typography variant="caption" color="text.secondary">Sin imagen</Typography>
+                    </Box>
+                  )}
+                  <ImageListItemBar
+                    title={`Foto ${item.numeroFoto}`}
+                    subtitle={`${item.nombreArchivo} · ${(item.tamanioBytes / 1024).toFixed(0)} KB`}
+                  />
+                </ImageListItem>
+              ))}
+            </ImageList>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeEvidence}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={viewerOpen} onClose={() => setViewerOpen(false)} maxWidth="lg" fullWidth
+        PaperProps={{ sx: { bgcolor: 'black', height: '100%' } }}>
+        <IconButton onClick={() => setViewerOpen(false)} sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1, color: 'white' }}>
+          <Typography sx={{ fontSize: 28, lineHeight: 1 }}>&times;</Typography>
+        </IconButton>
+        {viewerUrl && (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', p: 2 }}>
+            <img src={viewerUrl} alt="Evidencia" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+          </Box>
+        )}
       </Dialog>
     </Box>
   )

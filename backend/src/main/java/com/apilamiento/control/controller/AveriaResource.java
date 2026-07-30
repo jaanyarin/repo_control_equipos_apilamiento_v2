@@ -2,12 +2,20 @@ package com.apilamiento.control.controller;
 
 import com.apilamiento.control.dto.ApiResponse;
 import com.apilamiento.control.dto.AveriaDTO;
+import com.apilamiento.control.entity.EvidenciaAveria;
+import com.apilamiento.control.security.SecurityUtil;
 import com.apilamiento.control.service.AveriaService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.SecurityContext;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
+import java.io.IOException;
+import java.nio.file.Files;
 
 @Path("/averias")
 @RolesAllowed({"Super Admin", "Admin", "Usuario"})
@@ -76,5 +84,32 @@ public class AveriaResource {
                     .entity(ApiResponse.error("Avería no encontrada", "NOT_FOUND")).build();
         }
         return Response.ok(ApiResponse.ok("Avería eliminada correctamente", null)).build();
+    }
+
+    @PUT
+    @Path("/{averiaId}/evidencias/{numero}")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response subirEvidencia(@PathParam("averiaId") Long averiaId, @PathParam("numero") Short numero,
+            @RestForm("archivo") FileUpload archivo, @Context SecurityContext context) throws IOException {
+        if (archivo == null) throw new BadRequestException("La fotografía es obligatoria");
+        byte[] content = Files.readAllBytes(archivo.uploadedFile());
+        return Response.ok(ApiResponse.ok("Evidencia guardada",
+                service.guardarEvidencia(averiaId, numero, archivo.fileName(),
+                        archivo.contentType(), content, SecurityUtil.getUsuarioId(context)))).build();
+    }
+
+    @GET
+    @Path("/{averiaId}/evidencias")
+    public Response listarEvidencias(@PathParam("averiaId") Long averiaId) {
+        return Response.ok(ApiResponse.ok(service.listarEvidencias(averiaId))).build();
+    }
+
+    @GET
+    @Path("/{averiaId}/evidencias/{numero}/archivo")
+    @Produces({"image/jpeg", "image/png"})
+    public Response archivo(@PathParam("averiaId") Long averiaId, @PathParam("numero") Short numero) {
+        EvidenciaAveria item = service.obtenerArchivo(averiaId, numero);
+        return Response.ok(item.getContenido(), item.getTipoMime())
+                .header("Content-Disposition", "inline; filename=\"" + item.getNombreArchivo() + "\"").build();
     }
 }
