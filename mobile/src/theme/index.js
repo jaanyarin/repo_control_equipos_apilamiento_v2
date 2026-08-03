@@ -173,6 +173,14 @@ export const paperTheme = {
     outlineVariant: colors.border.subtle,
     onSurface: colors.text.primary,
     onSurfaceVariant: colors.text.secondary,
+    elevation: {
+      level0: 'transparent',
+      level1: 'rgb(247, 247, 247)',
+      level2: 'rgb(245, 245, 245)',
+      level3: 'rgb(242, 242, 242)',
+      level4: 'rgb(240, 240, 240)',
+      level5: 'rgb(238, 238, 238)',
+    },
   },
 }
 

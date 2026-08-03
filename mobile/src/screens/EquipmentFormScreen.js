@@ -197,7 +197,9 @@ export default function EquipmentFormScreen() {
             )} />
           ))}
           <Controller control={control} name="fechaIngreso" render={({ field }) => (
-            <DateField value={field.value} onChange={field.onChange} error={errors.fechaIngreso?.message} />
+            <View style={{ marginTop: 10 }}>
+              <DateField value={field.value} onChange={field.onChange} error={errors.fechaIngreso?.message} />
+            </View>
           )} />
         </AppCard>
 

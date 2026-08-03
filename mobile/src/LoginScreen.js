@@ -24,7 +24,6 @@ export default function LoginScreen() {
   const [showServerConfig, setShowServerConfig] = useState(false)
   const [apiUrl, setApiUrlState] = useState(BUILT_IN_API_URL)
   const [savingApiUrl, setSavingApiUrl] = useState(false)
-  const [step, setStep] = useState('roles')
 
   useEffect(() => {
     loadApiUrl().then(url => setApiUrlState(url || BUILT_IN_API_URL))
@@ -40,8 +39,8 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (selectedRolId) {
-      setStep('usuarios')
       setSelectedUsuarioId(null)
+      setPassword('')
       api.get(`/auth/usuarios-by-rol/${selectedRolId}`)
         .then(r => {
           const data = Array.isArray(r.data) ? r.data : (r.data?.data || [])
@@ -50,10 +49,6 @@ export default function LoginScreen() {
         .catch(e => setError('Error al cargar usuarios'))
     }
   }, [selectedRolId])
-
-  useEffect(() => {
-    if (selectedUsuarioId) setStep('password')
-  }, [selectedUsuarioId])
 
   const handleLogin = async () => {
     if (!selectedUsuarioId || !password) return
@@ -87,7 +82,7 @@ export default function LoginScreen() {
       setSelectedRolId(null)
       setSelectedUsuarioId(null)
       setUsuarios([])
-      setStep('roles')
+      setPassword('')
     } catch (e) {
       setError(e.message || 'Error al guardar servidor')
     } finally {
@@ -115,7 +110,7 @@ export default function LoginScreen() {
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <AppCard style={[styles.card, { width: Math.min(width - theme.spacing[12], 420) }]}>
+        <AppCard style={[styles.card, { width: Math.min(width - theme.spacing[10], 420) }]}>
           <Text variant="headlineSmall" style={styles.title}>
             Control de Equipos de Apilamiento Packing
           </Text>
@@ -133,41 +128,32 @@ export default function LoginScreen() {
             onChange={setSelectedRolId}
           />
 
-          {step !== 'roles' && (
-            <AppSelect
-              label="Usuario"
-              placeholder="Seleccionar usuario"
-              value={selectedUsuarioId}
-              options={(usuarios || []).map(usuario => ({ value: usuario.id, label: `${usuario.nombre}${usuario.area ? ` (${usuario.area})` : ''}` }))}
-              onChange={setSelectedUsuarioId}
-            />
-          )}
+          <AppSelect
+            label="Usuario"
+            placeholder="Primero selecciona un perfil"
+            value={selectedUsuarioId}
+            options={(usuarios || []).map(usuario => ({ value: usuario.id, label: `${usuario.nombre}${usuario.area ? ` (${usuario.area})` : ''}` }))}
+            onChange={setSelectedUsuarioId}
+            disabled={!selectedRolId}
+            style={{ marginTop: 10 }}
+          />
 
-          {step === 'password' && (
-            <>
-            <AppInput
-              label="Contraseña"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              style={styles.input}
-            />
-            <AppButton
-              onPress={handleLogin}
-              style={styles.button}
-              loading={loading}
-            >
-              Iniciar sesión
-            </AppButton>
-            <AppButton
-              tone="text"
-              onPress={() => { setSelectedRolId(null); setStep('roles') }}
-              style={styles.resetButton}
-            >
-              Cambiar usuario
-            </AppButton>
-            </>
-          )}
+          <AppInput
+            label="Contraseña"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            style={styles.input}
+          />
+
+          <AppButton
+            onPress={handleLogin}
+            style={styles.button}
+            loading={loading}
+            disabled={!selectedUsuarioId || !password}
+          >
+            Iniciar sesión
+          </AppButton>
           <Divider style={styles.divider} />
           <AppButton
             tone="text"

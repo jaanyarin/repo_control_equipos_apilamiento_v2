@@ -682,3 +682,61 @@ sin filtro    → GET /equipos (todos)
 | Fotos de avería: FM pide 3, implementado 2 | 🟡 Medio | Ampliar `fac_evidencias` de averías a 3 slots |
 | Fotos de atención: FM pide 3, implementado 1 | 🟡 Medio | Ampliar `AtenderAveriaScreen` a 3 slots |
 | Estado pegado en tab EquiposList tras `mode/devolucion` | 🟢 Bajo | Listener `tabPress` para resetear params (misma limitación que §16.3) |
+
+# 18. Login UX - Desplegables de ancho completo y campos visibles a la vez
+
+## 18.1 Problema
+
+En `LoginScreen.js` existían dos inconvenientes de experiencia de usuario:
+
+1. **Ancho de los desplegables (Perfil y Usuario):** los ítems del `Menu` de react-native-paper (`Menu.Item`) no heredan el ancho del botón ancla, por lo que el menú desplegado resultaba notablemente más angosto que el campo que lo abre (`AppSelect`).
+2. **Campos secuenciales:** el formulario ocultaba Usuario y Contraseña hasta avanzar por un estado `step` (`roles` → `usuarios` → `password`), obligando a tocar "Continuar"/avanzar para ver cada campo. La norma de UX es mostrar los tres campos (Perfil, Usuario, Contraseña) simultáneamente.
+
+## 18.2 Causas raíz
+
+| Síntoma | Causa |
+|---|---|
+| Ítems del desplegable angostos | `Menu`/`Menu.Item` de react-native-paper no toman el ancho del `anchor` por defecto |
+| Campos secuenciales | Estado `step` en `LoginScreen` condicionaba el render de cada campo |
+
+## 18.3 Solución
+
+### 18.3.1 `components/AppSelect.js` — ancho del desplegable
+
+- Se mide el ancho del contenedor ancla mediante `onLayout` (`anchorWidth`).
+- Se aplica `style={{ width: anchorWidth }}` al `Menu` para que todos los `Menu.Item` compartan el ancho del campo.
+- El anchor envuelve el `<Button>` con `width: '100%'` dentro de un `<View>` con `onLayout`.
+
+Resultado en emulador: los ítems ("Super Admin", "Admin", "Usuario") pasan de un ancho mínimo (texto corto) a ~735px, coincidiendo con el ancho del campo que los abre (ancla ~818px).
+
+### 18.3.2 `screens/LoginScreen.js` — campos simultáneos
+
+- Se **elimina por completo** el estado `step`.
+- El `useEffect` que reacciona a `selectedRolId` ahora resetea `selectedUsuarioId` y `password` (antes hacía `setStep('usuarios')`).
+- Se elimina el segundo `useEffect` que hacía `setStep('password')`.
+- `handleSaveApiUrl` reemplaza `setStep('roles')` por `setPassword('')`.
+- Render estable: siempre se muestran Perfil (select), Usuario (select, `disabled` y con placeholder "Primero selecciona un perfil" hasta elegir Perfil), Contraseña (input) y el botón "Iniciar sesión" (`disabled` hasta tener usuario y contraseña).
+- Se retira el botón "Cambiar usuario".
+
+## 18.4 Pruebas realizadas (emulador)
+
+- [x] Tres campos (Perfil, Usuario, Contraseña) visibles a la vez en el login.
+- [x] Select de Usuario deshabilitado con placeholder "Primero selecciona un perfil" hasta elegir Perfil.
+- [x] Al elegir Perfil, el select de Usuario se habilita y carga los usuarios del perfil.
+- [x] ítems del desplegable de Perfil y de Usuario con el ancho del campo (ancla ~819px, menú ~735px).
+- [x] Botón "Iniciar sesión" deshabilitado hasta ingresar usuario y contraseña.
+- [x] Login ejecuta y muestra la respuesta del backend (p.ej. "Contraseña incorrecta" ante credencial no coincidente), confirmando el envío y manejo de error.
+
+> Nota: no se completó un login con éxito porque el hash BCrypt de un usuario local en la BD actual difiere del seed (`V9` usa `00000000`); el objetivo del cambio (UX de desplegables y campos simultáneos) quedó validado. Este comportamiento es previo al cambio y ajeno al mismo.
+
+## 18.5 Pruebas de Código
+
+- Mobile: `npx eslint src/LoginScreen.js src/components/AppSelect.js` → exit 0.
+- Mobile: `npx jest` → 21/22. Único fallo `PasswordChangeScreen.test.js` **pre-existente** (falta `SafeAreaProvider`), ajeno a este cambio.
+
+## 18.6 Archivos Modificados
+
+| Archivo | Cambio |
+|---|---|
+| `mobile/src/components/AppSelect.js` | Medición de ancho del anchor (`onLayout`) + `style={{ width: anchorWidth }}` en el `Menu` |
+| `mobile/src/screens/LoginScreen.js` | Eliminación de `step`; tres campos siempre visibles; `disabled` condicional en Usuario y "Iniciar sesión"; retiro de "Cambiar usuario" |
