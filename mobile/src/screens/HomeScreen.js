@@ -11,10 +11,10 @@ import { theme } from '../theme'
 
 const menuActions = [
   { label: 'Ingreso de PSR', description: 'Registra y consulta movimientos PSR.', icon: 'file-document-outline', screen: 'PsrOsr', roles: ['Super Admin', 'Admin'] },
-  { label: 'Ingreso de Equipo', description: 'Gestiona los equipos de apilamiento.', icon: 'warehouse', screen: 'EquiposList', roles: ['Super Admin', 'Admin', 'Usuario'] },
-  { label: 'Registro de Avería', description: 'Selecciona un equipo y reporta incidencias.', icon: 'alert-outline', screen: 'EquiposList', roles: ['Super Admin', 'Admin', 'Usuario'] },
-  { label: 'Detalles de Equipo', description: 'Consulta información e historial.', icon: 'information-outline', screen: 'EquiposList', roles: ['Super Admin', 'Admin', 'Usuario'] },
-  { label: 'Finalización del Servicio', description: 'Selecciona un equipo averiado y atiende averías.', icon: 'check-circle-outline', screen: 'EquiposList', params: { filterEstado: 'AVERIADO' }, roles: ['Super Admin', 'Admin', 'Usuario'] },
+  { label: 'Ingreso de Equipo', description: 'Gestiona los equipos de apilamiento.', icon: 'warehouse', screen: 'EquiposList', params: { mode: 'manage' }, roles: ['Super Admin', 'Admin', 'Usuario'] },
+  { label: 'Registro de Avería', description: 'Selecciona un equipo y reporta incidencias.', icon: 'alert-outline', screen: 'EquiposList', params: { mode: 'select' }, roles: ['Super Admin', 'Admin', 'Usuario'] },
+  { label: 'Detalles de Equipo', description: 'Consulta información e historial.', icon: 'information-outline', screen: 'EquiposList', params: { mode: 'view' }, roles: ['Super Admin', 'Admin', 'Usuario'] },
+  { label: 'Finalización del Servicio', description: 'Devuelve un equipo que ya no está en servicio.', icon: 'check-circle-outline', screen: 'EquiposList', params: { mode: 'select', devolucion: true }, roles: ['Super Admin', 'Admin', 'Usuario'] },
 ]
 
 export default function HomeScreen() {
@@ -36,7 +36,7 @@ export default function HomeScreen() {
           {user?.area ? <Text style={styles.areaText}>{user.area}</Text> : null}
         </AppCard>
 
-        <Text style={styles.sectionTitle}>Menú principal</Text>
+        <Text style={styles.sectionTitle}>Menú Principal</Text>
 
         {visibleActions.map(action => (
           <TouchableRipple

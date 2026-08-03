@@ -36,6 +36,7 @@ public class EquipoMapper {
         dto.setEstadoOperativo(entity.getEstadoOperativo());
         dto.setObservaciones(entity.getObservaciones());
         dto.setFechaIngreso(entity.getFechaIngreso());
+        dto.setFechaDevolucion(entity.getFechaDevolucion());
         dto.setNumeroGuiaRemision(entity.getNumeroGuiaRemision());
         dto.setIngresoCompleto(entity.getIngresoCompleto());
         dto.setProveedorId(entity.getProveedorId());

@@ -98,6 +98,9 @@ public class Equipo {
     @Column(name = "fecha_ingreso")
     private LocalDate fechaIngreso;
 
+    @Column(name = "fecha_devolucion")
+    private OffsetDateTime fechaDevolucion;
+
     @Column(name = "numero_guia_remision", length = 100)
     private String numeroGuiaRemision;
 
@@ -207,6 +210,8 @@ public class Equipo {
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
     public LocalDate getFechaIngreso() { return fechaIngreso; }
     public void setFechaIngreso(LocalDate fechaIngreso) { this.fechaIngreso = fechaIngreso; }
+    public OffsetDateTime getFechaDevolucion() { return fechaDevolucion; }
+    public void setFechaDevolucion(OffsetDateTime fechaDevolucion) { this.fechaDevolucion = fechaDevolucion; }
     public String getNumeroGuiaRemision() { return numeroGuiaRemision; }
     public void setNumeroGuiaRemision(String numeroGuiaRemision) { this.numeroGuiaRemision = numeroGuiaRemision; }
     public Boolean getIngresoCompleto() { return ingresoCompleto; }

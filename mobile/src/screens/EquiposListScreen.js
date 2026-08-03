@@ -22,6 +22,9 @@ export default function EquiposListScreen() {
   const { user } = useAuth()
   const insets = useSafeAreaInsets()
   const filterEstado = route.params?.filterEstado
+  const mode = route.params?.mode ?? 'manage'
+  const esDevolucion = route.params?.devolucion === true
+  const isManage = mode === 'manage'
   const [equipos, setEquipos] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -32,17 +35,21 @@ export default function EquiposListScreen() {
   const fetchEquipos = useCallback(async () => {
     try {
       setError('')
-      const endpoint = filterEstado ? `/equipos/por-estado/${filterEstado}` : '/equipos'
-      const { data } = await api.get(endpoint)
+      const { data } = await api.get('/equipos')
       const list = data?.data || data || []
-      setEquipos(Array.isArray(list) ? list : [])
+      const arr = Array.isArray(list) ? list : []
+      setEquipos(esDevolucion
+        ? arr.filter(item => item.estadoOperativo !== 'DEVUELTO')
+        : filterEstado
+          ? arr.filter(item => item.estadoOperativo === filterEstado)
+          : arr)
     } catch (e) {
       setError(e.response?.data?.error || e.message || 'Error al cargar equipos')
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [filterEstado])
+  }, [esDevolucion, filterEstado])
 
   useFocusEffect(useCallback(() => {
     setLoading(true)
@@ -66,10 +73,18 @@ export default function EquiposListScreen() {
     <ErrorBoundary>
       <View style={styles.container}>
         <View style={styles.toolbar}>
-          <Text style={styles.title}>{filterEstado === 'AVERIADO' ? 'Equipos averiados' : 'Equipos ingresados'}</Text>
-          <AppButton icon="plus" onPress={() => navigation.navigate('SelectPsrEquipment')}>
-            Nuevo ingreso
-          </AppButton>
+          <Text style={styles.title}>{esDevolucion
+            ? 'Equipos para devolución'
+            : filterEstado === 'AVERIADO'
+              ? 'Equipos averiados'
+              : isManage
+                ? 'Equipos ingresados'
+                : mode === 'select' ? 'Seleccionar equipo' : 'Consulta de equipos'}</Text>
+          {isManage ? (
+            <AppButton icon="plus" onPress={() => navigation.navigate('SelectPsrEquipment')}>
+              Nuevo ingreso
+            </AppButton>
+          ) : null}
         </View>
         <Searchbar
           placeholder="Buscar por código, modelo o proveedor"
@@ -92,13 +107,15 @@ export default function EquiposListScreen() {
             ListEmptyComponent={(
               <EmptyState
                 icon="warehouse"
-                title={search ? 'Sin resultados' : filterEstado === 'AVERIADO' ? 'No hay equipos averiados' : 'No hay equipos'}
-                subtitle={search ? 'Intenta con otro término' : filterEstado === 'AVERIADO' ? 'Todos los equipos están operativos' : 'Aún no se han registrado equipos'}
+                title={search ? 'Sin resultados' : esDevolucion ? 'No hay equipos por devolver' : filterEstado === 'AVERIADO' ? 'No hay equipos averiados' : 'No hay equipos'}
+                subtitle={search ? 'Intenta con otro término' : esDevolucion ? 'Todos los equipos ya fueron devueltos' : filterEstado === 'AVERIADO' ? 'Todos los equipos están operativos' : 'Aún no se han registrado equipos'}
               />
             )}
             renderItem={({ item }) => (
               <AppCard style={styles.card}>
-                <TouchableRipple onPress={() => navigation.navigate('EquipoDetail', { id: item.id })}>
+                <TouchableRipple onPress={() => esDevolucion || (filterEstado === 'AVERIADO' && mode === 'select')
+                  ? navigation.navigate('DevolucionEquipo', { id: item.id })
+                  : navigation.navigate('EquipoDetail', { id: item.id })}>
                   <View style={styles.cardContent}>
                     <View style={styles.cardHeader}>
                       <View style={styles.heading}>
@@ -110,7 +127,7 @@ export default function EquiposListScreen() {
                     <Text style={styles.cardMeta}>{item.proveedorNombre || 'Sin proveedor'} · {item.tipoEquipoNombre || 'Sin tipo'}</Text>
                   </View>
                 </TouchableRipple>
-                {canEdit ? (
+                {isManage && canEdit ? (
                   <View style={styles.actions}>
                     <AppIconButton
                       icon="pencil-outline"

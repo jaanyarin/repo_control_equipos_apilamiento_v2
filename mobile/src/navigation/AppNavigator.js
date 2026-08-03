@@ -28,6 +28,7 @@ import CreateEditUserScreen from '../screens/CreateEditUserScreen'
 import SelectPsrEquipmentScreen from '../screens/SelectPsrEquipmentScreen'
 import EquipmentFormScreen from '../screens/EquipmentFormScreen'
 import EquipmentPhotosScreen from '../screens/EquipmentPhotosScreen'
+import DevolucionEquipoScreen from '../screens/DevolucionEquipoScreen'
 import MotivosPsrScreen from '../screens/MotivosPsrScreen'
 import AuditoriaScreen from '../screens/AuditoriaScreen'
 import LoadingScreen from '../components/LoadingScreen'
@@ -142,6 +143,7 @@ function MainNavigator() {
         title: route.params?.mode === 'edit' ? 'Editar equipo' : 'Ingreso de equipo',
       })} />
       <MainStack.Screen name="EquipmentPhotos" component={EquipmentPhotosScreen} options={{ title: 'Fotografías de ingreso', headerBackVisible: false }} />
+      <MainStack.Screen name="DevolucionEquipo" component={DevolucionEquipoScreen} options={{ title: 'Finalización del Servicio' }} />
       <MainStack.Screen name="PsrOsr" component={PsrOsrScreen} options={({ navigation }) => ({
         title: 'PSR',
         headerRight: canManagePsr ? () => (

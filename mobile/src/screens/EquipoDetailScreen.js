@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { Alert, Image, Modal, PermissionsAndroid, Platform, Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native'
 import { Text, Divider } from 'react-native-paper'
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native'
@@ -27,6 +27,8 @@ export default function EquipoDetailScreen() {
   const [error, setError] = useState(null)
   const [averias, setAverias] = useState([])
   const [showAverias, setShowAverias] = useState(false)
+  const showAveriasRef = useRef(false)
+  showAveriasRef.current = showAverias
   const [loadingAverias, setLoadingAverias] = useState(false)
   const [evidencias, setEvidencias] = useState([])
   const [imageAuth, setImageAuth] = useState(null)
@@ -93,23 +95,33 @@ export default function EquipoDetailScreen() {
 
   useFocusEffect(useCallback(() => { fetchEquipo() }, [fetchEquipo]))
 
-  const fetchAverias = async () => {
-    if (showAverias) {
-      setShowAverias(false)
-      return
-    }
+  const loadAverias = useCallback(async () => {
     setLoadingAverias(true)
     try {
       const { data } = await api.get(`/averias/por-equipo/${id}`)
       const list = data?.data || data || []
       setAverias(Array.isArray(list) ? list : [])
-      setShowAverias(true)
     } catch (e) {
       Alert.alert('Error', e.response?.data?.error || e.message || 'Error al cargar averías')
     } finally {
       setLoadingAverias(false)
     }
-  }
+  }, [id])
+
+  const toggleAverias = useCallback(() => {
+    if (showAveriasRef.current) {
+      setShowAverias(false)
+      return
+    }
+    setShowAverias(true)
+    loadAverias()
+  }, [loadAverias])
+
+  useFocusEffect(useCallback(() => {
+    if (showAveriasRef.current) {
+      loadAverias()
+    }
+  }, [loadAverias]))
 
   if (loading) return <LoadingScreen />
   if (error) return <ErrorState title="Error al cargar el equipo" message={error} onRetry={fetchEquipo} />
@@ -257,7 +269,7 @@ export default function EquipoDetailScreen() {
           <AppButton
             variant="secondary"
             icon="file-document"
-            onPress={fetchAverias}
+            onPress={toggleAverias}
             style={styles.actionButton}
             loading={loadingAverias}
             fullWidth

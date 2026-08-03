@@ -468,3 +468,217 @@ La preview de foto en `AtenderAveriaScreen` no se muestra en el dispositivo Xiao
 # 14. Cierre
 
 Este documento queda sincronizado con PostgreSQL 18 como base oficial, frontend web accesible en `http://localhost/`, y módulo PSR/OSR mobile funcional con formulario React Hook Form + Zod + date picker nativo. La configuración de red, puertos y conexiones queda documentada y congelada en la sección 12. Adicionalmente, el flujo de Finalización del Servicio (atención de averías con restauración de estado operativo) queda implementado en backend y mobile.
+
+---
+
+# 15. Auto-actualización de Averías en EquipoDetailScreen
+
+## 15.1 Problema
+
+Al registrar una avería desde `EquipoDetailScreen` (`RegistrarAveria`), el listado de averías del equipo no se actualizaba automáticamente al volver a la pantalla. Era necesario salir de la pantalla y volver a entrar para ver la avería recién registrada.
+
+## 15.2 Causa
+
+`useFocusEffect` (línea 96) solo invocaba `fetchEquipo()`, que recarga el equipo y las evidencias, pero **nunca recargaba el listado de averías** al recuperar el foco tras navegar a `RegistrarAveria` o `AtenderAveria`.
+
+## 15.3 Solución (EquipoDetailScreen.js)
+
+| Cambio | Detalle |
+|---|---|
+| `loadAverias()` | Función `useCallback([id])` que solo descarga el listado (`/averias/por-equipo/{id}`) y actualiza el estado `averias`. Sin lógica de toggle. |
+| `toggleAverias()` | `useCallback([loadAverias])` que conmuta `showAverias` (ver/ocultar) y dispara `loadAverias()` al abrir. Reemplaza al antiguo `fetchAverias`. |
+| `showAveriasRef` | `useRef` sincronizado en cada render con `showAverias`. Permite que el callback estable del `useFocusEffect` lea el valor actual sin closures obsoletos. |
+| Nuevo `useFocusEffect` | Se dispara al recuperar el foco (volver de RegistrarAveria/AtenderAveria); si `showAverias` está visible, llama `loadAverias()` → el listado se actualiza automáticamente. |
+| Botón "Ver/Ocultar Averías" | `onPress` apunta a `toggleAverias` (antes `fetchAverias`). |
+
+## 15.4 Comportamiento Resultante
+
+1. Pantalla en foco con averías visibles → al volver de registrar/atender una avería, el listado se recarga automáticamente.
+2. El estado del equipo (`estadoOperativo`) también se refresca con `fetchEquipo()` en el focus, manteniendo sincronizado el botón "Registrar Avería"/"Registrar Reparación".
+3. No hay fetch duplicado al abrir por primera vez: `toggleAverias` es quien carga; el `useFocusEffect` solo actúa sobre focus posteriores cuando ya está visible.
+
+## 15.5 Pruebas Internas
+
+- `npx eslint src/screens/EquipoDetailScreen.js` → sin errores (exit 0).
+- `npx jest` → 21/22 tests pasan. El único fallo (`PasswordChangeScreen.test.js`) es **pre-existente** y no relacionado: el test no envuelve el render en `SafeAreaProvider` requerido por `useSafeAreaInsets`. Verificado con `git stash` (falla sin el cambio).
+- Validación manual en emulador Android: registrar avería → al volver, el listado muestra la nueva avería sin salir de la pantalla.
+
+---
+
+# 16. Modo Contextual en EquiposListScreen (UX de selección vs gestión)
+
+## 16.1 Problema
+
+`HomeScreen` mapea 4 intenciones distintas a la misma pantalla `EquiposList`:
+
+| Acción | Intención real |
+|---|---|
+| Ingreso de Equipo | **Gestión/creación** → SelectPsrEquipment |
+| Registro de Avería | **Seleccionar** equipo → EquipoDetail → RegistrarAveria |
+| Detalles de Equipo | **Consulta** → EquipoDetail |
+| Finalización del Servicio | **Seleccionar** equipo averiado → AtenderAveria |
+
+`EquiposListScreen` siempre pintaba el botón **"Nuevo ingreso"** (navega a `SelectPsrEquipment`, alta de equipo por PSR/OSR). En los contextos de selección/consulta ese botón era un affordance engañoso: el usuario viene a *elegir* un equipo, no a *crear* uno.
+
+## 16.2 Solución
+
+Se introduce un parámetro `mode` en los params de navegación hacia `EquiposList`:
+
+| Valor | Uso | Título | Botón "Nuevo ingreso" |
+|---|---|---|---|
+| `manage` (por defecto) | Ingreso de Equipo / tab Equipos | "Equipos ingresados" | Visible |
+| `select` | Registro de Avería / Finalización del Servicio | "Seleccionar equipo" | Oculto |
+| `view` | Detalles de Equipo | "Consulta de equipos" | Oculto |
+
+### 16.2.1 HomeScreen.js
+
+| Cambio | Detalle |
+|---|---|
+| `menuActions` | Cada acción pasa ahora `params: { mode: ... }` explícito. `Finalización del Servicio` mantiene `filterEstado: 'AVERIADO'` junto a `mode: 'select'`. |
+
+### 16.2.2 EquiposListScreen.js
+
+| Cambio | Detalle |
+|---|---|
+| Derivación | `const mode = route.params?.mode ?? 'manage'`; `const isManage = mode === 'manage'`. Si no llegan params (acceso directo por tab), se asume gestión. |
+| Título contextual | `filterEstado === 'AVERIADO'` → "Equipos averiados"; `manage` → "Equipos ingresados"; `select` → "Seleccionar equipo"; `view` → "Consulta de equipos". |
+| Botón condicional | "Nuevo ingreso" solo se renderiza cuando `isManage`. El resto de la pantalla (búsqueda, listado, edición con lápiz para admins) permanece igual. |
+
+### 16.2.3 Lápiz de edición (EquiposListScreen.js)
+
+La edición es una acción de **gestión**, por lo que queda aislada al contexto `manage`, igual que el botón "Nuevo ingreso".
+
+| Modo | Lápiz de edición | Lápiz (admin) sobre card |
+|---|---|---|
+| `manage` | Visible | Sí |
+| `select` | Oculto | No |
+| `view` | Oculto | No |
+
+| Cambio | Detalle |
+|---|---|
+| Condición del lápiz | `{isManage && canEdit ? ( ... ) : null}`. Antes solo dependía de `canEdit = isAdminOrSuperAdmin(user)`, lo que mostraba el lápiz en "Detalles de Equipo" (`view`) y "Registro de Avería" (`select`) — un affordance de gestión en contextos de consulta/selección. Ahora solo aparece en `mode: 'manage'`. |
+
+La edición inline sigue disponible en el tab **Equipos** (desde la barra inferior, sin `mode`, se asume `manage`), donde la acción de gestionar equipos pertenece.
+
+## 16.3 Limitación Conocida (heredada de `filterEstado`)
+
+React Navigation conserva los `params` de un tab cuando este ya está montado. Si el usuario entra con `mode: 'select'` desde Home y luego toca directamente el tab "Equipos" en la barra inferior, el modo `select` queda "pegado" (botón oculto) hasta que se re-navegue desde Home. Es el mismo comportamiento heredado del parámetro `filterEstado`. Se decidió **no** añadir un listener `tabPress` para resetear el modo, priorizando un código mínimo y consistente con el precedente. Si en el futuro el estado pegado molesta, se puede implementar como fix puntual (deuda 🟢 documentada).
+
+## 16.4 Pruebas Internas
+
+- `npx eslint src/screens/HomeScreen.js src/screens/EquiposListScreen.js` → sin errores (exit 0).
+- `npx jest` → 21/22 tests pasan. Único fallo `PasswordChangeScreen.test.js` **pre-existente** (falta `SafeAreaProvider`), verificado con `git stash`.
+- Validación manual en emulador Android: navegar desde las 4 acciones del Home y verificar título, visibilidad del botón "Nuevo ingreso" y del lápiz de edición según modo.
+
+---
+
+# 17. Finalización del Servicio — Devolución de Equipos
+
+## 17.1 Problema
+
+El FM (sección 3.8) define que la finalización del servicio exige ingresar las fotos del equipo **"tal cual como cuando se recepcionó"** y guardar. No existía pantalla para registrar la devolución: un equipo que dejaba de estar en servicio no quedaba marcado ni se registraban sus evidencias de retorno.
+
+## 17.2 Análisis FM vs Implementación (brechas)
+
+| Requerimiento FM | Estado previo | Implementación |
+|---|---|---|
+| Fotos de devolución al finalizar | ❌ No existía | ✅ Nuevo módulo con 4 evidencias obligatorias |
+| Marcar equipo como devuelto | ❌ No existía | ✅ `estado_operativo = 'DEVUELTO'` + `fecha_devolucion` |
+| PDF de reporte de finalización | ❌ No existía | ⏳ Deuda documentada (fuera de alcance) |
+| Fotos de avería (FM pide 3, hay 2) | ⚠️ Parcial | 🟡 Deuda documentada |
+| Fotos de atención (FM pide 3, hay 1) | ⚠️ Parcial | 🟡 Deuda documentada |
+
+## 17.3 Decisiones de Diseño
+
+### 17.3.1 Módulo backend limpio `devolucion-equipos`
+
+No se reutilizó `fac_evidencias_ingreso_equipo` porque su constraint `chk_evidencias_ingreso` limita los tipos a los de ingreso. Se creó tabla dedicada `fac_evidencias_devolucion_equipo` con CHECK de tipos propios.
+
+### 17.3.2 Estados permitidos
+
+La migración V20 reemplaza el constraint existente (`DROP IF EXISTS` + `ADD`) por `chk_estado_operativo_equipo` con `('OPERATIVO','AVERIADO','DEVUELTO')`.
+
+### 17.3.3 Evidencias obligatorias (4)
+
+`DEVOLUCION_FRONTAL`, `DEVOLUCION_LATERAL_IZQUIERDO`, `DEVOLUCION_LATERAL_DERECHO`, `DEVOLUCION_POSTERIOR`. `DevolucionEquipoService.finalizar` valida que estén las 4 antes de marcar DEVUELTO.
+
+### 17.3.4 Fotos
+
+Solo JPEG/PNG, máximo 5 MB (validado en service y en CHECK `chk_evidencia_devolucion_tamanio`). Tabla con BYTEA + `UNIQUE(equipo_id, tipo)` (upsert por slot).
+
+## 17.4 Backend — Archivos del Módulo
+
+| Archivo | Contenido |
+|---|---|
+| `db/migration/V20__devolucion_equipo.sql` | `fecha_devolucion`, constraint DEVUELTO, tabla evidencias + índices |
+| `entity/TipoEvidenciaDevolucion.java` | Enum con los 4 tipos |
+| `entity/EvidenciaDevolucionEquipo.java` | JPA entity + UNIQUE(equipo_id, tipo) |
+| `repository/EvidenciaDevolucionEquipoRepository.java` | `listByEquipo`, `findByEquipoAndTipo` |
+| `dto/EvidenciaDevolucionEquipoDTO.java` | DTO de salida (sin contenido binario) |
+| `mapper/EvidenciaDevolucionEquipoMapper.java` | MapStruct |
+| `service/DevolucionEquipoService.java` | `guardarEvidencia` (upsert), `listarEvidencias`, `obtenerArchivo`, `finalizar` |
+| `controller/DevolucionEquipoResource.java` | `@Path("/devolucion-equipos")`, 4 endpoints |
+| `entity/Equipo.java` / `dto/EquipoDTO.java` / `mapper/EquipoMapper.java` | Campo `fechaDevolucion` añadido |
+
+### Endpoints
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| PUT | `/devolucion-equipos/{equipoId}/evidencias/{tipo}` | Sube foto multipart (upsert) |
+| GET | `/devolucion-equipos/{equipoId}/evidencias` | Lista evidencias |
+| GET | `/devolucion-equipos/{equipoId}/evidencias/{tipo}/archivo` | Binario de la foto |
+| POST | `/devolucion-equipos/{equipoId}/finalizar` | Valida 4 evidencias → `DEVUELTO` + `fecha_devolucion` |
+
+## 17.5 Mobile — Pantalla `DevolucionEquipoScreen`
+
+| Aspecto | Detalle |
+|---|---|
+| Navegación | Desde `EquiposList` con `devolucion: true` (ver 17.6) |
+| Carga | `GET /equipos/{id}` + `GET /devolucion-equipos/{id}/evidencias` |
+| Fotos | 4 slots, `launchCamera`, upload inmediato por slot con `PUT .../evidencias/{tipo}` |
+| Visor | Tocar foto guardada → Modal con `ZoomableImage` + descargar (mismo patrón que EquipmentPhotosScreen) |
+| Finalizar | Botón "Finalizar y devolver equipo" habilitado solo con 4/4 fotos → `POST .../finalizar` → alerta → `navigation.popTo('MainTabs')` |
+
+## 17.6 Corrección de Flujo (incongruencia reportada)
+
+La primera versión hacía que "Finalización del Servicio" filtrara **solo equipos AVERIADO** (`filterEstado: 'AVERIADO'`). El usuario indicó que el flujo debe listar equipos **operativos o averiados de forma indistinta**, excluyendo únicamente los **ya devueltos**.
+
+| Archivo | Cambio |
+|---|---|
+| `HomeScreen.js` | Acción pasa `params: { mode: 'select', devolucion: true }` (ya no `filterEstado`) |
+| `EquiposListScreen.js` | `const esDevolucion = route.params?.devolucion === true`. En devolución: `GET /equipos` y filtra `estadoOperativo !== 'DEVUELTO'`. Título "Equipos para devolución". Tap navega a `DevolucionEquipo` |
+| `AppNavigator.js` | Registra `DevolucionEquipo` en MainStack (título "Finalización del Servicio") |
+
+### Lógica de filtrado en `EquiposListScreen.js`
+
+```
+esDevolucion → GET /equipos → arr.filter(e => e.estadoOperativo !== 'DEVUELTO')
+filterEstado  → GET /equipos → arr.filter(e => e.estadoOperativo === filterEstado)
+sin filtro    → GET /equipos (todos)
+```
+
+## 17.7 Pruebas Realizadas (emulador)
+
+- [x] Flujo Home → Finalización → lista "Equipos para devolución" muestra OPERATIVO/AVERIADO y **oculta DEVUELTO**.
+- [x] Tap en equipo navega a `DevolucionEquipo` (no a EquipoDetail).
+- [x] Carga de evidencias previas (GET) y precarga de slots.
+- [x] Toma de foto con cámara virtual + upload inmediato → persistida en BD (4 registros).
+- [x] Visor de foto (GET archivo) con botón "Descargar al dispositivo".
+- [x] Finalizar → alerta "Equipo devuelto" → BD con `estado_operativo='DEVUELTO'` y `fecha_devolucion`.
+- [x] Lista se refresca y ya no muestra el equipo devuelto.
+- [x] Migración V20 aplicada (BD en v20); constraint incluye DEVUELTO.
+
+## 17.8 Pruebas de Código
+
+- Backend: `mvn compile` exitoso (via Docker image `maven:3.9-eclipse-temurin-21`).
+- Mobile: `npx eslint src/screens/DevolucionEquipoScreen.js src/screens/EquiposListScreen.js src/navigation/AppNavigator.js` → exit 0.
+- Mobile: `npx jest` → 21/22. Único fallo `PasswordChangeScreen.test.js` **pre-existente** (falta `SafeAreaProvider`), ajeno a este módulo.
+
+## 17.9 Deuda Documentada
+
+| Ítem | Severidad | Plan |
+|---|---|---|
+| PDF de reporte de finalización del servicio | 🟠 Alto | Fuera de alcance; requeriría librería de generación PDF y plantilla |
+| Fotos de avería: FM pide 3, implementado 2 | 🟡 Medio | Ampliar `fac_evidencias` de averías a 3 slots |
+| Fotos de atención: FM pide 3, implementado 1 | 🟡 Medio | Ampliar `AtenderAveriaScreen` a 3 slots |
+| Estado pegado en tab EquiposList tras `mode/devolucion` | 🟢 Bajo | Listener `tabPress` para resetear params (misma limitación que §16.3) |
