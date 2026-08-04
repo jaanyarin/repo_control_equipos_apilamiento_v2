@@ -6,6 +6,8 @@ import api from '../api'
 import LoadingScreen from '../components/LoadingScreen'
 import EmptyState from '../components/EmptyState'
 import ErrorBoundary from '../components/ErrorBoundary'
+import { useAuth } from '../AuthContext'
+import { isAdminOrSuperAdmin } from '../utils/roles'
 import { theme } from '../theme'
 
 const statusColor = (estado) => {
@@ -17,6 +19,8 @@ const statusColor = (estado) => {
 }
 
 export default function CampanasScreen() {
+  const { user } = useAuth()
+  const canEdit = isAdminOrSuperAdmin(user)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -90,18 +94,20 @@ export default function CampanasScreen() {
             Fin: {item.fechaFin ? new Date(item.fechaFin).toLocaleDateString() : '-'}
           </Text>
         </View>
-        <View style={styles.actions}>
-          {(item.estado === 'ACTIVO' || item.estado === 'activo') ? (
-            <Button mode="outlined" textColor={theme.colors.status.error} compact onPress={() => handleCerrar(item)}>
-              Cerrar
-            </Button>
-          ) : (
-            <Button mode="outlined" textColor={theme.colors.status.success} compact onPress={() => handleActivar(item)}>
-              Activar
-            </Button>
-          )}
-          <IconButton icon="delete" iconColor={theme.colors.status.error} size={20} onPress={() => handleDelete(item)} />
-        </View>
+        {canEdit ? (
+          <View style={styles.actions}>
+            {(item.estado === 'ACTIVO' || item.estado === 'activo') ? (
+              <Button mode="outlined" textColor={theme.colors.status.error} compact onPress={() => handleCerrar(item)}>
+                Cerrar
+              </Button>
+            ) : (
+              <Button mode="outlined" textColor={theme.colors.status.success} compact onPress={() => handleActivar(item)}>
+                Activar
+              </Button>
+            )}
+            <IconButton icon="delete" iconColor={theme.colors.status.error} size={20} onPress={() => handleDelete(item)} />
+          </View>
+        ) : null}
       </Card.Content>
     </Card>
   )

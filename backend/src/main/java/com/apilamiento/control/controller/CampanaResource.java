@@ -38,6 +38,7 @@ public class CampanaResource {
     }
 
     @POST
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response crear(@Valid CampanaDTO dto) {
         CampanaDTO creado = service.crear(dto);
         return Response.status(Response.Status.CREATED)
@@ -46,6 +47,7 @@ public class CampanaResource {
 
     @PUT
     @Path("/{id}")
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response actualizar(@PathParam("id") Long id, @Valid CampanaDTO dto) {
         CampanaDTO actualizado = service.actualizar(id, dto);
         if (actualizado == null) {
@@ -57,6 +59,7 @@ public class CampanaResource {
 
     @POST
     @Path("/{id}/activar")
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response activar(@PathParam("id") Long id) {
         service.activar(id);
         return Response.ok(ApiResponse.ok("Campaña activada correctamente", null)).build();
@@ -64,6 +67,7 @@ public class CampanaResource {
 
     @POST
     @Path("/{id}/cerrar")
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response cerrar(@PathParam("id") Long id) {
         service.cerrar(id);
         return Response.ok(ApiResponse.ok("Campaña cerrada correctamente", null)).build();
@@ -71,6 +75,7 @@ public class CampanaResource {
 
     @DELETE
     @Path("/{id}")
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response eliminar(@PathParam("id") Long id) {
         boolean resultado = service.eliminar(id);
         if (!resultado) {

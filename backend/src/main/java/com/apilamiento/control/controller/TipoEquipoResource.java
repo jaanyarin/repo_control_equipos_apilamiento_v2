@@ -38,6 +38,7 @@ public class TipoEquipoResource {
     }
 
     @POST
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response crear(@Valid TipoEquipoDTO dto) {
         TipoEquipoDTO creado = service.crear(dto);
         return Response.status(Response.Status.CREATED)
@@ -46,6 +47,7 @@ public class TipoEquipoResource {
 
     @PUT
     @Path("/{id}")
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response actualizar(@PathParam("id") Long id, @Valid TipoEquipoDTO dto) {
         TipoEquipoDTO actualizado = service.actualizar(id, dto);
         if (actualizado == null) {
@@ -57,6 +59,7 @@ public class TipoEquipoResource {
 
     @DELETE
     @Path("/{id}")
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response eliminar(@PathParam("id") Long id) {
         boolean resultado = service.eliminar(id);
         if (!resultado) {

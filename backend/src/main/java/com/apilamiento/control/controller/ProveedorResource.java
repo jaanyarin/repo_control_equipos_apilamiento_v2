@@ -38,6 +38,7 @@ public class ProveedorResource {
     }
 
     @POST
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response crear(@Valid ProveedorDTO dto) {
         ProveedorDTO creado = service.crear(dto);
         return Response.status(Response.Status.CREATED)
@@ -46,6 +47,7 @@ public class ProveedorResource {
 
     @PUT
     @Path("/{id}")
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response actualizar(@PathParam("id") Long id, @Valid ProveedorDTO dto) {
         ProveedorDTO actualizado = service.actualizar(id, dto);
         if (actualizado == null) {
@@ -57,6 +59,7 @@ public class ProveedorResource {
 
     @DELETE
     @Path("/{id}")
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response eliminar(@PathParam("id") Long id) {
         boolean resultado = service.eliminar(id);
         if (!resultado) {

@@ -54,7 +54,6 @@ export default function AppSelect({
 
   return (
     <View style={[{ width: "100%" }, style]}>
-      {" "}
       <Text
         style={[
           theme.typography.body2,

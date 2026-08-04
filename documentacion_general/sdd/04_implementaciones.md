@@ -738,5 +738,33 @@ Resultado en emulador: los ítems ("Super Admin", "Admin", "Usuario") pasan de u
 
 | Archivo | Cambio |
 |---|---|
-| `mobile/src/components/AppSelect.js` | Medición de ancho del anchor (`onLayout`) + `style={{ width: anchorWidth }}` en el `Menu` |
+| `mobile/src/components/AppSelect.js` | Medición de ancho del anchor (`onLayout`) + `width` en el `Menu` |
 | `mobile/src/screens/LoginScreen.js` | Eliminación de `step`; tres campos siempre visibles; `disabled` condicional en Usuario y "Iniciar sesión"; retiro de "Cambiar usuario" |
+
+## 19. Restricción de permisos en mantenimiento de catálogos
+
+### 19.1 Problema
+
+Los mantenimientos CRUD de catálogos operativos (marcas, proveedores, tipos de equipo, sedes, campañas y motivos PSR) estaban disponibles para cualquier rol autenticado. El rol **Usuario** no debía poder crear, editar ni eliminar registros, solo consultarlos.
+
+### 19.2 Solución
+
+- **Backend (autoridad)**: en los recursos REST de los seis catálogos, los métodos de escritura (POST/PUT/DELETE) y las acciones de campaña (`activar`/`cerrar`) quedaron anotados con `@RolesAllowed({"Super Admin","Admin"})`. GET permanece accesible para los tres roles (anotación a nivel de clase).
+- **Frontend Web**: las páginas `Marcas`, `Proveedores`, `TiposEquipo`, `Sedes`, `MotivosPsr` y `Campanas` obtienen el rol vía `useApp()` y calculan `canEdit = rolId === 1 || rolId === 2`, ocultando el botón "Nuevo/Nueva" y las acciones de editar/eliminar (y activar/cerrar en campañas) cuando el rol no lo permite.
+- **Mobile**: `CatalogScreen` recibe la prop `canEdit` (oculta el FAB y las acciones de editar/eliminar). Cada pantalla hija (`MarcasScreen`, `ProveedoresScreen`, `TiposEquipoScreen`, `SedesScreen`, `MotivosPsrScreen`) pasa `canEdit={isAdminOrSuperAdmin(user)}`; `CampanasScreen` oculta activar/cerrar/eliminar si no tiene permiso. Reutiliza `utils/roles.js`.
+
+### 19.3 Casos cubiertos
+
+| Rol | Leer | Crear/Editar/Eliminar |
+|---|---|---|
+| Super Admin | ✅ | ✅ |
+| Admin | ✅ | ✅ |
+| Usuario | ✅ | ❌ (HTTP 403) |
+
+### 19.4 Archivos Modificados
+
+| Capa | Archivo |
+|---|---|
+| Backend | `CampanaResource.java`, `MarcaResource.java`, `MotivoPsrResource.java`, `ProveedorResource.java`, `SedeResource.java`, `TipoEquipoResource.java` |
+| Frontend Web | `Marcas.jsx`, `Proveedores.jsx`, `TiposEquipo.jsx`, `Sedes.jsx`, `MotivosPsr.jsx`, `Campanas.jsx` |
+| Mobile | `CatalogScreen.js`, `CampanasScreen.js`, `MarcasScreen.js`, `ProveedoresScreen.js`, `TiposEquipoScreen.js`, `SedesScreen.js`, `MotivosPsrScreen.js` |

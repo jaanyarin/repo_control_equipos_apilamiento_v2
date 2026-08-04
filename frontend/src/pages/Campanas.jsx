@@ -17,8 +17,11 @@ import CancelIcon from '@mui/icons-material/Cancel'
 import AddIcon from '@mui/icons-material/Add'
 import api from '../api'
 import DataTable from '../components/DataTable'
+import { useApp } from '../store'
 
 export default function Campanas() {
+  const { user } = useApp()
+  const canEdit = user?.rolId === 1 || user?.rolId === 2
   const [campanas, setCampanas] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -144,31 +147,33 @@ export default function Campanas() {
   ]
 
   const renderActions = (item) => (
-    <>
-      {item.estadoActivo ? (
-        <Tooltip title="Cerrar campaña">
-          <IconButton size="small" onClick={() => handleCerrar(item.id)}>
-            <CancelIcon fontSize="small" color="error" />
+    canEdit ? (
+      <>
+        {item.estadoActivo ? (
+          <Tooltip title="Cerrar campaña">
+            <IconButton size="small" onClick={() => handleCerrar(item.id)}>
+              <CancelIcon fontSize="small" color="error" />
+            </IconButton>
+          </Tooltip>
+        ) : (
+          <Tooltip title="Activar campaña">
+            <IconButton size="small" onClick={() => handleActivar(item.id)}>
+              <CheckCircleIcon fontSize="small" color="success" />
+            </IconButton>
+          </Tooltip>
+        )}
+        <Tooltip title="Eliminar">
+          <IconButton size="small" onClick={() => openDelete(item)}>
+            <DeleteIcon fontSize="small" color="error" />
           </IconButton>
         </Tooltip>
-      ) : (
-        <Tooltip title="Activar campaña">
-          <IconButton size="small" onClick={() => handleActivar(item.id)}>
-            <CheckCircleIcon fontSize="small" color="success" />
+        <Tooltip title="Editar">
+          <IconButton size="small" onClick={() => openEdit(item)}>
+            <EditIcon fontSize="small" color="primary" />
           </IconButton>
         </Tooltip>
-      )}
-      <Tooltip title="Eliminar">
-        <IconButton size="small" onClick={() => openDelete(item)}>
-          <DeleteIcon fontSize="small" color="error" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Editar">
-        <IconButton size="small" onClick={() => openEdit(item)}>
-          <EditIcon fontSize="small" color="primary" />
-        </IconButton>
-      </Tooltip>
-    </>
+      </>
+    ) : null
   )
 
   const renderCard = (item) => (
@@ -199,9 +204,11 @@ export default function Campanas() {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
         <Typography variant="h4" sx={{ fontWeight: 600, fontSize: { xs: 20, md: 24 } }}>Campañas Operativas</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} size="small">
-          Nueva
-        </Button>
+        {canEdit ? (
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} size="small">
+            Nueva
+          </Button>
+        ) : null}
       </Box>
 
       <DataTable

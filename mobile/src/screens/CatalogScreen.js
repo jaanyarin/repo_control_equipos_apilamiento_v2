@@ -14,7 +14,7 @@ import AppIconButton from '../components/AppIconButton'
 import ErrorState from '../components/ErrorState'
 import { theme } from '../theme'
 
-export default function CatalogScreen({ title, endpoint, searchPlaceholder, searchFields, emptyMessage, fields }) {
+export default function CatalogScreen({ title, endpoint, searchPlaceholder, searchFields, emptyMessage, fields, canEdit = false }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -114,7 +114,7 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
   })
 
   const renderItem = ({ item }) => (
-    <AppCard style={styles.card} onPress={() => openEdit(item)} accessibilityLabel={`Editar ${title}: ${item[fields[0]?.key] || item.nombre || item.id}`}>
+    <AppCard style={styles.card} onPress={canEdit ? () => openEdit(item) : undefined} accessibilityLabel={canEdit ? `Editar ${title}: ${item[fields[0]?.key] || item.nombre || item.id}` : `${item[fields[0]?.key] || item.nombre || item.id}`}>
       <View style={styles.cardContent}>
         <View style={styles.cardRow}>
           <View style={styles.cardInfo}>
@@ -124,7 +124,9 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
               </Text>
             ))}
           </View>
-          <AppIconButton icon="delete-outline" iconColor={theme.colors.status.error} size={20} accessibilityLabel={`Eliminar ${item[fields[0]?.key] || item.nombre || item.id}`} onPress={() => handleDelete(item)} />
+          {canEdit ? (
+            <AppIconButton icon="delete-outline" iconColor={theme.colors.status.error} size={20} accessibilityLabel={`Eliminar ${item[fields[0]?.key] || item.nombre || item.id}`} onPress={() => handleDelete(item)} />
+          ) : null}
         </View>
       </View>
     </AppCard>
@@ -161,7 +163,9 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
             }
           />
         )}
-        <FAB icon="plus" style={styles.fab} onPress={openCreate} label={`Agregar ${title.slice(0, -1)}`} />
+        {canEdit ? (
+          <FAB icon="plus" style={styles.fab} onPress={openCreate} label={`Agregar ${title.slice(0, -1)}`} />
+        ) : null}
 
         <Portal>
           <Dialog visible={showForm} onDismiss={() => setShowForm(false)} style={styles.dialog}>

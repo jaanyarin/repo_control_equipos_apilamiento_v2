@@ -1,7 +1,11 @@
 import React from 'react'
 import CatalogScreen from './CatalogScreen'
+import { useAuth } from '../AuthContext'
+import { isAdminOrSuperAdmin } from '../utils/roles'
 
 export default function MotivosPsrScreen() {
+  const { user } = useAuth()
+  const canEdit = isAdminOrSuperAdmin(user)
   return (
     <CatalogScreen
       title="Motivos PSR"
@@ -9,6 +13,7 @@ export default function MotivosPsrScreen() {
       searchPlaceholder="Buscar por nombre de motivo"
       searchFields={['nombreCorto', 'nombre', 'codigo']}
       emptyMessage="No hay motivos PSR registrados"
+      canEdit={canEdit}
       fields={[
         { key: 'nombreCorto', label: 'Nombre corto', required: true, primary: true },
         { key: 'nombre', label: 'Nombre completo', required: true },

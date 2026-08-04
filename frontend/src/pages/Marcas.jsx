@@ -15,8 +15,11 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
 import api from '../api'
 import DataTable from '../components/DataTable'
+import { useApp } from '../store'
 
 export default function Marcas() {
+  const { user } = useApp()
+  const canEdit = user?.rolId === 1 || user?.rolId === 2
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -104,18 +107,20 @@ export default function Marcas() {
   ]
 
   const renderActions = (item) => (
-    <>
-      <Tooltip title="Editar">
-        <IconButton size="small" onClick={() => openEdit(item)}>
-          <EditIcon fontSize="small" color="primary" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Eliminar">
-        <IconButton size="small" onClick={() => openDelete(item)}>
-          <DeleteIcon fontSize="small" color="error" />
-        </IconButton>
-      </Tooltip>
-    </>
+    canEdit ? (
+      <>
+        <Tooltip title="Editar">
+          <IconButton size="small" onClick={() => openEdit(item)}>
+            <EditIcon fontSize="small" color="primary" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Eliminar">
+          <IconButton size="small" onClick={() => openDelete(item)}>
+            <DeleteIcon fontSize="small" color="error" />
+          </IconButton>
+        </Tooltip>
+      </>
+    ) : null
   )
 
   const renderCard = (item) => (
@@ -138,9 +143,11 @@ export default function Marcas() {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
         <Typography variant="h4" sx={{ fontWeight: 600, fontSize: { xs: 20, md: 24 } }}>Marcas</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} size="small">
-          Nueva Marca
-        </Button>
+        {canEdit ? (
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} size="small">
+            Nueva Marca
+          </Button>
+        ) : null}
       </Box>
 
       <DataTable

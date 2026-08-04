@@ -38,6 +38,7 @@ public class MotivoPsrResource {
     }
 
     @POST
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response crear(@Valid MotivoPsrDTO dto) {
         MotivoPsrDTO creado = service.crear(dto);
         return Response.status(Response.Status.CREATED)
@@ -46,6 +47,7 @@ public class MotivoPsrResource {
 
     @PUT
     @Path("/{id}")
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response actualizar(@PathParam("id") Long id, @Valid MotivoPsrDTO dto) {
         MotivoPsrDTO actualizado = service.actualizar(id, dto);
         if (actualizado == null) {
@@ -57,6 +59,7 @@ public class MotivoPsrResource {
 
     @DELETE
     @Path("/{id}")
+    @RolesAllowed({"Super Admin", "Admin"})
     public Response eliminar(@PathParam("id") Long id) {
         boolean resultado = service.eliminar(id);
         if (!resultado) {
