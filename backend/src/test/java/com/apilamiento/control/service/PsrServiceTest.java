@@ -10,6 +10,8 @@ import com.apilamiento.control.entity.Sede;
 import com.apilamiento.control.mapper.OsrMapper;
 import com.apilamiento.control.mapper.PsrMapper;
 import com.apilamiento.control.repository.CampanaRepository;
+import com.apilamiento.control.repository.EquipoRepository;
+import com.apilamiento.control.repository.MarcaRepository;
 import com.apilamiento.control.repository.MotivoPsrRepository;
 import com.apilamiento.control.repository.OsrRepository;
 import com.apilamiento.control.repository.PsrRepository;
@@ -49,6 +51,12 @@ class PsrServiceTest {
     @Mock
     SedeRepository sedeRepository;
 
+    @Mock
+    EquipoRepository equipoRepository;
+
+    @Mock
+    MarcaRepository marcaRepository;
+
     PsrService service;
 
     @BeforeEach
@@ -60,7 +68,9 @@ class PsrServiceTest {
                 osrRepository,
                 new OsrMapper(),
                 campanaRepository,
-                sedeRepository);
+                sedeRepository,
+                equipoRepository,
+                marcaRepository);
     }
 
     @Test

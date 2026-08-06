@@ -15,6 +15,7 @@ import LoadingScreen from '../components/LoadingScreen'
 import StatusChip from '../components/StatusChip'
 import { theme } from '../theme'
 import { isAdminOrSuperAdmin } from '../utils/roles'
+import { filterEquiposByMode } from '../utils/equipmentForm'
 
 export default function EquiposListScreen() {
   const navigation = useNavigation()
@@ -38,18 +39,14 @@ export default function EquiposListScreen() {
       const { data } = await api.get('/equipos')
       const list = data?.data || data || []
       const arr = Array.isArray(list) ? list : []
-      setEquipos(esDevolucion
-        ? arr.filter(item => item.estadoOperativo !== 'DEVUELTO')
-        : filterEstado
-          ? arr.filter(item => item.estadoOperativo === filterEstado)
-          : arr)
+      setEquipos(filterEquiposByMode(arr, { mode, filterEstado }))
     } catch (e) {
       setError(e.response?.data?.error || e.message || 'Error al cargar equipos')
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [esDevolucion, filterEstado])
+  }, [esDevolucion, filterEstado, mode])
 
   useFocusEffect(useCallback(() => {
     setLoading(true)
@@ -107,8 +104,8 @@ export default function EquiposListScreen() {
             ListEmptyComponent={(
               <EmptyState
                 icon="warehouse"
-                title={search ? 'Sin resultados' : esDevolucion ? 'No hay equipos por devolver' : filterEstado === 'AVERIADO' ? 'No hay equipos averiados' : 'No hay equipos'}
-                subtitle={search ? 'Intenta con otro término' : esDevolucion ? 'Todos los equipos ya fueron devueltos' : filterEstado === 'AVERIADO' ? 'Todos los equipos están operativos' : 'Aún no se han registrado equipos'}
+                title={search ? 'Sin resultados' : esDevolucion ? 'No hay equipos por devolver' : mode !== 'view' ? 'No hay equipos disponibles' : filterEstado === 'AVERIADO' ? 'No hay equipos averiados' : 'No hay equipos'}
+                subtitle={search ? 'Intenta con otro término' : esDevolucion ? 'Todos los equipos ya fueron devueltos' : mode !== 'view' ? 'No hay equipos para gestionar o reportar' : filterEstado === 'AVERIADO' ? 'Todos los equipos están operativos' : 'Aún no se han registrado equipos'}
               />
             )}
             renderItem={({ item }) => (

@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { Alert, ScrollView, StyleSheet, View } from 'react-native'
-import { useNavigation, useRoute } from '@react-navigation/native'
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -67,9 +67,11 @@ export default function CreateEditUserScreen() {
     },
   })
 
-  const loadRoles = useCallback(async () => {
-    setCatalogLoading(true)
-    setCatalogError('')
+  const loadRoles = useCallback(async (silent = false) => {
+    if (!silent) {
+      setCatalogLoading(true)
+      setCatalogError('')
+    }
     try {
       const response = await api.get('/roles')
       const list = extractRolesList(response)
@@ -78,15 +80,21 @@ export default function CreateEditUserScreen() {
       }
       setRoles(list)
     } catch (error) {
-      setCatalogError(getRequestError(error, 'No se pudieron cargar los roles'))
+      if (!silent) setCatalogError(getRequestError(error, 'No se pudieron cargar los roles'))
     } finally {
-      setCatalogLoading(false)
+      if (!silent) setCatalogLoading(false)
     }
   }, [])
 
-  useEffect(() => {
-    loadRoles()
-  }, [loadRoles])
+  const loadedRef = useRef(false)
+  useFocusEffect(useCallback(() => {
+    if (!loadedRef.current) {
+      loadedRef.current = true
+      loadRoles()
+    } else {
+      loadRoles(true)
+    }
+  }, [loadRoles]))
 
   const roleOptions = useMemo(
     () => roles
@@ -145,7 +153,7 @@ export default function CreateEditUserScreen() {
       <ErrorState
         title="No se pudieron cargar los roles"
         message={catalogError}
-        onRetry={loadRoles}
+        onRetry={() => loadRoles()}
       />
     )
   }
@@ -201,6 +209,7 @@ export default function CreateEditUserScreen() {
                   options={roleOptions}
                   onChange={onChange}
                   error={errors.rolId?.message}
+                  onOpen={() => loadRoles(true)}
                 />
               </View>
             )}

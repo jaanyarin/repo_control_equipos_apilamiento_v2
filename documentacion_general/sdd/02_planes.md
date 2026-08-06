@@ -208,6 +208,12 @@ No se usará MySQL en este proyecto.
 | 28 | Pantalla PSR/OSR mobile con date picker, catálogos y CRUD | ✅ Completado |
 | 29 | Pantalla crear PSR mobile (React Hook Form + Zod + date picker nativo) | ✅ Completado |
 | 30 | Finalización del Servicio (atención de averías con restauración estado equipo) | ✅ Completado |
+| 31 | Desplegables AppSelect con Portal + ScrollView completo | ✅ Completado |
+| 32 | Catálogos en tiempo real (refetch silencioso en focus + onOpen) | ✅ Completado |
+| 33 | Filtro de equipos por modo (oculta DEVUELTO en selección/gestión) | ✅ Completado |
+| 34 | Card PSR/OSR en detalle de equipo + Marca/Modelo/GRR en PSR/OSR (retroactivo) | ✅ Completado |
+| 35 | CRUD completo campañas mobile (Dialog + date picker) | ✅ Completado |
+| 36 | Tab Catálogos con secciones + permisos por rol (oculto para Usuario) | ✅ Completado |
 
 ---
 
@@ -417,6 +423,17 @@ La estrategia de despliegue considerará:
 2. Permisos por rol (solo Super Admin edita Super Admin) ✅
 3. Correcciones de autenticación (race condition en login, logout robusto) ✅
 
+## HDT-008 — UX Desplegables, Catálogos en Tiempo Real y Referencias PSR/OSR ✅ (IMPLEMENTADO)
+
+1. AppSelect reescrito con Portal + ScrollView completo (opciones nunca detrás de la barra de acciones) ✅
+2. Catálogos en tiempo real (refetch silencioso en `useFocusEffect` + `onOpen`) ✅
+3. Filtro de equipos por modo (`filterEquiposByMode`, oculta DEVUELTO en select/manage) ✅
+4. Card PSR/OSR en EquipoDetail (backend `EquipoDTO.psrOsr` + `PsrOsrRefDTO`) ✅
+5. Marca/Modelo/GRR en cards PSR/OSR (backend `PsrDTO.marca/modelo/grr`) ✅
+6. Retroactividad validada en producción local (PSR existentes y `GET /equipos/6`) ✅
+7. CRUD completo campañas mobile (Dialog + date picker nativo) ✅
+8. Tab Catálogos con secciones + permisos por rol; CatalogScreen/RolesScreen con `headerRight` ✅
+
 ## Feature: Finalización del Servicio ✅ (COMPLETADO)
 
 - Backend: al marcar `ATENDIDA`, restaura `equipo.estadoOperativo = "OPERATIVO"`
@@ -432,6 +449,11 @@ La estrategia de despliegue considerará:
 - Sistema de tema (Design Tokens) ✅
 - CRUD PSR/OSR mobile con date picker nativo ✅
 - Catálogos integrados en mobile (sedes, motivos, campañas) ✅
+- Desplegables AppSelect con Portal + ScrollView ✅
+- Catálogos sincronizados en tiempo real entre dispositivos ✅
+- Filtro de equipos por modo de navegación ✅
+- Referencias PSR/OSR y Marca/Modelo/GRR retroactivas ✅
+- CRUD completo campañas mobile + tab Catálogos con secciones y permisos ✅
 
 ## Próximo foco
 

@@ -27,15 +27,18 @@ export default function LoginScreen() {
 
   useEffect(() => {
     loadApiUrl().then(url => setApiUrlState(url || BUILT_IN_API_URL))
-    api.get('/auth/roles')
-      .then(r => {
-        const data = Array.isArray(r.data) ? r.data : (r.data?.data || [])
-        setRoles(data)
-      })
-      .catch(e => {
-        setError('Error al cargar roles: ' + (e.message || 'red'))
-      })
+    fetchRoles()
   }, [])
+
+  const fetchRoles = async (silent = false) => {
+    try {
+      const r = await api.get('/auth/roles')
+      const data = Array.isArray(r.data) ? r.data : (r.data?.data || [])
+      setRoles(data)
+    } catch (e) {
+      if (!silent) setError('Error al cargar roles: ' + (e.message || 'red'))
+    }
+  }
 
   useEffect(() => {
     if (selectedRolId) {
@@ -126,6 +129,7 @@ export default function LoginScreen() {
             value={selectedRolId}
             options={(roles || []).map(role => ({ value: role.id, label: role.nombre }))}
             onChange={setSelectedRolId}
+            onOpen={() => fetchRoles(true)}
           />
 
           <AppSelect

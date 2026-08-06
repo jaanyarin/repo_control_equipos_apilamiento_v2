@@ -79,6 +79,12 @@ No se usará MySQL en este proyecto.
 | 32 | HDT-006: CreatePsrScreen con date picker nativo | ✅ Completado |
 | 33 | HDT-007: CreateEditUserScreen con permisos por rol | ✅ Completado |
 | 34 | Finalización del Servicio (backend + mobile) | ✅ Completado |
+| 35 | HDT-008: AppSelect con Portal + ScrollView completo | ✅ Completado |
+| 36 | HDT-008: Catálogos en tiempo real (refetch silencioso focus + onOpen) | ✅ Completado |
+| 37 | HDT-008: Filtro de equipos por modo (oculta DEVUELTO) | ✅ Completado |
+| 38 | HDT-008: Card PSR/OSR en detalle + Marca/Modelo/GRR en PSR/OSR | ✅ Completado |
+| 39 | HDT-008: CRUD completo campañas mobile (Dialog + date picker) | ✅ Completado |
+| 40 | HDT-008: Tab Catálogos con secciones + permisos por rol | ✅ Completado |
 
 ---
 
@@ -163,6 +169,10 @@ No se usará MySQL en este proyecto.
 | BE-025 | Configurar logs backend | Alta | ✅ |
 | BE-026 | Configurar versionamiento APIs `/api/v1` | Alta | ✅ |
 | BE-027 | Configurar OpenAPI / Swagger UI | Media | ✅ |
+| BE-028 | HDT-008: Crear `PsrOsrRefDTO` y campo `EquipoDTO.psrOsr` (resolución en `buscarPorId`) | Alta | ✅ |
+| BE-029 | HDT-008: Campos `PsrDTO.marca/modelo/grr` (resolución vía OSR→Equipo→Marca) | Alta | ✅ |
+| BE-030 | HDT-008: Tests EquipoServiceTest + PsrServiceTest con nuevos mocks | Alta | ✅ |
+| BE-031 | HDT-008: Rebuild Docker backend + verificación retroactiva (GET /equipos/6, GET /psr) | Alta | ✅ |
 
 ---
 
@@ -225,6 +235,12 @@ No se usará MySQL en este proyecto.
 | AND-021 | Implementar pantalla PSR/OSR con listado + botón crear/editar | Crítica | ✅ |
 | AND-022 | Implementar pantalla crear PSR con React Hook Form + Zod + date picker nativo | Crítica | ✅ |
 | AND-023 | Integrar catálogos (sedes, motivos, campañas) en formularios mobile | Alta | ✅ |
+| AND-024 | Reescribir AppSelect con Portal + ScrollView completo (opciones nunca detrás de la barra de acciones) | Alta | ✅ |
+| AND-025 | Refetch silencioso de catálogos en focus (`useFocusEffect` + `loadedRef`) y en `onOpen` de selects | Alta | ✅ |
+| AND-026 | Implementar `filterEquiposByMode` (oculta DEVUELTO en select/manage) + tests | Alta | ✅ |
+| AND-027 | Card PSR/OSR en EquipoDetail + línea Marca/Modelo/GRR en PsrOsrScreen | Alta | ✅ |
+| AND-028 | CRUD completo campañas mobile (crear/editar en Dialog + date picker nativo) | Alta | ✅ |
+| AND-029 | Tab Catálogos con secciones agrupadas + ocultar para rol Usuario; headerRight en Catalog/Roles | Alta | ✅ |
 
 ---
 
@@ -259,6 +275,12 @@ El núcleo operativo del sistema fue completado e incluye todos los componentes 
 | 16 | HDT-004: Pantallas mobile catálogos, roles, usuarios, auditoría, settings | ✅ Completado |
 | 17 | HDT-006: CreatePsrScreen con date picker nativo + Zod | ✅ Completado |
 | 18 | HDT-007: CreateEditUserScreen con permisos por rol | ✅ Completado |
+| 19 | HDT-008: Desplegables AppSelect Portal + ScrollView + onOpen | ✅ Completado |
+| 20 | HDT-008: Catálogos en tiempo real (EquipmentForm, CreatePsr, CreateEditUser, Login) | ✅ Completado |
+| 21 | HDT-008: Filtro de equipos por modo + tests (equiposListFilter) | ✅ Completado |
+| 22 | HDT-008: Backend PsrOsrRefDTO + EquipoDTO.psrOsr + PsrDTO marca/modelo/grr | ✅ Completado |
+| 23 | HDT-008: Card PSR/OSR en EquipoDetail + Marca/Modelo/GRR en PsrOsrScreen | ✅ Completado |
+| 24 | HDT-008: CRUD campañas mobile + tab Catálogos con secciones/perfiles | ✅ Completado |
 
 ---
 

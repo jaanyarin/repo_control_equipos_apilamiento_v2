@@ -165,6 +165,37 @@ export default function EquipoDetailScreen() {
 
         <AppCard style={styles.section}>
           <Text variant="titleMedium" style={styles.sectionTitle}>
+            PSR / OSR
+          </Text>
+          <Divider style={styles.divider} />
+          {equipo.psrOsr ? (
+            <>
+              <View style={styles.row}>
+                <Text variant="bodySmall" style={styles.label}>PSR</Text>
+                <Text variant="bodyMedium" style={styles.value}>{equipo.psrOsr.numeroPsr || '-'}</Text>
+              </View>
+              <View style={styles.row}>
+                <Text variant="bodySmall" style={styles.label}>OSR</Text>
+                <Text variant="bodyMedium" style={styles.value}>{equipo.psrOsr.numeroOsr || '-'}</Text>
+              </View>
+              <View style={styles.row}>
+                <Text variant="bodySmall" style={styles.label}>Sede</Text>
+                <Text variant="bodyMedium" style={styles.value}>{equipo.psrOsr.sedeNombre || '-'}</Text>
+              </View>
+              <View style={styles.row}>
+                <Text variant="bodySmall" style={styles.label}>Campaña</Text>
+                <Text variant="bodyMedium" style={styles.value}>{equipo.psrOsr.campanaNombre || '-'}</Text>
+              </View>
+            </>
+          ) : (
+            <Text variant="bodyMedium" style={styles.emptyText}>
+              Sin PSR/OSR vinculada
+            </Text>
+          )}
+        </AppCard>
+
+        <AppCard style={styles.section}>
+          <Text variant="titleMedium" style={styles.sectionTitle}>
             Estado
           </Text>
           <Divider style={styles.divider} />
@@ -255,6 +286,12 @@ export default function EquipoDetailScreen() {
             >
               Registrar Reparación
             </AppButton>
+          ) : equipo.estadoOperativo === 'DEVUELTO' ? (
+            <View style={styles.devueltoInfo}>
+              <Text variant="bodyMedium" style={styles.devueltoText}>
+                Equipo devuelto y fuera de servicio. No se pueden registrar averías para este equipo.
+              </Text>
+            </View>
           ) : (
             <AppButton
               variant="primary"
@@ -396,6 +433,16 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     marginBottom: theme.spacing[2],
+  },
+  devueltoInfo: {
+    marginBottom: theme.spacing[2],
+    padding: theme.spacing[3],
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.status.infoBackground,
+  },
+  devueltoText: {
+    ...theme.typography.body2,
+    color: theme.colors.text.primary,
   },
   emptyText: {
     textAlign: 'center',

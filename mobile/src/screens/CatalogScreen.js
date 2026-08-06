@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useLayoutEffect } from 'react'
 import { View, FlatList, RefreshControl, StyleSheet, ScrollView, Alert } from 'react-native'
-import { Text, Searchbar, FAB, Portal, Dialog } from 'react-native-paper'
-import { useFocusEffect } from '@react-navigation/native'
+import { Text, Searchbar, IconButton, Portal, Dialog } from 'react-native-paper'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import api from '../api'
 import LoadingScreen from '../components/LoadingScreen'
 import EmptyState from '../components/EmptyState'
@@ -15,6 +15,7 @@ import ErrorState from '../components/ErrorState'
 import { theme } from '../theme'
 
 export default function CatalogScreen({ title, endpoint, searchPlaceholder, searchFields, emptyMessage, fields, canEdit = false }) {
+  const navigation = useNavigation()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -24,6 +25,20 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({})
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: canEdit ? () => (
+        <IconButton
+          icon="plus"
+          iconColor={theme.colors.text.inverse}
+          size={24}
+          onPress={openCreate}
+          accessibilityLabel={`Agregar ${title}`}
+        />
+      ) : undefined,
+    })
+  }, [navigation, canEdit, title])
 
   const fetchItems = useCallback(async () => {
     try {
@@ -163,10 +178,6 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
             }
           />
         )}
-        {canEdit ? (
-          <FAB icon="plus" style={styles.fab} onPress={openCreate} label={`Agregar ${title.slice(0, -1)}`} />
-        ) : null}
-
         <Portal>
           <Dialog visible={showForm} onDismiss={() => setShowForm(false)} style={styles.dialog}>
             <Dialog.Title>{editing ? `Editar ${title.slice(0, -1)}` : `Nuevo ${title.slice(0, -1)}`}</Dialog.Title>
@@ -228,13 +239,6 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     color: theme.colors.text.secondary,
     marginTop: theme.spacing[1],
-  },
-  fab: {
-    position: 'absolute',
-    right: theme.spacing[4],
-    bottom: theme.spacing[4],
-    borderRadius: theme.radius.lg,
-    backgroundColor: theme.colors.action.primary,
   },
   dialog: {
     maxHeight: '80%',

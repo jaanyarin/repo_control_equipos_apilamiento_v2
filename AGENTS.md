@@ -341,6 +341,49 @@ db: crear migración V8 para tabla de evidencias
 | Rebuild APK EAS Cloud | ⏳ Pendiente |
 | Firebase Crashlytics | ⏳ Pendiente |
 
+### HDT-004 — Pantallas Mobile Faltantes (CERRADO ✅)
+
+| Módulo | Estado |
+|---|---|
+| CatalogScreen genérico + screens catálogos (marcas, proveedores, tipos, sedes, motivos) | ✅ |
+| Roles, Usuarios, Auditoría, Settings screens | ✅ |
+| Tab Catálogos con menú de botones | ✅ |
+
+### HDT-005 — Migración a React Native CLI (CANCELADO ❌)
+
+| Módulo | Estado |
+|---|---|
+| Migración Expo → CLI | ❌ Cancelado (se mantiene Expo, validado) |
+
+### HDT-006 — Gestión móvil PSR/OSR (CERRADO ✅)
+
+| Módulo | Estado |
+|---|---|
+| CreatePsrScreen (React Hook Form + Zod + date picker nativo) | ✅ |
+| Edición PSR/OSR con atomicidad transaccional | ✅ |
+| Catálogos integrados (campañas, sedes, motivos) | ✅ |
+
+### HDT-007 — CRUD Usuarios Mobile (CERRADO ✅)
+
+| Módulo | Estado |
+|---|---|
+| CreateEditUserScreen (crear/editar usuarios) | ✅ |
+| Permisos por rol (solo Super Admin edita Super Admin) | ✅ |
+| Correcciones de autenticación (race condition login, logout robusto) | ✅ |
+
+### HDT-008 — UX Desplegables, Catálogos en Tiempo Real y Referencias PSR/OSR (IMPLEMENTADO ✅)
+
+| Módulo | Estado |
+|---|---|
+| AppSelect con Portal + ScrollView completo (onOpen refetch) | ✅ |
+| Catálogos en tiempo real (refetch silencioso en focus + onOpen) | ✅ |
+| Filtro de equipos por modo (filterEquiposByMode, oculta DEVUELTO) | ✅ |
+| Backend: PsrOsrRefDTO + EquipoDTO.psrOsr + PsrDTO marca/modelo/grr | ✅ |
+| Mobile: card PSR/OSR en EquipoDetail + Marca\|Modelo\|GRR en PsrOsrScreen (retroactivo) | ✅ |
+| CRUD completo campañas mobile (Dialog + date picker) | ✅ |
+| Tab Catálogos con secciones + permisos por rol | ✅ |
+| Rebuild Docker backend + verificación retroactiva | ✅ |
+
 ---
 
 ## 13. Configuración de Red y Puertos Congelados (NO CAMBIAR)

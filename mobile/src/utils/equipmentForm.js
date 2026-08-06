@@ -128,3 +128,15 @@ export function toEquipmentPayload(data) {
     estadoActivo: true,
   }
 }
+
+// Filtra la lista de equipos según el modo de navegación.
+// - mode 'select' y 'manage': oculta equipos DEVUELTO (no operativos para gestionar).
+// - mode 'view': muestra todos (OPERATIVO, AVERIADO y DEVUELTO).
+// - filterEstado: si se define, solo equipos con ese estadoOperativo.
+export function filterEquiposByMode(equipos, { mode = 'manage', filterEstado } = {}) {
+  return equipos.filter(item => {
+    if (mode !== 'view' && item.estadoOperativo === 'DEVUELTO') return false
+    if (filterEstado && item.estadoOperativo !== filterEstado) return false
+    return true
+  })
+}

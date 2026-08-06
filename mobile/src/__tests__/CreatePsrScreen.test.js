@@ -23,6 +23,12 @@ jest.mock('@react-navigation/native', () => ({
     popTo: mockPopTo,
     navigate: jest.fn(),
   }),
+  useFocusEffect: (callback) => {
+    const reactModule = require('react')
+    reactModule.useEffect(() => {
+      return callback()
+    }, [callback])
+  },
 }))
 
 jest.mock('../AuthContext', () => ({

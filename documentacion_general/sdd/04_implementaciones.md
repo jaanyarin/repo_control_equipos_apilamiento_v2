@@ -10,8 +10,8 @@
 | Documento | 04_IMPLEMENTATION.md |
 | Proyecto | Sistema de Control Operativo de Equipos de Apilamiento |
 | Estado | En desarrollo sincronizado con repositorio |
-| Versión | 1.5 |
-| Fecha | 2026-07-24 |
+| Versión | 1.6 |
+| Fecha | 2026-08-06 |
 | Responsable | Jose Anyarin |
 | Base de Datos Oficial | PostgreSQL 18 |
 
@@ -88,6 +88,14 @@ No se usará MySQL en este proyecto.
 | Tests backend (7), web (2), mobile (3) | ✅ Validado |
 | CI/CD GitHub Actions | ✅ Validado |
 | Modo claro/oscuro frontend web | ✅ Validado |
+| AppSelect con Portal + ScrollView completo (onOpen refetch) | ✅ Validado |
+| Catálogos en tiempo real (refetch silencioso en focus + onOpen) | ✅ Validado |
+| Filtro de equipos por modo (filterEquiposByMode, oculta DEVUELTO) | ✅ Validado |
+| Card PSR/OSR en detalle de equipo (EquipoDTO.psrOsr) | ✅ Validado |
+| Marca/Modelo/GRR en cards PSR/OSR (PsrDTO.marca/modelo/grr) | ✅ Validado |
+| CRUD completo campañas mobile (Dialog + date picker) | ✅ Validado |
+| Tab Catálogos con secciones + permisos por rol | ✅ Validado |
+| Backend rebuild Docker + verificación retroactiva | ✅ Validado |
 
 ---
 
@@ -768,3 +776,86 @@ Los mantenimientos CRUD de catálogos operativos (marcas, proveedores, tipos de 
 | Backend | `CampanaResource.java`, `MarcaResource.java`, `MotivoPsrResource.java`, `ProveedorResource.java`, `SedeResource.java`, `TipoEquipoResource.java` |
 | Frontend Web | `Marcas.jsx`, `Proveedores.jsx`, `TiposEquipo.jsx`, `Sedes.jsx`, `MotivosPsr.jsx`, `Campanas.jsx` |
 | Mobile | `CatalogScreen.js`, `CampanasScreen.js`, `MarcasScreen.js`, `ProveedoresScreen.js`, `TiposEquipoScreen.js`, `SedesScreen.js`, `MotivosPsrScreen.js` |
+
+## 20. Desplegables AppSelect con Portal + ScrollView completo (2026-08-05)
+
+### 20.1 Problema
+
+El `Menu` de react-native-paper desplegaba las opciones con `contentStyle maxHeight` + `zIndex`, pero en el dispositivo del usuario el listado quedaba **detrás de la barra de acciones** y no permitía hacer scroll hasta el último ítem (listas largas de marcas/proveedores). La primera solución con `Modal` + `ScrollView` seguía dejando el menú detrás de la barra de acciones inferior.
+
+### 20.2 Solución — `mobile/src/components/AppSelect.js` (reescritura)
+
+| Aspecto | Detalle |
+|---|---|
+| Render | `Portal` de react-native-paper + `Pressable` overlay (`testID="select-overlay"`) para cerrar tocando fuera + `View` posicionado (`testID="select-menu"`) con `ScrollView` interno siempre scrolleable. |
+| Posicionamiento | `measureInWindow` sobre el nodo ancla (`ref` + `collapsable={false}`) → `{ x, y, width, height }`; el menú se ubica debajo del anchor. Fallback `{ left: 16, right: 16, top: 80 }`. |
+| Altura máxima | `maxHeight = max(120, windowHeight - anchor.y - anchor.height - insets.bottom - 24)`; el `ScrollView` permite llegar al último ítem. |
+| Prop `onOpen` | Callback opcional invocado al abrir el menú (antes de `setVisible(true)`) para refetch silencioso de catálogos. |
+| Contrato `onChange` | `onChange(option.value, option)` — sin cambios en consumidores. |
+
+## 21. Catálogos en tiempo real (2026-08-05)
+
+### 21.1 Problema
+
+Los catálogos (marcas, proveedores, tipos, sedes, campañas, motivos, roles) se cargaban una sola vez al montar cada pantalla. Un catálogo creado por el admin en un dispositivo no aparecía en el otro celular hasta reiniciar la app.
+
+### 21.2 Solución — refetch silencioso en focus + al abrir desplegables
+
+| Pantalla | Cambio |
+|---|---|
+| `EquipmentFormScreen.js` | `loadCatalogs(silent)`; `useFocusEffect` con `loadedRef` (primera vez con loader; re-enfoques recargan en silencio). `onOpen={() => loadCatalogs(true)}` en los 3 selects. |
+| `CreatePsrScreen.js` | `loadCatalogs(silent)`; `useFocusEffect` + `loadedRef`; validaciones de negocio solo en carga no-silenciosa; `onOpen` en campaña, sede y motivo. |
+| `CreateEditUserScreen.js` | `loadRoles(silent)`; `useFocusEffect` + `loadedRef`; `onOpen={() => loadRoles(true)}` en el select de rol. |
+| `LoginScreen.js` | `fetchRoles(silent)`; `onOpen={() => fetchRoles(true)}` en el select de Perfil. |
+
+El refetch silencioso no muestra spinners ni errores (UX no intrusiva); los errores de carga inicial sí se muestran.
+
+## 22. Filtro de equipos por modo de navegación (DEVUELTO)
+
+`mobile/src/utils/equipmentForm.js` — nueva función pura `filterEquiposByMode(equipos, { mode, filterEstado })`:
+
+| Modo | Comportamiento |
+|---|---|
+| `select` / `manage` | Oculta equipos `DEVUELTO`. |
+| `view` | Muestra todos (`OPERATIVO`, `AVERIADO`, `DEVUELTO`). |
+| `filterEstado` | Si se define, solo equipos con ese `estadoOperativo`. |
+
+`EquiposListScreen.js` la usa con mensajes de vacío contextuales por modo. Tests: `mobile/src/__tests__/equiposListFilter.test.js`.
+
+## 23. Referencias PSR/OSR — backend + mobile (2026-08-06)
+
+### 23.1 Backend — `EquipoDTO` con bloque `psrOsr`
+
+- `dto/PsrOsrRefDTO.java` (nuevo): `psrId`, `numeroPsr`, `numeroOsr`, `sedeNombre`, `campanaNombre`.
+- `dto/EquipoDTO.java`: campo anidado `psrOsr`.
+- `service/EquipoService.java`: solo `buscarPorId(id)` resuelve la vinculación (evita N+1 en `listarTodos`).
+
+```
+Equipo → Osr.equipoId → Osr.psrId → Psr → (Sede, Campaña)
+```
+
+### 23.2 Backend — `PsrDTO` con `marca`, `modelo`, `grr`
+
+`service/PsrService.java` `toDTO(psr)` resuelve vía `osrRepository.findByPsrId` → `resolverEquipoAsociado(dto, osr)`: si `osr.equipoId != null`, obtiene el equipo y llena `modelo`, `grr` (= `numeroGuiaRemision`) y `marca` (nombre vía `MarcaRepository`). Se inyectan `EquipoRepository` y `MarcaRepository`.
+
+### 23.3 Mobile
+
+- `EquipoDetailScreen.js`: card **"PSR / OSR"** (línea ~166) con PSR, OSR, Sede y Campaña desde `equipo.psrOsr`; estado vacío "Sin PSR/OSR vinculada" si el equipo no tiene vinculación.
+- `PsrOsrScreen.js`: línea `Marca: ... | Modelo: ... | GRR: ...` (línea ~151), renderizada solo si existe al menos un valor.
+
+### 23.4 Retroactividad validada (producción local)
+
+`GET /equipos/6` → `psrOsr: { psrId: 4, numeroPsr: "PSR-2026-004", numeroOsr: "OSR-2026-004", sedeNombre: "Packing Uva", campanaNombre: "26-27" }`. Las 4 PSR existentes devuelven `marca/modelo/grr` correctos. Contenedor `apilamiento-backend` reconstruido y saludable. Tests `EquipoServiceTest` + `PsrServiceTest` (exit 0).
+
+## 24. Mejoras de administración mobile (2026-08-05/06)
+
+- `AppNavigator.js`: tab Catálogos con secciones agrupadas (Catálogos / Operación / Administración / Sistema); oculto para rol Usuario con mensaje "No tienes permisos para acceder a esta sección."; Configuración solo Super Admin.
+- `CatalogScreen.js` / `RolesScreen.js`: el botón de creación pasa de FAB a `headerRight` (`IconButton` `+`) vía `useLayoutEffect`. `RolesScreen` pasa `canEdit={isAdminOrSuperAdmin(user)}`.
+- `CampanasScreen.js`: CRUD completo mobile — crear/editar campañas en `Dialog` con `AppInput` (nombre, código) + `DateField` con `DateTimePicker` nativo (fechas inicio/fin), POST/PUT; `headerRight` `+` solo con `canEdit`; tap en card abre edición.
+
+## 25. Pruebas de Código (HDT-008)
+
+- **Backend**: `mvn compile` exitoso (JDK 21 vía Docker `maven:3.9-eclipse-temurin-21` con caché `.m2` local). `EquipoServiceTest` + `PsrServiceTest` pasan. `docker compose build backend && up -d backend` → health check `UP`.
+- **Mobile**: ESLint limpio en `EquipoDetailScreen` y `PsrOsrScreen`. Suite Jest: 33 pass / 2 fail **pre-existentes y ajenos** (`PasswordChangeScreen.test.js` sin `SafeAreaProvider`; `AuthContext.test.js` flaky por timing que pasa aislado).
+- **Dispositivos**: card PSR/OSR y línea Marca|Modelo|GRR visibles en los 2 celulares (REDMI admin + Xiaomi usuario).
+

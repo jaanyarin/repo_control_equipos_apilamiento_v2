@@ -1,13 +1,17 @@
-import React, { useState, useCallback } from 'react'
-import { View, FlatList, RefreshControl, StyleSheet, Alert } from 'react-native'
-import { Card, Text, TextInput, Button, Searchbar, FAB, Chip, Surface, IconButton } from 'react-native-paper'
-import { useFocusEffect } from '@react-navigation/native'
+import React, { useState, useCallback, useLayoutEffect } from 'react'
+import { View, FlatList, RefreshControl, StyleSheet, Alert, Platform, ScrollView } from 'react-native'
+import { Card, Text, Button, Searchbar, Chip, IconButton, Dialog, TouchableRipple } from 'react-native-paper'
+import DateTimePicker from '@react-native-community/datetimepicker'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import api from '../api'
 import LoadingScreen from '../components/LoadingScreen'
 import EmptyState from '../components/EmptyState'
 import ErrorBoundary from '../components/ErrorBoundary'
+import AppInput from '../components/AppInput'
+import AppButton from '../components/AppButton'
 import { useAuth } from '../AuthContext'
 import { isAdminOrSuperAdmin } from '../utils/roles'
+import { formatApiDate, formatDisplayDate, parseApiDate } from '../utils/psrForm'
 import { theme } from '../theme'
 
 const statusColor = (estado) => {
@@ -18,7 +22,29 @@ const statusColor = (estado) => {
   return theme.colors.status.warning
 }
 
+function DateField({ label, value, onChange }) {
+  const [show, setShow] = useState(false)
+  return (
+    <View>
+      <TouchableRipple onPress={() => setShow(true)} accessibilityRole="button" accessibilityLabel={`Seleccionar ${label}`}>
+        <View pointerEvents="none">
+          <AppInput label={label} value={formatDisplayDate(value)} placeholder="dd/mm/yyyy" editable={false} />
+        </View>
+      </TouchableRipple>
+      {show ? (
+        <DateTimePicker
+          value={parseApiDate(value)}
+          mode="date"
+          display="default"
+          onChange={(e, d) => { setShow(false); if (e.type !== 'dismissed' && d) onChange(formatApiDate(d)) }}
+        />
+      ) : null}
+    </View>
+  )
+}
+
 export default function CampanasScreen() {
+  const navigation = useNavigation()
   const { user } = useAuth()
   const canEdit = isAdminOrSuperAdmin(user)
   const [items, setItems] = useState([])
@@ -26,6 +52,18 @@ export default function CampanasScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
+  const [showForm, setShowForm] = useState(false)
+  const [editing, setEditing] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [formData, setFormData] = useState({ nombre: '', codigo: '', fechaInicio: '', fechaFin: '' })
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: canEdit ? () => (
+        <IconButton icon="plus" iconColor={theme.colors.text.inverse} size={24} onPress={openCreate} accessibilityLabel="Nueva campaña" />
+      ) : undefined,
+    })
+  }, [navigation, canEdit])
 
   const fetch = useCallback(async () => {
     try {
@@ -44,6 +82,44 @@ export default function CampanasScreen() {
   useFocusEffect(useCallback(() => { setLoading(true); fetch() }, [fetch]))
 
   const onRefresh = useCallback(() => { setRefreshing(true); fetch() }, [fetch])
+
+  const openCreate = () => {
+    setEditing(null)
+    setFormData({ nombre: '', codigo: '', fechaInicio: '', fechaFin: '' })
+    setShowForm(true)
+  }
+
+  const openEdit = (item) => {
+    setEditing(item)
+    setFormData({
+      nombre: item.nombre || '',
+      codigo: item.codigo || '',
+      fechaInicio: item.fechaInicio ? formatApiDate(new Date(item.fechaInicio)) : '',
+      fechaFin: item.fechaFin ? formatApiDate(new Date(item.fechaFin)) : '',
+    })
+    setShowForm(true)
+  }
+
+  const handleSave = async () => {
+    if (!formData.nombre?.trim()) {
+      Alert.alert('Validación', 'El campo "Nombre" es obligatorio')
+      return
+    }
+    setSaving(true)
+    try {
+      if (editing) {
+        await api.put(`/campanas/${editing.id}`, { nombre: formData.nombre, codigo: formData.codigo, fechaInicio: formData.fechaInicio || null, fechaFin: formData.fechaFin || null })
+      } else {
+        await api.post('/campanas', { nombre: formData.nombre, codigo: formData.codigo, fechaInicio: formData.fechaInicio, fechaFin: formData.fechaFin })
+      }
+      setShowForm(false)
+      fetch()
+    } catch (e) {
+      Alert.alert('Error', e.response?.data?.error || e.message || 'Error al guardar')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleActivar = (item) => {
     Alert.alert('Activar', `¿Activar campaña "${item.nombre}"?`, [
@@ -73,7 +149,7 @@ export default function CampanasScreen() {
   })
 
   const renderItem = ({ item }) => (
-    <Card style={styles.card}>
+    <Card style={styles.card} onPress={canEdit ? () => openEdit(item) : undefined}>
       <Card.Content>
         <View style={styles.cardHeader}>
           <View style={styles.cardInfo}>
@@ -130,6 +206,21 @@ export default function CampanasScreen() {
             ListEmptyComponent={<EmptyState icon="calendar" title={search ? 'Sin resultados' : 'No hay campañas'} subtitle={search ? 'Intenta con otro término' : 'Aún no se han registrado campañas'} />}
           />
         )}
+        <Dialog visible={showForm} onDismiss={() => setShowForm(false)} style={styles.dialog}>
+          <Dialog.Title>{editing ? 'Editar campaña' : 'Nueva campaña'}</Dialog.Title>
+          <Dialog.ScrollArea>
+            <ScrollView>
+              <AppInput label="Nombre" value={formData.nombre} onChangeText={(v) => setFormData(prev => ({ ...prev, nombre: v }))} style={styles.dialogInput} />
+              <AppInput label="Código" value={formData.codigo} onChangeText={(v) => setFormData(prev => ({ ...prev, codigo: v }))} style={styles.dialogInput} />
+              <DateField label="Fecha de inicio" value={formData.fechaInicio} onChange={(v) => setFormData(prev => ({ ...prev, fechaInicio: v }))} />
+              <DateField label="Fecha de fin" value={formData.fechaFin} onChange={(v) => setFormData(prev => ({ ...prev, fechaFin: v }))} />
+            </ScrollView>
+          </Dialog.ScrollArea>
+          <Dialog.Actions>
+            <AppButton variant="text" onPress={() => setShowForm(false)}>Cancelar</AppButton>
+            <AppButton variant="primary" onPress={handleSave} disabled={saving} loading={saving}>{editing ? 'Actualizar' : 'Crear'}</AppButton>
+          </Dialog.Actions>
+        </Dialog>
       </View>
     </ErrorBoundary>
   )
@@ -147,4 +238,6 @@ const styles = StyleSheet.create({
   dates: { flexDirection: 'row', gap: 16, marginBottom: 8 },
   dateText: { opacity: 0.6, fontSize: 12 },
   actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
+  dialog: { maxHeight: '80%' },
+  dialogInput: { marginBottom: theme.spacing[3] },
 })

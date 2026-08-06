@@ -3,6 +3,8 @@ package com.apilamiento.control.service;
 import com.apilamiento.control.dto.PsrDTO;
 import com.apilamiento.control.dto.PsrRequest;
 import com.apilamiento.control.entity.Campana;
+import com.apilamiento.control.entity.Equipo;
+import com.apilamiento.control.entity.Marca;
 import com.apilamiento.control.entity.MotivoPsr;
 import com.apilamiento.control.entity.Osr;
 import com.apilamiento.control.entity.Psr;
@@ -10,6 +12,8 @@ import com.apilamiento.control.entity.Sede;
 import com.apilamiento.control.mapper.PsrMapper;
 import com.apilamiento.control.mapper.OsrMapper;
 import com.apilamiento.control.repository.CampanaRepository;
+import com.apilamiento.control.repository.EquipoRepository;
+import com.apilamiento.control.repository.MarcaRepository;
 import com.apilamiento.control.repository.MotivoPsrRepository;
 import com.apilamiento.control.repository.OsrRepository;
 import com.apilamiento.control.repository.PsrRepository;
@@ -40,10 +44,13 @@ public class PsrService {
     private final OsrMapper osrMapper;
     private final CampanaRepository campanaRepository;
     private final SedeRepository sedeRepository;
+    private final EquipoRepository equipoRepository;
+    private final MarcaRepository marcaRepository;
 
     public PsrService(PsrRepository psrRepository, MotivoPsrRepository motivoRepository,
                       PsrMapper mapper, OsrRepository osrRepository, OsrMapper osrMapper,
-                      CampanaRepository campanaRepository, SedeRepository sedeRepository) {
+                      CampanaRepository campanaRepository, SedeRepository sedeRepository,
+                      EquipoRepository equipoRepository, MarcaRepository marcaRepository) {
         this.psrRepository = psrRepository;
         this.motivoRepository = motivoRepository;
         this.mapper = mapper;
@@ -51,6 +58,8 @@ public class PsrService {
         this.osrMapper = osrMapper;
         this.campanaRepository = campanaRepository;
         this.sedeRepository = sedeRepository;
+        this.equipoRepository = equipoRepository;
+        this.marcaRepository = marcaRepository;
     }
 
     public List<PsrDTO> listarTodas() {
@@ -75,9 +84,22 @@ public class PsrService {
         if (campana != null) dto.setCampanaNombre(campana.getNombre());
         if (sede != null) dto.setSedeNombre(sede.getNombre());
         osrRepository.findByPsrId(psr.getId())
-                .map(osrMapper::toDTO)
-                .ifPresent(dto::setOsr);
+                .ifPresent(osr -> {
+                    dto.setOsr(osrMapper.toDTO(osr));
+                    resolverEquipoAsociado(dto, osr);
+                });
         return dto;
+    }
+
+    private void resolverEquipoAsociado(PsrDTO dto, Osr osr) {
+        if (osr.getEquipoId() == null) return;
+        Equipo equipo = equipoRepository.findByIdOptional(osr.getEquipoId()).orElse(null);
+        if (equipo == null) return;
+        dto.setModelo(equipo.getModelo());
+        dto.setGrr(equipo.getNumeroGuiaRemision());
+        marcaRepository.findByIdOptional(equipo.getMarcaId())
+                .map(Marca::getNombre)
+                .ifPresent(dto::setMarca);
     }
 
     private BigDecimal calcularMeses(LocalDate inicio, LocalDate fin) {

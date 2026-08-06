@@ -1,11 +1,18 @@
 package com.apilamiento.control.service;
 
 import com.apilamiento.control.dto.EquipoDTO;
+import com.apilamiento.control.dto.PsrOsrRefDTO;
 import com.apilamiento.control.entity.Equipo;
+import com.apilamiento.control.entity.Osr;
+import com.apilamiento.control.entity.Psr;
 import com.apilamiento.control.mapper.EquipoMapper;
+import com.apilamiento.control.repository.CampanaRepository;
 import com.apilamiento.control.repository.EquipoRepository;
 import com.apilamiento.control.repository.MarcaRepository;
+import com.apilamiento.control.repository.OsrRepository;
 import com.apilamiento.control.repository.ProveedorRepository;
+import com.apilamiento.control.repository.PsrRepository;
+import com.apilamiento.control.repository.SedeRepository;
 import com.apilamiento.control.repository.TipoEquipoRepository;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -23,15 +30,25 @@ public class EquipoService {
     private final ProveedorRepository proveedorRepository;
     private final MarcaRepository marcaRepository;
     private final TipoEquipoRepository tipoEquipoRepository;
+    private final OsrRepository osrRepository;
+    private final PsrRepository psrRepository;
+    private final SedeRepository sedeRepository;
+    private final CampanaRepository campanaRepository;
 
     public EquipoService(EquipoRepository repository, EquipoMapper mapper,
             ProveedorRepository proveedorRepository, MarcaRepository marcaRepository,
-            TipoEquipoRepository tipoEquipoRepository) {
+            TipoEquipoRepository tipoEquipoRepository, OsrRepository osrRepository,
+            PsrRepository psrRepository, SedeRepository sedeRepository,
+            CampanaRepository campanaRepository) {
         this.repository = repository;
         this.mapper = mapper;
         this.proveedorRepository = proveedorRepository;
         this.marcaRepository = marcaRepository;
         this.tipoEquipoRepository = tipoEquipoRepository;
+        this.osrRepository = osrRepository;
+        this.psrRepository = psrRepository;
+        this.sedeRepository = sedeRepository;
+        this.campanaRepository = campanaRepository;
     }
 
     public List<EquipoDTO> listarTodos() {
@@ -42,7 +59,7 @@ public class EquipoService {
 
     public EquipoDTO buscarPorId(Long id) {
         return repository.findByIdOptional(id)
-                .map(this::toDTO)
+                .map(this::toDTOConVinculacion)
                 .orElse(null);
     }
 
@@ -83,6 +100,32 @@ public class EquipoService {
         tipoEquipoRepository.findByIdOptional(entity.getTipoEquipoId())
                 .ifPresent(value -> dto.setTipoEquipoNombre(value.getNombre()));
         return dto;
+    }
+
+    private EquipoDTO toDTOConVinculacion(Equipo entity) {
+        EquipoDTO dto = toDTO(entity);
+        dto.setPsrOsr(resolverPsrOsr(entity.getId()));
+        return dto;
+    }
+
+    private PsrOsrRefDTO resolverPsrOsr(Long equipoId) {
+        return osrRepository.findByEquipoId(equipoId)
+                .map(this::toPsrOsrRef)
+                .orElse(null);
+    }
+
+    private PsrOsrRefDTO toPsrOsrRef(Osr osr) {
+        PsrOsrRefDTO ref = new PsrOsrRefDTO();
+        ref.setNumeroOsr(osr.getNumeroOsr());
+        Psr psr = psrRepository.findByIdOptional(osr.getPsrId()).orElse(null);
+        if (psr == null) return ref;
+        ref.setPsrId(psr.getId());
+        ref.setNumeroPsr(psr.getNumeroPsr());
+        sedeRepository.findByIdOptional(psr.getSedeId())
+                .ifPresent(value -> ref.setSedeNombre(value.getNombre()));
+        campanaRepository.findByIdOptional(psr.getCampanaId())
+                .ifPresent(value -> ref.setCampanaNombre(value.getNombre()));
+        return ref;
     }
 
     @Transactional

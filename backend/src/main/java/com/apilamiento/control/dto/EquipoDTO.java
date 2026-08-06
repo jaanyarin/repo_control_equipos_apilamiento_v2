@@ -53,6 +53,7 @@ public class EquipoDTO {
     private String numeroGuiaRemision;
     private Boolean ingresoCompleto;
     private Boolean estadoActivo;
+    private PsrOsrRefDTO psrOsr;
     private Long usuarioCreacion;
     private Long usuarioActualizacion;
     private OffsetDateTime fechaCreacion;
@@ -158,6 +159,9 @@ public class EquipoDTO {
 
     public Boolean getEstadoActivo() { return estadoActivo; }
     public void setEstadoActivo(Boolean estadoActivo) { this.estadoActivo = estadoActivo; }
+
+    public PsrOsrRefDTO getPsrOsr() { return psrOsr; }
+    public void setPsrOsr(PsrOsrRefDTO psrOsr) { this.psrOsr = psrOsr; }
 
     public Long getUsuarioCreacion() { return usuarioCreacion; }
     public void setUsuarioCreacion(Long usuarioCreacion) { this.usuarioCreacion = usuarioCreacion; }

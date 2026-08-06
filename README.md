@@ -30,8 +30,9 @@ Plataforma full-stack para la gestión operativa de equipos de apilamiento alqui
 | HDT-005 — Migración a React Native CLI | ❌ Cancelado (se mantiene Expo) |
 | HDT-006 — Gestión móvil PSR/OSR | ✅ Cerrado |
 | HDT-007 — CRUD Usuarios Mobile | ✅ Cerrado |
+| HDT-008 — UX Desplegables, Catálogos en Tiempo Real y Referencias PSR/OSR | ✅ Implementado |
 
-**Feature adicional:** Finalización del Servicio — al atender una avería se restaura automáticamente el estado operativo del equipo.
+**Features adicionales:** Finalización del Servicio (al atender una avería se restaura el estado operativo del equipo) · Devolución de equipos con 4 evidencias · Desplegables AppSelect con Portal + ScrollView completo · Catálogos sincronizados en tiempo real entre dispositivos · Card PSR/OSR en detalle de equipo y Marca/Modelo/GRR en PSR/OSR (retroactivo).
 
 ---
 

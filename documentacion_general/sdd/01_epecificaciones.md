@@ -12,9 +12,9 @@
 | Plataforma | Web SPA + Android APK |
 | Backend | Quarkus Java |
 | Base de Datos Oficial | PostgreSQL 18 |
-| Versión Documento | 1.7 |
+| Versión Documento | 1.8 |
 | Estado | En desarrollo — frontend web funcional, mobile Expo SDK 54, backend completo con todos los módulos operativos |
-| Fecha | 2026-07-30 |
+| Fecha | 2026-08-06 |
 | Responsable | Jose Anyarin |
 
 ---
@@ -166,6 +166,12 @@ No se usará MySQL en este proyecto.
 - Tests backend (7 archivos JUnit/Mockito), frontend web (2), mobile (3).
 - CI/CD GitHub Actions.
 - Modo claro/oscuro frontend web.
+- **Desplegables AppSelect con Portal + ScrollView completo** (opciones nunca quedan detrás de la barra de acciones).
+- **Catálogos en tiempo real**: refetch silencioso al enfocar pantallas y al abrir desplegables (lo creado por un admin se ve en el otro dispositivo sin reiniciar).
+- **Filtro de equipos por modo de navegación** (`filterEquiposByMode`): oculta equipos `DEVUELTO` en modos selección/gestión.
+- **Referencias PSR/OSR en detalle de equipo** (card PSR/OSR con PSR, OSR, sede y campaña) y **Marca|Modelo|GRR en cards PSR/OSR** — retroactivo sobre los datos existentes.
+- CRUD completo de campañas en mobile (crear/editar con dialog + date picker nativo).
+- Tab Catálogos mobile agrupado por secciones (Catálogos/Operación/Administración/Sistema) y oculto para rol Usuario.
 
 ## Pendiente
 
@@ -254,6 +260,8 @@ HDT-004 (Pantallas Mobile Faltantes) completado: catálogos mobile, configuraci�
 HDT-006 (Gestión móvil PSR/OSR) completado: CreatePsrScreen con date picker nativo + Zod.
 
 HDT-007 (CRUD Usuarios Mobile) completado: CreateEditUserScreen con permisos por rol.
+
+HDT-008 (UX Desplegables, Catálogos en Tiempo Real y Referencias PSR/OSR) completado: AppSelect con Portal + ScrollView completo, catálogos sincronizados en tiempo real entre dispositivos, filtro DEVUELTO por modo, card PSR/OSR en detalle de equipo, línea Marca|Modelo|GRR en PSR/OSR (retroactivo), CRUD completo de campañas mobile y tab Catálogos con secciones y permisos.
 
 **Feature Finalización del Servicio** completado: backend restaura estado operativo, mobile con foto + botón "Finalizar Servicio".
 

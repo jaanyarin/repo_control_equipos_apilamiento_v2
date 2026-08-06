@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { Divider, Text, TouchableRipple } from 'react-native-paper'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import { useNavigation, useRoute } from '@react-navigation/native'
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -81,9 +81,9 @@ export default function EquipmentFormScreen() {
 
   const values = watch()
 
-  const loadCatalogs = useCallback(async () => {
+  const loadCatalogs = useCallback(async (silent = false) => {
     try {
-      setError('')
+      if (!silent) setError('')
       const [providers, brands, types] = await Promise.all([
         api.get('/proveedores'),
         api.get('/marcas'),
@@ -95,13 +95,21 @@ export default function EquipmentFormScreen() {
         types: types.data?.data || types.data || [],
       })
     } catch (e) {
-      setError(e.response?.data?.error || e.message || 'No se pudieron cargar los catálogos')
+      if (!silent) setError(e.response?.data?.error || e.message || 'No se pudieron cargar los catálogos')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [])
 
-  useEffect(() => { loadCatalogs() }, [loadCatalogs])
+  const loadedRef = useRef(false)
+  useFocusEffect(useCallback(() => {
+    if (!loadedRef.current) {
+      loadedRef.current = true
+      loadCatalogs()
+    } else {
+      loadCatalogs(true)
+    }
+  }, [loadCatalogs]))
 
   const submit = async data => {
     if (saving) return
@@ -132,7 +140,7 @@ export default function EquipmentFormScreen() {
   }
 
   if (loading) return <LoadingScreen message="Cargando catálogos" />
-  if (error) return <ErrorState title="Catálogos no disponibles" message={error} onRetry={loadCatalogs} />
+  if (error) return <ErrorState title="Catálogos no disponibles" message={error} onRetry={() => loadCatalogs()} />
   if (!isEdit && !psr) return <ErrorState title="PSR no disponible" message="Seleccione una PSR antes de registrar el equipo." />
 
   return (
@@ -158,6 +166,7 @@ export default function EquipmentFormScreen() {
               onChange={field.onChange}
               options={catalogOptions(catalogs.providers, item => item.razonSocial || item.nombre)}
               error={errors.proveedorId?.message}
+              onOpen={() => loadCatalogs(true)}
             />
           )} />
           <Controller control={control} name="marcaId" render={({ field }) => (
@@ -167,6 +176,7 @@ export default function EquipmentFormScreen() {
               onChange={field.onChange}
               options={catalogOptions(catalogs.brands, item => item.nombre)}
               error={errors.marcaId?.message}
+              onOpen={() => loadCatalogs(true)}
             />
           )} />
           <Controller control={control} name="tipoEquipoId" render={({ field }) => (
@@ -176,6 +186,7 @@ export default function EquipmentFormScreen() {
               onChange={field.onChange}
               options={catalogOptions(catalogs.types, item => item.nombre)}
               error={errors.tipoEquipoId?.message}
+              onOpen={() => loadCatalogs(true)}
             />
           )} />
           {[

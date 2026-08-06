@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { Divider, HelperText, SegmentedButtons, Text, TouchableRipple } from 'react-native-paper'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import { useNavigation, useRoute } from '@react-navigation/native'
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -171,9 +171,11 @@ export default function CreatePsrScreen() {
     },
   })
 
-  const loadCatalogs = useCallback(async () => {
-    setCatalogLoading(true)
-    setCatalogError('')
+  const loadCatalogs = useCallback(async (silent = false) => {
+    if (!silent) {
+      setCatalogLoading(true)
+      setCatalogError('')
+    }
 
     try {
       const [campanasResponse, sedesResponse, motivosResponse] = await Promise.all([
@@ -186,29 +188,37 @@ export default function CreatePsrScreen() {
       const sedesList = extractApiList(sedesResponse, 'sedes')
       const motivosList = extractApiList(motivosResponse, 'motivos PSR')
 
-      if (!isEditing && !campanasList.some(item => item.estadoActivo === true)) {
-        throw new Error('No existe una campaña activa para registrar el PSR')
-      }
-      if (sedesList.length === 0) {
-        throw new Error('No existen sedes registradas')
-      }
-      if (!motivosList.some(item => item.estadoActivo !== false)) {
-        throw new Error('No existen motivos PSR activos')
+      if (!silent) {
+        if (!isEditing && !campanasList.some(item => item.estadoActivo === true)) {
+          throw new Error('No existe una campaña activa para registrar el PSR')
+        }
+        if (sedesList.length === 0) {
+          throw new Error('No existen sedes registradas')
+        }
+        if (!motivosList.some(item => item.estadoActivo !== false)) {
+          throw new Error('No existen motivos PSR activos')
+        }
       }
 
       setCampanas(campanasList)
       setSedes(sedesList)
       setMotivos(motivosList)
     } catch (error) {
-      setCatalogError(getRequestError(error, 'No se pudieron cargar los catálogos'))
+      if (!silent) setCatalogError(getRequestError(error, 'No se pudieron cargar los catálogos'))
     } finally {
-      setCatalogLoading(false)
+      if (!silent) setCatalogLoading(false)
     }
   }, [isEditing])
 
-  useEffect(() => {
-    loadCatalogs()
-  }, [loadCatalogs])
+  const loadedRef = useRef(false)
+  useFocusEffect(useCallback(() => {
+    if (!loadedRef.current) {
+      loadedRef.current = true
+      loadCatalogs()
+    } else {
+      loadCatalogs(true)
+    }
+  }, [loadCatalogs]))
 
   useEffect(() => {
     if (!isEditing && campanas.length > 0) {
@@ -335,7 +345,7 @@ export default function CreatePsrScreen() {
       <ErrorState
         title="No se pudieron cargar los catálogos"
         message={catalogError}
-        onRetry={loadCatalogs}
+        onRetry={() => loadCatalogs()}
       />
     )
   }
@@ -364,6 +374,7 @@ export default function CreatePsrScreen() {
                   onChange={onChange}
                   error={errors.campanaId?.message}
                   disabled={isOsrMode}
+                  onOpen={() => loadCatalogs(true)}
                 />
               </View>
             )}
@@ -381,6 +392,7 @@ export default function CreatePsrScreen() {
                   onChange={onChange}
                   error={errors.sedeId?.message}
                   disabled={isOsrMode}
+                  onOpen={() => loadCatalogs(true)}
                 />
               </View>
             )}
@@ -430,6 +442,7 @@ export default function CreatePsrScreen() {
                   onChange={onChange}
                   error={errors.motivoId?.message}
                   disabled={isOsrMode}
+                  onOpen={() => loadCatalogs(true)}
                 />
               </View>
             )}

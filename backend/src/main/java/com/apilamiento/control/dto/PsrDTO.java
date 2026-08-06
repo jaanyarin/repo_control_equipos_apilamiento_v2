@@ -25,6 +25,9 @@ public class PsrDTO {
     private OffsetDateTime fechaCreacion;
     private OffsetDateTime fechaActualizacion;
     private OsrDTO osr;
+    private String marca;
+    private String modelo;
+    private String grr;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -85,4 +88,13 @@ public class PsrDTO {
 
     public OsrDTO getOsr() { return osr; }
     public void setOsr(OsrDTO osr) { this.osr = osr; }
+
+    public String getMarca() { return marca; }
+    public void setMarca(String marca) { this.marca = marca; }
+
+    public String getModelo() { return modelo; }
+    public void setModelo(String modelo) { this.modelo = modelo; }
+
+    public String getGrr() { return grr; }
+    public void setGrr(String grr) { this.grr = grr; }
 }

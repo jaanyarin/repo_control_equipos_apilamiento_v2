@@ -33,28 +33,22 @@ import MotivosPsrScreen from '../screens/MotivosPsrScreen'
 import AuditoriaScreen from '../screens/AuditoriaScreen'
 import LoadingScreen from '../components/LoadingScreen'
 import { theme } from '../theme'
-import { hasPsrAdminRole } from '../utils/roles'
+import { hasPsrAdminRole, isSuperAdmin, isAdminOrSuperAdmin } from '../utils/roles'
 
-function CatalogoTabScreen() {
-  const navigation = useNavigation()
-  const insets = useSafeAreaInsets()
-  const catalogItems = [
-    { label: 'Marcas', icon: 'trademark', screen: 'Marcas' },
-    { label: 'Proveedores', icon: 'truck', screen: 'Proveedores' },
-    { label: 'Tipos Equipo', icon: 'cog', screen: 'TiposEquipo' },
-    { label: 'Sedes', icon: 'map-marker', screen: 'Sedes' },
-    { label: 'Campañas', icon: 'calendar', screen: 'Campanas' },
-    { label: 'Roles', icon: 'shield-account', screen: 'Roles' },
-    { label: 'Usuarios', icon: 'account-group', screen: 'Usuarios' },
-    { label: 'Auditoría', icon: 'history', screen: 'Auditoria' },
-    { label: 'Motivos PSR', icon: 'clipboard-list', screen: 'MotivosPsr' },
-    { label: 'Configuración', icon: 'cog-outline', screen: 'Settings' },
-  ]
+function SectionHeader({ label }) {
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: theme.colors.background.page }} contentContainerStyle={{ padding: theme.spacing[4], paddingBottom: theme.spacing[8] + insets.bottom + 68 }}>
-      <Text variant="titleMedium" style={{ ...theme.typography.title, color: theme.colors.text.primary, marginBottom: theme.spacing[4] }}>Catálogos y Administración</Text>
+    <Text variant="titleSmall" style={{ ...theme.typography.subtitle, color: theme.colors.text.secondary, marginTop: theme.spacing[4], marginBottom: theme.spacing[2] }}>
+      {label}
+    </Text>
+  )
+}
+
+function CatalogoSection({ navigation, title, items }) {
+  return (
+    <>
+      <SectionHeader label={title} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing[3] }}>
-        {catalogItems.map(item => (
+        {items.map(item => (
           <Button
             key={item.screen}
             mode="contained"
@@ -68,6 +62,54 @@ function CatalogoTabScreen() {
           </Button>
         ))}
       </View>
+    </>
+  )
+}
+
+function CatalogoTabScreen() {
+  const navigation = useNavigation()
+  const insets = useSafeAreaInsets()
+  const { user } = useAuth()
+  const superAdmin = isSuperAdmin(user)
+  const admin = isAdminOrSuperAdmin(user)
+
+  const catalogoItems = [
+    { label: 'Marcas', icon: 'trademark', screen: 'Marcas' },
+    { label: 'Proveedores', icon: 'truck', screen: 'Proveedores' },
+    { label: 'Tipos Equipo', icon: 'cog', screen: 'TiposEquipo' },
+    { label: 'Sedes', icon: 'map-marker', screen: 'Sedes' },
+    { label: 'Motivos PSR', icon: 'clipboard-list', screen: 'MotivosPsr' },
+  ]
+  const operacionItems = [
+    { label: 'Campañas', icon: 'calendar', screen: 'Campanas' },
+  ]
+  const adminItems = [
+    { label: 'Roles', icon: 'shield-account', screen: 'Roles' },
+    { label: 'Usuarios', icon: 'account-group', screen: 'Usuarios' },
+  ]
+  const sistemaItems = [
+    { label: 'Auditoría', icon: 'history', screen: 'Auditoria' },
+    { label: 'Configuración', icon: 'cog-outline', screen: 'Settings' },
+  ]
+
+  return (
+    <ScrollView style={{ flex: 1, backgroundColor: theme.colors.background.page }} contentContainerStyle={{ padding: theme.spacing[4], paddingBottom: theme.spacing[8] + insets.bottom + 68 }}>
+      <Text variant="titleMedium" style={{ ...theme.typography.title, color: theme.colors.text.primary, marginBottom: theme.spacing[2] }}>Catálogos y Administración</Text>
+
+      {!admin ? (
+        <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary, marginTop: theme.spacing[4] }}>
+          No tienes permisos para acceder a esta sección.
+        </Text>
+      ) : (
+        <>
+          <CatalogoSection navigation={navigation} title="Catálogos" items={catalogoItems} />
+          <CatalogoSection navigation={navigation} title="Operación" items={operacionItems} />
+          <CatalogoSection navigation={navigation} title="Administración" items={adminItems} />
+          {superAdmin ? (
+            <CatalogoSection navigation={navigation} title="Sistema" items={sistemaItems} />
+          ) : null}
+        </>
+      )}
     </ScrollView>
   )
 }
@@ -78,6 +120,8 @@ const Tab = createBottomTabNavigator()
 
 function MainTabs() {
   const insets = useSafeAreaInsets()
+  const { user } = useAuth()
+  const admin = isAdminOrSuperAdmin(user)
 
   return (
     <Tab.Navigator
@@ -110,11 +154,13 @@ function MainTabs() {
         component={EquiposListScreen}
         options={{ tabBarLabel: 'Equipos', tabBarIcon: ({ color, size }) => <Icon source="warehouse" size={size} color={color} /> }}
       />
-      <Tab.Screen
-        name="Catalogo"
-        component={CatalogoTabScreen}
-        options={{ tabBarLabel: 'Catálogos', tabBarIcon: ({ color, size }) => <Icon source="bookmark" size={size} color={color} /> }}
-      />
+            {admin ? (
+        <Tab.Screen
+          name="Catalogo"
+          component={CatalogoTabScreen}
+          options={{ tabBarLabel: 'Catálogos', tabBarIcon: ({ color, size }) => <Icon source="bookmark" size={size} color={color} /> }}
+        />
+      ) : null}
       <Tab.Screen
         name="Perfil"
         component={PerfilScreen}

@@ -3,9 +3,13 @@ package com.apilamiento.control.service;
 import com.apilamiento.control.dto.EquipoDTO;
 import com.apilamiento.control.entity.Equipo;
 import com.apilamiento.control.mapper.EquipoMapper;
+import com.apilamiento.control.repository.CampanaRepository;
 import com.apilamiento.control.repository.EquipoRepository;
 import com.apilamiento.control.repository.MarcaRepository;
+import com.apilamiento.control.repository.OsrRepository;
 import com.apilamiento.control.repository.ProveedorRepository;
+import com.apilamiento.control.repository.PsrRepository;
+import com.apilamiento.control.repository.SedeRepository;
 import com.apilamiento.control.repository.TipoEquipoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +31,10 @@ class EquipoServiceTest {
     @Mock ProveedorRepository proveedorRepository;
     @Mock MarcaRepository marcaRepository;
     @Mock TipoEquipoRepository tipoEquipoRepository;
+    @Mock OsrRepository osrRepository;
+    @Mock PsrRepository psrRepository;
+    @Mock SedeRepository sedeRepository;
+    @Mock CampanaRepository campanaRepository;
 
     EquipoMapper mapper = new EquipoMapper();
 
@@ -34,7 +42,8 @@ class EquipoServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new EquipoService(repository, mapper, proveedorRepository, marcaRepository, tipoEquipoRepository);
+        service = new EquipoService(repository, mapper, proveedorRepository, marcaRepository,
+                tipoEquipoRepository, osrRepository, psrRepository, sedeRepository, campanaRepository);
     }
 
     @Test

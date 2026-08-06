@@ -148,6 +148,11 @@ export default function PsrOsrScreen() {
           <Text variant="bodySmall" style={styles.detailText}>
             Meses: {formatMonths(item.meses)} | Campaña: {item.campanaNombre || '-'} | Sede: {item.sedeNombre || '-'}
           </Text>
+          {item.marca || item.modelo || item.grr ? (
+            <Text variant="bodySmall" style={styles.detailText}>
+              Marca: {item.marca || '-'} | Modelo: {item.modelo || '-'} | GRR: {item.grr || '-'}
+            </Text>
+          ) : null}
           {item.osr ? (
             <View style={styles.osrInfo}>
               <Text variant="bodySmall" style={styles.osrText}>
