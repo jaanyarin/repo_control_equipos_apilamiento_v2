@@ -10,14 +10,13 @@ export default function ProveedoresScreen() {
     <CatalogScreen
       title="Proveedores"
       endpoint="/proveedores"
-      searchPlaceholder="Buscar por razón social o RUC"
+      searchPlaceholder="Buscar por razón social"
       searchFields={['razonSocial', 'ruc', 'codigo']}
       emptyMessage="No hay proveedores registrados"
       canEdit={canEdit}
       fields={[
         { key: 'razonSocial', label: 'Razón Social', required: true, primary: true },
-        { key: 'ruc', label: 'RUC', required: true },
-        { key: 'codigo', label: 'Código', required: false },
+        { key: 'codigo', label: 'Código', required: false, autoFrom: 'razonSocial' },
       ]}
     />
   )

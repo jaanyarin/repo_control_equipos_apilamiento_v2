@@ -16,7 +16,7 @@ export default function MarcasScreen() {
       canEdit={canEdit}
       fields={[
         { key: 'nombre', label: 'Nombre', required: true, primary: true },
-        { key: 'codigo', label: 'Código', required: false },
+        { key: 'codigo', label: 'Código', required: false, autoFrom: 'nombre' },
       ]}
     />
   )

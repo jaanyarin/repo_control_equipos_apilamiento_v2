@@ -15,8 +15,7 @@ export default function MotivosPsrScreen() {
       emptyMessage="No hay motivos PSR registrados"
       canEdit={canEdit}
       fields={[
-        { key: 'nombreCorto', label: 'Nombre corto', required: true, primary: true },
-        { key: 'nombre', label: 'Nombre completo', required: true },
+        { key: 'nombre', label: 'Nombre completo', required: true, primary: true },
       ]}
     />
   )

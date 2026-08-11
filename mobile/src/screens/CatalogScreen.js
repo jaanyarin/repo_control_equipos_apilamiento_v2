@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useLayoutEffect } from 'react'
-import { View, FlatList, RefreshControl, StyleSheet, ScrollView, Alert } from 'react-native'
+import React, { useState, useCallback, useLayoutEffect, useEffect } from 'react'
+import { View, FlatList, RefreshControl, StyleSheet, ScrollView, Alert, Keyboard } from 'react-native'
 import { Text, Searchbar, IconButton, Portal, Dialog } from 'react-native-paper'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import api from '../api'
@@ -25,6 +25,16 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({})
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', (e) => setKeyboardHeight(e.endCoordinates?.height || 0))
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardHeight(0))
+    return () => {
+      show.remove()
+      hide.remove()
+    }
+  }, [])
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -83,7 +93,11 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
   }
 
   const handleSave = async () => {
-    const missing = fields.find(f => f.required && !formData[f.key]?.trim())
+    const payload = {}
+    fields.forEach(f => {
+      payload[f.key] = f.autoFrom ? (formData[f.autoFrom] || '').trim() : (formData[f.key] || '')
+    })
+    const missing = fields.find(f => f.required && !f.autoFrom && !payload[f.key]?.trim())
     if (missing) {
       Alert.alert('Validación', `El campo "${missing.label}" es obligatorio`)
       return
@@ -91,9 +105,9 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
     setSaving(true)
     try {
       if (editing) {
-        await api.put(`${endpoint}/${editing.id}`, formData)
+        await api.put(`${endpoint}/${editing.id}`, payload)
       } else {
-        await api.post(endpoint, formData)
+        await api.post(endpoint, payload)
       }
       setShowForm(false)
       fetchItems()
@@ -179,11 +193,15 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
           />
         )}
         <Portal>
-          <Dialog visible={showForm} onDismiss={() => setShowForm(false)} style={styles.dialog}>
+          <Dialog visible={showForm} onDismiss={() => setShowForm(false)}  style={{ borderRadius: 20 }}>
             <Dialog.Title>{editing ? `Editar ${title.slice(0, -1)}` : `Nuevo ${title.slice(0, -1)}`}</Dialog.Title>
             <Dialog.ScrollArea>
-              <ScrollView>
-                {fields.map(f => (
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                style={styles.scrollView}
+                contentContainerStyle={{ paddingBottom: keyboardHeight }}
+              >
+                {fields.map(f => f.autoFrom ? null : (
                   f.multiline ? (
                     <AppTextArea key={f.key} label={f.label} value={formData[f.key] || ''} onChangeText={(v) => setFormData(prev => ({ ...prev, [f.key]: v }))} style={styles.dialogInput} />
                   ) : (
@@ -242,6 +260,9 @@ const styles = StyleSheet.create({
   },
   dialog: {
     maxHeight: '80%',
+  },
+  scrollView: {
+    maxHeight: 320,
   },
   dialogInput: {
     marginBottom: theme.spacing[3],

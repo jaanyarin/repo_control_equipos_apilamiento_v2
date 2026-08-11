@@ -16,8 +16,7 @@ export default function SedesScreen() {
       canEdit={canEdit}
       fields={[
         { key: 'nombre', label: 'Nombre', required: true, primary: true },
-        { key: 'codigo', label: 'Código', required: false },
-        { key: 'direccion', label: 'Dirección', required: false, multiline: true },
+        { key: 'codigo', label: 'Código', required: false, autoFrom: 'nombre' },
       ]}
     />
   )

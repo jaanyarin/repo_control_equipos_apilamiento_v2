@@ -12,7 +12,6 @@ public class MotivoPsrDTO {
 
     private String codigo;
 
-    @NotBlank(message = "El nombre corto es obligatorio")
     private String nombreCorto;
 
     private Boolean estadoActivo;

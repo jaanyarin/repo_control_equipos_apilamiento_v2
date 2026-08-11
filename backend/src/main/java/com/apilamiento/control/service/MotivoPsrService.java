@@ -38,11 +38,24 @@ public class MotivoPsrService {
         return base.length() > 50 ? base.substring(0, 50) : base;
     }
 
+    private String generarNombreCorto(String nombre) {
+        if (nombre == null || nombre.isBlank()) return null;
+        String corto = nombre.trim();
+        return corto.length() > 100 ? corto.substring(0, 100) : corto;
+    }
+
+    private String resolverNombreCorto(MotivoPsrDTO dto) {
+        if (dto.getNombreCorto() != null && !dto.getNombreCorto().isBlank()) {
+            return dto.getNombreCorto().trim();
+        }
+        return generarNombreCorto(dto.getNombre());
+    }
+
     @Transactional
     public MotivoPsrDTO crear(MotivoPsrDTO dto) {
         MotivoPsr entity = new MotivoPsr();
         entity.setNombre(dto.getNombre());
-        entity.setNombreCorto(dto.getNombreCorto());
+        entity.setNombreCorto(resolverNombreCorto(dto));
         entity.setCodigo(generarCodigo(dto.getNombre()));
         entity.setEstadoActivo(true);
         entity.setUsuarioCreacion(dto.getUsuarioCreacion() != null ? dto.getUsuarioCreacion() : 1L);

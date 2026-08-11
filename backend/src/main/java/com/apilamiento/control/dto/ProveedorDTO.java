@@ -10,9 +10,7 @@ public class ProveedorDTO {
     @NotBlank(message = "La razón social es obligatoria")
     private String razonSocial;
 
-    @NotBlank(message = "El código es obligatorio")
     private String codigo;
-    @NotBlank(message = "El RUC es obligatorio")
     private String ruc;
     private Boolean estadoActivo;
     private Long usuarioCreacion;
