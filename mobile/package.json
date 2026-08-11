@@ -1,6 +1,6 @@
 {
   "name": "apilamiento-mobile",
-  "version": "1.0.0",
+  "version": "1.9.0",
   "private": true,
   "main": "index.js",
   "scripts": {
@@ -43,7 +43,7 @@
     "@react-native-community/cli": "20.0.0",
     "@react-native-community/cli-platform-android": "20.0.0",
     "@react-native/babel-preset": "0.81.5",
-    "@react-native/metro-config": "0.81.5",
+    "@react-native/metro-config": "^0.81.5",
     "@testing-library/react-native": "^12.4.0",
     "babel-jest": "^29.7.0",
     "eslint": "^8.57.1",
