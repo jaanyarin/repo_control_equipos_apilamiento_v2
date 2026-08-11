@@ -1,5 +1,6 @@
 import React from 'react'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import PasswordChangeScreen from '../screens/PasswordChangeScreen'
 
 const mockPost = jest.fn()
@@ -60,7 +61,11 @@ describe('PasswordChangeScreen', () => {
   })
 
   it('envía solo la nueva contraseña y actualiza la sesión', async () => {
-    const screen = render(<PasswordChangeScreen />)
+    const screen = render(
+      <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 360, height: 640 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } }}>
+        <PasswordChangeScreen />
+      </SafeAreaProvider>
+    )
 
     fireEvent.changeText(screen.getByTestId('input-Nueva contraseña'), 'NuevaClave2026')
     fireEvent.changeText(screen.getByTestId('input-Confirmar contraseña'), 'NuevaClave2026')

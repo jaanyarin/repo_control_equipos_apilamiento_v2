@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { View, StyleSheet, ImageBackground } from 'react-native'
+import { StyleSheet, ImageBackground } from 'react-native'
 import { Button, Text, Surface, TextInput, ActivityIndicator } from 'react-native-paper'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import api, { setToken } from '../api'
 import { useAuth } from '../AuthContext'
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView'
 import { theme } from '../theme'
 
 export default function PasswordChangeScreen() {
@@ -52,7 +53,13 @@ export default function PasswordChangeScreen() {
       style={styles.background}
       resizeMode="cover"
     >
-      <View style={[styles.overlay, { paddingTop: Math.max(insets.top, theme.spacing[6]), paddingBottom: Math.max(insets.bottom, theme.spacing[6]) }]}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={[
+          styles.overlay,
+          { paddingTop: Math.max(insets.top, theme.spacing[6]), paddingBottom: Math.max(insets.bottom, theme.spacing[6]) },
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
         <Surface style={styles.card}>
           <Text variant="headlineSmall" style={styles.title}>
             Cambiar contraseña
@@ -108,7 +115,7 @@ export default function PasswordChangeScreen() {
             </Text>
           )}
         </Surface>
-      </View>
+      </KeyboardAwareScrollView>
     </ImageBackground>
   )
 }
@@ -116,7 +123,7 @@ export default function PasswordChangeScreen() {
 const styles = StyleSheet.create({
   background: { flex: 1 },
   overlay: {
-    flex: 1, justifyContent: 'center', alignItems: 'center',
+    flexGrow: 1, justifyContent: 'center', alignItems: 'center',
     backgroundColor: theme.colors.background.backdrop, padding: theme.spacing[6],
   },
   card: {

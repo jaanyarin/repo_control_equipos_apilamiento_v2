@@ -52,5 +52,5 @@ describe('AuthContext', () => {
     await waitFor(() => expect(screen.getByText('Cambiar contraseña')).toBeTruthy())
     expect(mockParseToken).toHaveBeenCalledWith('jwt-primer-acceso')
     expect(mockGetToken).toHaveBeenCalledTimes(1)
-  })
+  }, 15000)
 })

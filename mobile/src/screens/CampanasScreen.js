@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useLayoutEffect } from 'react'
-import { View, FlatList, RefreshControl, StyleSheet, Alert, Platform, ScrollView } from 'react-native'
+import React, { useState, useCallback, useLayoutEffect, useEffect } from 'react'
+import { View, FlatList, RefreshControl, StyleSheet, Alert, ScrollView, Keyboard } from 'react-native'
 import { Card, Text, Button, Searchbar, Chip, IconButton, Dialog, TouchableRipple } from 'react-native-paper'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
@@ -56,6 +56,16 @@ export default function CampanasScreen() {
   const [editing, setEditing] = useState(null)
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({ nombre: '', codigo: '', fechaInicio: '', fechaFin: '' })
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', (e) => setKeyboardHeight(e.endCoordinates?.height || 0))
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardHeight(0))
+    return () => {
+      show.remove()
+      hide.remove()
+    }
+  }, [])
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -209,7 +219,11 @@ export default function CampanasScreen() {
         <Dialog visible={showForm} onDismiss={() => setShowForm(false)} style={styles.dialog}>
           <Dialog.Title>{editing ? 'Editar campaña' : 'Nueva campaña'}</Dialog.Title>
           <Dialog.ScrollArea>
-            <ScrollView>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              style={styles.scrollView}
+              contentContainerStyle={{ paddingBottom: keyboardHeight }}
+            >
               <AppInput label="Nombre" value={formData.nombre} onChangeText={(v) => setFormData(prev => ({ ...prev, nombre: v }))} style={styles.dialogInput} />
               <AppInput label="Código" value={formData.codigo} onChangeText={(v) => setFormData(prev => ({ ...prev, codigo: v }))} style={styles.dialogInput} />
               <DateField label="Fecha de inicio" value={formData.fechaInicio} onChange={(v) => setFormData(prev => ({ ...prev, fechaInicio: v }))} />
@@ -239,5 +253,6 @@ const styles = StyleSheet.create({
   dateText: { opacity: 0.6, fontSize: 12 },
   actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
   dialog: { maxHeight: '80%' },
+  scrollView: { maxHeight: 320 },
   dialogInput: { marginBottom: theme.spacing[3] },
 })

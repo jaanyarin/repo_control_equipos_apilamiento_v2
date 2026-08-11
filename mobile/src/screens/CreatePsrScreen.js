@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native'
+import { Alert, Platform, StyleSheet, View } from 'react-native'
 import { Divider, HelperText, SegmentedButtons, Text, TouchableRipple } from 'react-native-paper'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
@@ -15,6 +15,7 @@ import AppSelect from '../components/AppSelect'
 import AppTextArea from '../components/AppTextArea'
 import ErrorBoundary from '../components/ErrorBoundary'
 import ErrorState from '../components/ErrorState'
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView'
 import LoadingScreen from '../components/LoadingScreen'
 import { theme } from '../theme'
 import {
@@ -352,7 +353,7 @@ export default function CreatePsrScreen() {
 
   return (
     <ErrorBoundary>
-      <ScrollView
+      <KeyboardAwareScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
@@ -581,7 +582,7 @@ export default function CreatePsrScreen() {
             {isOsrMode ? 'Guardar OSR' : isEditing ? 'Actualizar PSR' : 'Crear PSR'}
           </AppButton>
         </AppCard>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </ErrorBoundary>
   )
 }

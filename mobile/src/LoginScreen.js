@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { View, ScrollView, StyleSheet, ImageBackground, useWindowDimensions } from 'react-native'
+import { View, StyleSheet, ImageBackground, useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text, Divider } from 'react-native-paper'
 import api, { setToken, loadApiUrl, setApiUrl, BUILT_IN_API_URL } from './api'
@@ -8,6 +8,7 @@ import AppButton from './components/AppButton'
 import AppCard from './components/AppCard'
 import AppInput from './components/AppInput'
 import AppSelect from './components/AppSelect'
+import KeyboardAwareScrollView from './components/KeyboardAwareScrollView'
 import { theme } from './theme'
 
 export default function LoginScreen() {
@@ -27,11 +28,12 @@ export default function LoginScreen() {
 
   useEffect(() => {
     loadApiUrl().then(url => setApiUrlState(url || BUILT_IN_API_URL))
-    fetchRoles()
+    fetchRoles(true)
   }, [])
 
   const fetchRoles = async (silent = false) => {
     try {
+      setError('')
       const r = await api.get('/auth/roles')
       const data = Array.isArray(r.data) ? r.data : (r.data?.data || [])
       setRoles(data)
@@ -103,7 +105,7 @@ export default function LoginScreen() {
       style={styles.background}
       resizeMode="cover"
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.overlay,
           {
@@ -188,7 +190,7 @@ export default function LoginScreen() {
             </>
           )}
         </AppCard>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </ImageBackground>
   )
 }

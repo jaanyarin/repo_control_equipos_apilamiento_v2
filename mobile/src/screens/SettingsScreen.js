@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { View, ScrollView, StyleSheet, Alert } from 'react-native'
+import { View, StyleSheet, Alert } from 'react-native'
 import { Text, TextInput, Button, Surface, Divider } from 'react-native-paper'
 import { loadApiUrl, setApiUrl, BUILT_IN_API_URL } from '../api'
 import ErrorBoundary from '../components/ErrorBoundary'
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView'
 import { theme } from '../theme'
 
 export default function SettingsScreen() {
@@ -38,7 +39,7 @@ export default function SettingsScreen() {
 
   return (
     <ErrorBoundary>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <KeyboardAwareScrollView style={styles.container} contentContainerStyle={styles.content}>
         <Surface style={styles.card}>
           <Text variant="titleMedium" style={styles.sectionTitle}>Configuración de API</Text>
           <Divider style={styles.divider} />
@@ -81,7 +82,7 @@ export default function SettingsScreen() {
             <Text variant="bodyMedium" style={styles.value}>Android</Text>
           </View>
         </Surface>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </ErrorBoundary>
   )
 }
