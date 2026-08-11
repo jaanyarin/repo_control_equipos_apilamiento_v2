@@ -24,6 +24,8 @@ public class OsrRequest {
     @Pattern(regexp = "PEN|USD|EUR", message = "El tipo de moneda debe ser PEN, USD o EUR")
     private String tipoMoneda;
 
+    private Long usuarioCreacion;
+
     public Long getPsrId() { return psrId; }
     public void setPsrId(Long psrId) { this.psrId = psrId; }
 
@@ -35,4 +37,7 @@ public class OsrRequest {
 
     public String getTipoMoneda() { return tipoMoneda; }
     public void setTipoMoneda(String tipoMoneda) { this.tipoMoneda = tipoMoneda; }
+
+    public Long getUsuarioCreacion() { return usuarioCreacion; }
+    public void setUsuarioCreacion(Long usuarioCreacion) { this.usuarioCreacion = usuarioCreacion; }
 }

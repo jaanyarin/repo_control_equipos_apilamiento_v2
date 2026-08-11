@@ -48,7 +48,7 @@ public class OsrService {
         entity.setCostoUnitario(request.getCostoUnitario());
         entity.setTipoMoneda(request.getTipoMoneda());
         entity.setEstadoActivo(true);
-        entity.setUsuarioCreacion(1L);
+        entity.setUsuarioCreacion(request.getUsuarioCreacion() != null ? request.getUsuarioCreacion() : 1L);
         osrRepository.persist(entity);
         return mapper.toDTO(entity);
     }

@@ -6,6 +6,7 @@ public class ApiResponse<T> {
     private boolean success;
     private String message;
     private T data;
+    private String error;
     private String errorCode;
     private String timestamp;
 
@@ -33,6 +34,7 @@ public class ApiResponse<T> {
         ApiResponse<T> response = new ApiResponse<>();
         response.success = false;
         response.message = message;
+        response.error = message;
         response.errorCode = errorCode;
         return response;
     }
@@ -43,6 +45,8 @@ public class ApiResponse<T> {
     public void setMessage(String message) { this.message = message; }
     public T getData() { return data; }
     public void setData(T data) { this.data = data; }
+    public String getError() { return error; }
+    public void setError(String error) { this.error = error; }
     public String getErrorCode() { return errorCode; }
     public void setErrorCode(String errorCode) { this.errorCode = errorCode; }
     public String getTimestamp() { return timestamp; }

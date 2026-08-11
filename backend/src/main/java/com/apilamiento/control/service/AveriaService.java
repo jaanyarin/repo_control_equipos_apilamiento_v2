@@ -14,6 +14,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -119,12 +120,26 @@ public class AveriaService {
         return ChronoUnit.DAYS.between(inicio, fin);
     }
 
+    private void validateHorometroAtencion(Averia averia, BigDecimal value) {
+        int integerDigits = value.precision() - value.scale();
+        if (value.signum() < 0 || value.scale() != 1 || integerDigits < 1 || integerDigits > 6) {
+            throw error("El horómetro de atención debe tener entre 1 y 6 enteros y 1 decimal (ej. 1234.5)",
+                    Response.Status.BAD_REQUEST);
+        }
+        if (averia.getHorometro() != null && value.compareTo(averia.getHorometro()) < 0) {
+            throw error("El horómetro de atención no puede ser menor que el horómetro reportado",
+                    Response.Status.BAD_REQUEST);
+        }
+    }
+
     @Transactional
     public AveriaDTO crear(AveriaDTO dto) {
         Averia entity = new Averia();
         entity.setEquipoId(dto.getEquipoId());
         entity.setDescripcionFalla(dto.getDescripcionFalla());
-        entity.setFechaHoraAveria(OffsetDateTime.now(ZoneId.of("America/Lima")));
+        entity.setHorometro(dto.getHorometro());
+        entity.setFechaHoraAveria(dto.getFechaHoraAveria() != null
+                ? dto.getFechaHoraAveria() : OffsetDateTime.now(ZoneId.of("America/Lima")));
         entity.setEstadoAveria("REPORTADA");
         entity.setObservaciones(dto.getObservaciones());
         entity.setEstadoActivo(true);
@@ -144,18 +159,34 @@ public class AveriaService {
         Averia entity = repository.findById(id);
         if (entity == null) return null;
         if (dto.getDescripcionFalla() != null) entity.setDescripcionFalla(dto.getDescripcionFalla());
+        if (dto.getHorometro() != null) entity.setHorometro(dto.getHorometro());
         if (dto.getFechaHoraAveria() != null) entity.setFechaHoraAveria(dto.getFechaHoraAveria());
         if (dto.getAccionRealizada() != null) entity.setAccionRealizada(dto.getAccionRealizada());
         if (dto.getObservaciones() != null) entity.setObservaciones(dto.getObservaciones());
         if (dto.getEstadoActivo() != null) entity.setEstadoActivo(dto.getEstadoActivo());
         if ("ATENDIDA".equals(dto.getEstadoAveria())) {
+            boolean primeraAtencion = !"ATENDIDA".equals(entity.getEstadoAveria());
             entity.setEstadoAveria("ATENDIDA");
-            entity.setFechaHoraAtencion(OffsetDateTime.now(ZoneId.of("America/Lima")));
-            entity.setDiasInactividad((int) calcularDiasInactividad(entity.getFechaHoraAveria(), entity.getFechaHoraAtencion()));
-            Equipo equipo = equipoRepository.findById(entity.getEquipoId());
-            if (equipo != null) {
-                equipo.setEstadoOperativo("OPERATIVO");
-                equipo.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+            if (primeraAtencion) {
+                if (dto.getHorometroAtencion() == null) {
+                    throw error("El horómetro de atención es obligatorio al atender la avería",
+                            Response.Status.BAD_REQUEST);
+                }
+                validateHorometroAtencion(entity, dto.getHorometroAtencion());
+                entity.setHorometroAtencion(dto.getHorometroAtencion());
+                entity.setFechaHoraAtencion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+                entity.setDiasInactividad((int) calcularDiasInactividad(
+                        entity.getFechaHoraAveria(), entity.getFechaHoraAtencion()));
+                Equipo equipo = equipoRepository.findById(entity.getEquipoId());
+                if (equipo != null) {
+                    if (equipo.getFechaDevolucion() == null) {
+                        equipo.setEstadoOperativo("OPERATIVO");
+                    }
+                    equipo.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+                }
+            } else if (dto.getHorometroAtencion() != null) {
+                validateHorometroAtencion(entity, dto.getHorometroAtencion());
+                entity.setHorometroAtencion(dto.getHorometroAtencion());
             }
         } else if (dto.getEstadoAveria() != null) {
             entity.setEstadoAveria(dto.getEstadoAveria());

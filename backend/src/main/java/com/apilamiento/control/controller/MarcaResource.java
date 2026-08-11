@@ -8,6 +8,9 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.SecurityContext;
+import com.apilamiento.control.security.SecurityUtil;
 
 @Path("/marcas")
 @RolesAllowed({"Super Admin", "Admin", "Usuario"})
@@ -39,7 +42,8 @@ public class MarcaResource {
 
     @POST
     @RolesAllowed({"Super Admin", "Admin"})
-    public Response crear(@Valid MarcaDTO dto) {
+    public Response crear(@Valid MarcaDTO dto, @Context SecurityContext context) {
+        dto.setUsuarioCreacion(SecurityUtil.getUsuarioId(context));
         MarcaDTO creado = service.crear(dto);
         return Response.status(Response.Status.CREATED)
                 .entity(ApiResponse.ok("Marca creada correctamente", creado)).build();
@@ -48,7 +52,8 @@ public class MarcaResource {
     @PUT
     @Path("/{id}")
     @RolesAllowed({"Super Admin", "Admin"})
-    public Response actualizar(@PathParam("id") Long id, @Valid MarcaDTO dto) {
+    public Response actualizar(@PathParam("id") Long id, @Valid MarcaDTO dto, @Context SecurityContext context) {
+        dto.setUsuarioActualizacion(SecurityUtil.getUsuarioId(context));
         MarcaDTO actualizado = service.actualizar(id, dto);
         if (actualizado == null) {
             return Response.status(Response.Status.NOT_FOUND)

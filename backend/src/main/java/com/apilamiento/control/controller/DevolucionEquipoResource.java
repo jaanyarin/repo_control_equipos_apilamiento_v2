@@ -1,6 +1,7 @@
 package com.apilamiento.control.controller;
 
 import com.apilamiento.control.dto.ApiResponse;
+import com.apilamiento.control.dto.FinalizarDevolucionRequest;
 import com.apilamiento.control.entity.EvidenciaDevolucionEquipo;
 import com.apilamiento.control.security.SecurityUtil;
 import com.apilamiento.control.service.DevolucionEquipoService;
@@ -10,6 +11,7 @@ import jakarta.ws.rs.core.*;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 
 @Path("/devolucion-equipos")
@@ -51,8 +53,11 @@ public class DevolucionEquipoResource {
 
     @POST
     @Path("/{equipoId}/finalizar")
-    public Response finalizar(@PathParam("equipoId") Long equipoId, @Context SecurityContext context) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response finalizar(@PathParam("equipoId") Long equipoId, FinalizarDevolucionRequest request,
+            @Context SecurityContext context) {
+        BigDecimal horometroFin = request == null ? null : request.getHorometroFin();
         return Response.ok(ApiResponse.ok("Devolución finalizada",
-                service.finalizar(equipoId, SecurityUtil.getUsuarioId(context)))).build();
+                service.finalizar(equipoId, horometroFin, SecurityUtil.getUsuarioId(context)))).build();
     }
 }

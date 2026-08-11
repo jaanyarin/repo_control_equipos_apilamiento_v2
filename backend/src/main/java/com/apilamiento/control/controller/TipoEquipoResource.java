@@ -8,6 +8,9 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.SecurityContext;
+import com.apilamiento.control.security.SecurityUtil;
 
 @Path("/tipos-equipo")
 @RolesAllowed({"Super Admin", "Admin", "Usuario"})
@@ -39,7 +42,8 @@ public class TipoEquipoResource {
 
     @POST
     @RolesAllowed({"Super Admin", "Admin"})
-    public Response crear(@Valid TipoEquipoDTO dto) {
+    public Response crear(@Valid TipoEquipoDTO dto, @Context SecurityContext context) {
+        dto.setUsuarioCreacion(SecurityUtil.getUsuarioId(context));
         TipoEquipoDTO creado = service.crear(dto);
         return Response.status(Response.Status.CREATED)
                 .entity(ApiResponse.ok("Tipo de equipo creado correctamente", creado)).build();
@@ -48,7 +52,8 @@ public class TipoEquipoResource {
     @PUT
     @Path("/{id}")
     @RolesAllowed({"Super Admin", "Admin"})
-    public Response actualizar(@PathParam("id") Long id, @Valid TipoEquipoDTO dto) {
+    public Response actualizar(@PathParam("id") Long id, @Valid TipoEquipoDTO dto, @Context SecurityContext context) {
+        dto.setUsuarioActualizacion(SecurityUtil.getUsuarioId(context));
         TipoEquipoDTO actualizado = service.actualizar(id, dto);
         if (actualizado == null) {
             return Response.status(Response.Status.NOT_FOUND)

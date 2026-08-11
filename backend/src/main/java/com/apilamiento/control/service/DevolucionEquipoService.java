@@ -13,6 +13,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -92,11 +93,12 @@ public class DevolucionEquipoService {
     }
 
     @Transactional
-    public EquipoDTO finalizar(Long equipoId, Long usuarioId) {
+    public EquipoDTO finalizar(Long equipoId, BigDecimal horometroFin, Long usuarioId) {
         Equipo equipo = requireEquipo(equipoId);
         if (equipo.getFechaDevolucion() != null) {
             throw error("El equipo ya fue devuelto", Response.Status.CONFLICT);
         }
+        validateHorometroFin(equipo, horometroFin);
         List<TipoEvidenciaDevolucion> actuales = evidenciaRepository.listByEquipo(equipoId).stream()
                 .map(EvidenciaDevolucionEquipo::getTipo)
                 .toList();
@@ -108,11 +110,27 @@ public class DevolucionEquipoService {
             throw error("Faltan evidencias obligatorias de devolución: " + String.join(", ", faltantes),
                     Response.Status.BAD_REQUEST);
         }
+        equipo.setHorometroFin(horometroFin);
         equipo.setFechaDevolucion(OffsetDateTime.now(ZoneId.of("America/Lima")));
         equipo.setEstadoOperativo("DEVUELTO");
         equipo.setUsuarioActualizacion(usuarioId);
         equipo.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
         return equipoMapper.toDTO(equipo);
+    }
+
+    private void validateHorometroFin(Equipo equipo, BigDecimal value) {
+        if (value == null) {
+            throw error("El horómetro final es obligatorio", Response.Status.BAD_REQUEST);
+        }
+        int integerDigits = value.precision() - value.scale();
+        if (value.signum() < 0 || value.scale() != 1 || integerDigits < 1 || integerDigits > 6) {
+            throw error("El horómetro final debe tener entre 1 y 6 enteros y 1 decimal (ej. 1234.5)",
+                    Response.Status.BAD_REQUEST);
+        }
+        if (equipo.getHorometroInicio() != null && value.compareTo(equipo.getHorometroInicio()) < 0) {
+            throw error("El horómetro final no puede ser menor que el horómetro inicial",
+                    Response.Status.BAD_REQUEST);
+        }
     }
 
     private Equipo requireEquipo(Long id) {

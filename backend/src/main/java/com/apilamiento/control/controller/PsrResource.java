@@ -9,6 +9,9 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.SecurityContext;
+import com.apilamiento.control.security.SecurityUtil;
 
 @Path("/psr")
 @RolesAllowed({"Super Admin", "Admin", "Usuario"})
@@ -39,7 +42,8 @@ public class PsrResource {
     }
 
     @POST
-    public Response crear(@Valid PsrRequest request) {
+    public Response crear(@Valid PsrRequest request, @Context SecurityContext context) {
+        request.setUsuarioCreacion(SecurityUtil.getUsuarioId(context));
         PsrDTO creado = service.crear(request);
         return Response.status(Response.Status.CREATED)
                 .entity(ApiResponse.ok("PSR creado correctamente", creado)).build();
@@ -48,7 +52,8 @@ public class PsrResource {
     @PUT
     @Path("/{id}")
     @RolesAllowed({"Super Admin", "Admin"})
-    public Response actualizar(@PathParam("id") Long id, @Valid PsrRequest request) {
+    public Response actualizar(@PathParam("id") Long id, @Valid PsrRequest request, @Context SecurityContext context) {
+        request.setUsuarioActualizacion(SecurityUtil.getUsuarioId(context));
         PsrDTO actualizado = service.actualizar(id, request);
         if (actualizado == null) {
             return Response.status(Response.Status.NOT_FOUND)

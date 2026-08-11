@@ -8,6 +8,9 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.SecurityContext;
+import com.apilamiento.control.security.SecurityUtil;
 
 @Path("/proveedores")
 @RolesAllowed({"Super Admin", "Admin", "Usuario"})
@@ -39,7 +42,8 @@ public class ProveedorResource {
 
     @POST
     @RolesAllowed({"Super Admin", "Admin"})
-    public Response crear(@Valid ProveedorDTO dto) {
+    public Response crear(@Valid ProveedorDTO dto, @Context SecurityContext context) {
+        dto.setUsuarioCreacion(SecurityUtil.getUsuarioId(context));
         ProveedorDTO creado = service.crear(dto);
         return Response.status(Response.Status.CREATED)
                 .entity(ApiResponse.ok("Proveedor creado correctamente", creado)).build();
@@ -48,7 +52,8 @@ public class ProveedorResource {
     @PUT
     @Path("/{id}")
     @RolesAllowed({"Super Admin", "Admin"})
-    public Response actualizar(@PathParam("id") Long id, @Valid ProveedorDTO dto) {
+    public Response actualizar(@PathParam("id") Long id, @Valid ProveedorDTO dto, @Context SecurityContext context) {
+        dto.setUsuarioActualizacion(SecurityUtil.getUsuarioId(context));
         ProveedorDTO actualizado = service.actualizar(id, dto);
         if (actualizado == null) {
             return Response.status(Response.Status.NOT_FOUND)

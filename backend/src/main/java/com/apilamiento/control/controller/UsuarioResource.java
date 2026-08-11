@@ -9,6 +9,9 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.SecurityContext;
+import com.apilamiento.control.security.SecurityUtil;
 
 @Path("/usuarios")
 @RolesAllowed({"Super Admin", "Admin", "Usuario"})
@@ -41,7 +44,8 @@ public class UsuarioResource {
     }
 
     @POST
-    public Response crear(@Valid UsuarioDTO dto) {
+    public Response crear(@Valid UsuarioDTO dto, @Context SecurityContext context) {
+        dto.setUsuarioCreacion(SecurityUtil.getUsuarioId(context));
         UsuarioDTO creado = service.crear(dto);
         return Response.status(Response.Status.CREATED)
                 .entity(ApiResponse.ok("Usuario creado correctamente", creado)).build();
@@ -49,7 +53,8 @@ public class UsuarioResource {
 
     @PUT
     @Path("/{id}")
-    public Response actualizar(@PathParam("id") Long id, @Valid UsuarioDTO dto) {
+    public Response actualizar(@PathParam("id") Long id, @Valid UsuarioDTO dto, @Context SecurityContext context) {
+        dto.setUsuarioActualizacion(SecurityUtil.getUsuarioId(context));
         UsuarioDTO actualizado = service.actualizar(id, dto);
         if (actualizado == null) {
             return Response.status(Response.Status.NOT_FOUND)

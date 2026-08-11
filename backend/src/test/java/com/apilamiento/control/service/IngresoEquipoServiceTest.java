@@ -1,6 +1,8 @@
 package com.apilamiento.control.service;
 
 import com.apilamiento.control.dto.PsrPendienteEquipoDTO;
+import com.apilamiento.control.dto.IngresoEquipoRequest;
+import com.apilamiento.control.dto.EquipoDTO;
 import com.apilamiento.control.entity.*;
 import com.apilamiento.control.mapper.EquipoMapper;
 import com.apilamiento.control.mapper.EvidenciaIngresoEquipoMapper;
@@ -9,8 +11,11 @@ import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -69,15 +74,12 @@ class IngresoEquipoServiceTest {
     }
 
     @Test
-    void finalizarCompletaConLasCincoFotosBase() {
+    void finalizarCompletaConLasFotosBase() {
         Equipo equipo = draft();
         when(equipoRepository.findById(1L)).thenReturn(equipo);
         when(evidenciaRepository.listByEquipo(1L)).thenReturn(List.of(
-                evidence(TipoEvidenciaIngreso.LATERAL_IZQUIERDO),
-                evidence(TipoEvidenciaIngreso.LATERAL_DERECHO),
-                evidence(TipoEvidenciaIngreso.FRONTAL),
-                evidence(TipoEvidenciaIngreso.POSTERIOR),
-                evidence(TipoEvidenciaIngreso.GUIA_REMISION)));
+                evidence(TipoEvidenciaIngreso.GUIA_REMISION),
+                evidence(TipoEvidenciaIngreso.HOROMETRO_INICIAL)));
 
         service.finalizar(1L, 9L);
 
@@ -91,6 +93,71 @@ class IngresoEquipoServiceTest {
         assertThrows(WebApplicationException.class, () ->
                 service.guardarEvidencia(1L, "FRONTAL", "foto.gif", "image/gif", new byte[]{1}, 9L));
         verifyNoInteractions(evidenciaRepository);
+    }
+
+    @Test
+    void crearBorrador_persisteHorometroInicioYFin() {
+        Psr psr = new Psr();
+        psr.setId(10L);
+        psr.setEstadoActivo(true);
+        Osr osr = new Osr();
+        osr.setId(20L);
+        osr.setEstadoActivo(true);
+        osr.setNumeroOsr("OSR20");
+        when(psrRepository.findById(10L)).thenReturn(psr);
+        when(osrRepository.findByPsrIdForUpdate(10L)).thenReturn(Optional.of(osr));
+        when(proveedorRepository.findById(1L)).thenReturn(proveedorActivo());
+        when(marcaRepository.findById(2L)).thenReturn(marcaActiva());
+        when(tipoEquipoRepository.findById(3L)).thenReturn(tipoActivo());
+        when(equipoRepository.findByCodigo("COD-HOR-01")).thenReturn(Optional.empty());
+        when(equipoRepository.findByNumeroSerie("SN001")).thenReturn(Optional.empty());
+
+        ArgumentCaptor<Equipo> captor = ArgumentCaptor.forClass(Equipo.class);
+        doAnswer(invocation -> {
+            Equipo eq = invocation.getArgument(0);
+            eq.setId(99L);
+            return null;
+        }).when(equipoRepository).persist(captor.capture());
+
+        EquipoDTO equipoDTO = new EquipoDTO();
+        equipoDTO.setProveedorId(1L);
+        equipoDTO.setMarcaId(2L);
+        equipoDTO.setTipoEquipoId(3L);
+        equipoDTO.setModelo("MODEL-X");
+        equipoDTO.setCodigo("cod-hor-01");
+        equipoDTO.setNumeroSerie("SN001");
+        equipoDTO.setFechaIngreso(LocalDate.of(2026, 8, 10));
+        equipoDTO.setNumeroGuiaRemision("GUIA-001");
+        equipoDTO.setHorometroInicio(new BigDecimal("1234.5"));
+        equipoDTO.setHorometroFin(new BigDecimal("24345.6"));
+
+        IngresoEquipoRequest request = new IngresoEquipoRequest();
+        request.setPsrId(10L);
+        request.setEquipo(equipoDTO);
+
+        service.crearBorrador(request, 1L);
+
+        Equipo persistido = captor.getValue();
+        assertEquals(new BigDecimal("1234.5"), persistido.getHorometroInicio());
+        assertEquals(new BigDecimal("24345.6"), persistido.getHorometroFin());
+    }
+
+    private Proveedor proveedorActivo() {
+        Proveedor p = new Proveedor();
+        p.setEstadoActivo(true);
+        return p;
+    }
+
+    private Marca marcaActiva() {
+        Marca m = new Marca();
+        m.setEstadoActivo(true);
+        return m;
+    }
+
+    private TipoEquipo tipoActivo() {
+        TipoEquipo t = new TipoEquipo();
+        t.setEstadoActivo(true);
+        return t;
     }
 
     private Equipo draft() {

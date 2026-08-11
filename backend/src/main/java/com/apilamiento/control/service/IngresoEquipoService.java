@@ -18,11 +18,8 @@ public class IngresoEquipoService {
     private static final long MAX_FILE_SIZE = 5L * 1024 * 1024;
     private static final Set<String> MIME_TYPES = Set.of("image/jpeg", "image/png");
     private static final Set<TipoEvidenciaIngreso> BASE_REQUIRED = EnumSet.of(
-            TipoEvidenciaIngreso.LATERAL_IZQUIERDO,
-            TipoEvidenciaIngreso.LATERAL_DERECHO,
-            TipoEvidenciaIngreso.FRONTAL,
-            TipoEvidenciaIngreso.POSTERIOR,
-            TipoEvidenciaIngreso.GUIA_REMISION);
+            TipoEvidenciaIngreso.GUIA_REMISION,
+            TipoEvidenciaIngreso.HOROMETRO_INICIAL);
 
     private final PsrRepository psrRepository;
     private final OsrRepository osrRepository;
@@ -245,6 +242,8 @@ public class IngresoEquipoService {
         entity.setElevadorBateria(Boolean.TRUE.equals(dto.getElevadorBateria()));
         entity.setCableAdicional(Boolean.TRUE.equals(dto.getCableAdicional()));
         entity.setConectorAdicional(Boolean.TRUE.equals(dto.getConectorAdicional()));
+        entity.setHorometroInicio(dto.getHorometroInicio());
+        entity.setHorometroFin(dto.getHorometroFin());
         entity.setObservaciones(dto.getObservaciones());
         entity.setFechaIngreso(dto.getFechaIngreso());
         entity.setNumeroGuiaRemision(dto.getNumeroGuiaRemision().trim());

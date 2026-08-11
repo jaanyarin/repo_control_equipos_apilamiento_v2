@@ -13,6 +13,8 @@ public class AveriaMapper {
         dto.setId(entity.getId());
         dto.setEquipoId(entity.getEquipoId());
         dto.setDescripcionFalla(entity.getDescripcionFalla());
+        dto.setHorometro(entity.getHorometro());
+        dto.setHorometroAtencion(entity.getHorometroAtencion());
         dto.setFechaHoraAveria(entity.getFechaHoraAveria());
         dto.setFechaHoraAtencion(entity.getFechaHoraAtencion());
         dto.setAccionRealizada(entity.getAccionRealizada());

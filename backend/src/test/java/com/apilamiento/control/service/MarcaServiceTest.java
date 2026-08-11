@@ -75,12 +75,6 @@ class MarcaServiceTest {
         dto.setNombre("Toyota");
         dto.setUsuarioCreacion(1L);
 
-        Marca marca = new Marca();
-        marca.setId(1L);
-        marca.setNombre("Toyota");
-        marca.setCodigo("TOYOTA");
-        when(repository.findById(any())).thenReturn(marca);
-
         MarcaDTO resultado = service.crear(dto);
 
         assertNotNull(resultado);

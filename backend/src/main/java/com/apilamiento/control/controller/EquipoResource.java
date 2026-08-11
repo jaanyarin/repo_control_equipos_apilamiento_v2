@@ -71,7 +71,8 @@ public class EquipoResource {
     }
 
     @POST
-    public Response crear(@Valid EquipoDTO dto) {
+    public Response crear(@Valid EquipoDTO dto, @Context SecurityContext context) {
+        dto.setUsuarioCreacion(SecurityUtil.getUsuarioId(context));
         EquipoDTO creado = service.crear(dto);
         return Response.status(Response.Status.CREATED)
                 .entity(ApiResponse.ok("Equipo creado correctamente", creado)).build();

@@ -1,6 +1,7 @@
 package com.apilamiento.control.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
@@ -17,6 +18,12 @@ public class Averia {
 
     @Column(name = "descripcion_falla", nullable = false)
     private String descripcionFalla;
+
+    @Column(name = "horometro")
+    private BigDecimal horometro;
+
+    @Column(name = "horometro_atencion")
+    private BigDecimal horometroAtencion;
 
     @Column(name = "fecha_hora_averia")
     private OffsetDateTime fechaHoraAveria;
@@ -61,6 +68,12 @@ public class Averia {
 
     public String getDescripcionFalla() { return descripcionFalla; }
     public void setDescripcionFalla(String descripcionFalla) { this.descripcionFalla = descripcionFalla; }
+
+    public BigDecimal getHorometro() { return horometro; }
+    public void setHorometro(BigDecimal horometro) { this.horometro = horometro; }
+
+    public BigDecimal getHorometroAtencion() { return horometroAtencion; }
+    public void setHorometroAtencion(BigDecimal horometroAtencion) { this.horometroAtencion = horometroAtencion; }
 
     public OffsetDateTime getFechaHoraAveria() { return fechaHoraAveria; }
     public void setFechaHoraAveria(OffsetDateTime fechaHoraAveria) { this.fechaHoraAveria = fechaHoraAveria; }

@@ -58,7 +58,8 @@ public class AveriaResource {
     }
 
     @POST
-    public Response crear(@Valid AveriaDTO dto) {
+    public Response crear(@Valid AveriaDTO dto, @Context SecurityContext context) {
+        dto.setUsuarioCreacion(SecurityUtil.getUsuarioId(context));
         AveriaDTO creado = service.crear(dto);
         return Response.status(Response.Status.CREATED)
                 .entity(ApiResponse.ok("Avería reportada correctamente", creado)).build();
@@ -66,7 +67,8 @@ public class AveriaResource {
 
     @PUT
     @Path("/{id}")
-    public Response actualizar(@PathParam("id") Long id, AveriaDTO dto) {
+    public Response actualizar(@PathParam("id") Long id, AveriaDTO dto, @Context SecurityContext context) {
+        dto.setUsuarioActualizacion(SecurityUtil.getUsuarioId(context));
         AveriaDTO actualizado = service.actualizar(id, dto);
         if (actualizado == null) {
             return Response.status(Response.Status.NOT_FOUND)

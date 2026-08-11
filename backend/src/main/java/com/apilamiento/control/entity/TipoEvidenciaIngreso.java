@@ -16,6 +16,7 @@ public enum TipoEvidenciaIngreso {
     ELEVADOR_BATERIA,
     CONECTOR_ADICIONAL,
     GUIA_REMISION,
+    HOROMETRO_INICIAL,
     DETALLE_1,
     DETALLE_2,
     DETALLE_3

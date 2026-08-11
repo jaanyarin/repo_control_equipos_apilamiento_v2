@@ -2,6 +2,7 @@ package com.apilamiento.control.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 public class AveriaDTO {
@@ -12,6 +13,8 @@ public class AveriaDTO {
 
     @NotBlank(message = "La descripción de la falla es obligatoria")
     private String descripcionFalla;
+    private BigDecimal horometro;
+    private BigDecimal horometroAtencion;
     private OffsetDateTime fechaHoraAveria;
     private OffsetDateTime fechaHoraAtencion;
     private String accionRealizada;
@@ -32,6 +35,12 @@ public class AveriaDTO {
 
     public String getDescripcionFalla() { return descripcionFalla; }
     public void setDescripcionFalla(String descripcionFalla) { this.descripcionFalla = descripcionFalla; }
+
+    public BigDecimal getHorometro() { return horometro; }
+    public void setHorometro(BigDecimal horometro) { this.horometro = horometro; }
+
+    public BigDecimal getHorometroAtencion() { return horometroAtencion; }
+    public void setHorometroAtencion(BigDecimal horometroAtencion) { this.horometroAtencion = horometroAtencion; }
 
     public OffsetDateTime getFechaHoraAveria() { return fechaHoraAveria; }
     public void setFechaHoraAveria(OffsetDateTime fechaHoraAveria) { this.fechaHoraAveria = fechaHoraAveria; }
