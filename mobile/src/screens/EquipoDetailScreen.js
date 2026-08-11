@@ -43,32 +43,50 @@ export default function EquipoDetailScreen() {
 
   const handleDownload = async (tipo) => {
     try {
+      const baseUrl = await loadApiUrl()
+      const token = await getToken()
+      const uri = `${baseUrl}/ingresos-equipo/${id}/evidencias/${tipo}/archivo`
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      const { dirs, writeFile } = ReactNativeBlobUtil.fs
+      const fileName = `evidencia_${tipo}_${Date.now()}.jpg`
+
+      // Descarga en memoria (base64). Evita el flujo FileStorage del nativo que
+      // lanza "Download interrupted." cuando isDownloadComplete() falla.
+      const res = await ReactNativeBlobUtil.fetch('GET', uri, headers)
+      if (res.info().statusCode !== 200) {
+        Alert.alert('Error', 'No se pudo descargar la foto. Código: ' + res.info().statusCode)
+        return
+      }
+      const base64Data = await res.base64()
+
+      // Android 10+ (API >= 29): MediaStore guarda en Galería sin permiso de almacenamiento.
+      const androidVersion = Platform.OS === 'android' ? Number(Platform.Version) : 0
+      if (Platform.OS === 'android' && androidVersion >= 29) {
+        const cachePath = `${dirs.CacheDir}/${fileName}`
+        await writeFile(cachePath, base64Data, 'base64')
+        await ReactNativeBlobUtil.MediaCollection.copyToMediaStore(
+          { name: fileName, parentFolder: '', mimeType: 'image/jpeg' },
+          'Image',
+          cachePath,
+        )
+        Alert.alert('Foto guardada', 'La foto se guardó en la galería del dispositivo.')
+        return
+      }
+
+      // Android 9 y anteriores: permiso de escritura explícito.
       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          { title: 'Permiso de almacenamiento', message: 'Necesitamos acceso al almacenamiento para guardar la foto' }
+          { title: 'Permiso de almacenamiento', message: 'Necesitamos acceso al almacenamiento para guardar la foto' },
         )
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
           Alert.alert('Permiso denegado', 'No se puede guardar la foto sin permiso de almacenamiento.')
           return
         }
       }
-      const baseUrl = await loadApiUrl()
-      const token = await getToken()
-      const uri = `${baseUrl}/ingresos-equipo/${id}/evidencias/${tipo}/archivo`
-      const { dirs } = ReactNativeBlobUtil.fs
-      const destPath = `${dirs.PictureDir || dirs.DownloadDir}/evidencia_${tipo}_${Date.now()}.jpg`
-      const res = await ReactNativeBlobUtil
-        .config({
-          path: destPath,
-          addAndroidDownloads: { useDownloadManager: true, notification: true, path: destPath },
-        })
-        .fetch('GET', uri, token ? { Authorization: `Bearer ${token}` } : {})
-      if (res.info().statusCode === 200) {
-        Alert.alert('Foto guardada', `Se guardó en: ${destPath}`)
-      } else {
-        Alert.alert('Error', 'No se pudo descargar la foto. Código: ' + res.info().statusCode)
-      }
+      const destPath = `${dirs.PictureDir || dirs.DownloadDir}/${fileName}`
+      await writeFile(destPath, base64Data, 'base64')
+      Alert.alert('Foto guardada', `Se guardó en: ${destPath}`)
     } catch (e) {
       Alert.alert('Error al descargar', e.message || 'Intente nuevamente')
     }
@@ -202,6 +220,18 @@ export default function EquipoDetailScreen() {
           <View style={styles.row}>
             <Text variant="bodySmall" style={styles.label}>Estado Operativo</Text>
             <StatusChip status={equipo.estadoOperativo === 'OPERATIVO' ? 'active' : equipo.estadoOperativo === 'AVERIADO' ? 'fault' : 'cancelled'} label={equipo.estadoOperativo || 'DESCONOCIDO'} />
+          </View>
+          <View style={styles.row}>
+            <Text variant="bodySmall" style={styles.label}>Horómetro Inicio</Text>
+            <Text variant="bodyMedium" style={styles.value}>
+              {equipo.horometroInicio != null ? Number(equipo.horometroInicio).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}
+            </Text>
+          </View>
+          <View style={styles.row}>
+            <Text variant="bodySmall" style={styles.label}>Horómetro Final</Text>
+            <Text variant="bodyMedium" style={styles.value}>
+              {equipo.horometroFin != null ? Number(equipo.horometroFin).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}
+            </Text>
           </View>
         </AppCard>
 
