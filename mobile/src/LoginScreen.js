@@ -11,6 +11,8 @@ import AppSelect from './components/AppSelect'
 import KeyboardAwareScrollView from './components/KeyboardAwareScrollView'
 import { theme } from './theme'
 
+const DEFAULT_PASSWORD = '00000000'
+
 export default function LoginScreen() {
   const insets = useSafeAreaInsets()
   const { width } = useWindowDimensions()
@@ -139,7 +141,11 @@ export default function LoginScreen() {
             placeholder="Primero selecciona un perfil"
             value={selectedUsuarioId}
             options={(usuarios || []).map(usuario => ({ value: usuario.id, label: `${usuario.nombre}${usuario.area ? ` (${usuario.area})` : ''}` }))}
-            onChange={setSelectedUsuarioId}
+            onChange={(value, option) => {
+              setSelectedUsuarioId(value)
+              const selected = usuarios.find(u => u.id === value)
+              setPassword(selected?.passwordResetRequired ? DEFAULT_PASSWORD : '')
+            }}
             disabled={!selectedRolId}
             style={{ marginTop: 10 }}
           />
@@ -147,8 +153,10 @@ export default function LoginScreen() {
           <AppInput
             label="Contraseña"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={value => setPassword(value.replace(/[^0-9]/g, '').slice(0, 8))}
             secureTextEntry
+            keyboardType="number-pad"
+            maxLength={8}
             style={styles.input}
           />
 

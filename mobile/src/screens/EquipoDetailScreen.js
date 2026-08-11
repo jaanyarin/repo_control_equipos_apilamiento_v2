@@ -17,6 +17,22 @@ import ErrorState from '../components/ErrorState'
 import { theme } from '../theme'
 import { accessoryFields } from '../utils/equipmentForm'
 
+function formatAveriaDateTime(value) {
+  if (!value) return '-'
+  const d = new Date(value)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  return `${day}/${month}/${year} ${hours}:${minutes}`
+}
+
+function formatAveriaHorometro(value) {
+  if (value == null) return '-'
+  return Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 export default function EquipoDetailScreen() {
   const route = useRoute()
   const navigation = useNavigation()
@@ -360,10 +376,13 @@ export default function EquipoDetailScreen() {
                 <View key={index} style={styles.averiaItem}>
                   <View style={styles.averiaHeader}>
                     <Text variant="bodyMedium" style={styles.averiaDate}>
-                      {av.fechaHoraAveria ? new Date(av.fechaHoraAveria).toLocaleDateString() : '-'}
+                      {formatAveriaDateTime(av.fechaHoraAveria)} — {formatAveriaDateTime(av.fechaHoraAtencion)}
                     </Text>
                     <StatusChip status={av.estadoAveria === 'ATENDIDA' ? 'approved' : av.estadoAveria === 'PENDIENTE' ? 'pending' : 'cancelled'} label={av.estadoAveria || 'PENDIENTE'} />
                   </View>
+                  <Text variant="bodySmall" style={styles.averiaHorometro}>
+                    Horómetro: {formatAveriaHorometro(av.horometro)} — {formatAveriaHorometro(av.horometroAtencion)}
+                  </Text>
                   <Text variant="bodySmall" style={styles.averiaDesc}>
                     {av.descripcionFalla || av.descripcion || '-'}
                   </Text>
@@ -494,8 +513,13 @@ const styles = StyleSheet.create({
     fontFamily: theme.fontFamily.semiBold,
     color: theme.colors.text.primary,
   },
+  averiaHorometro: {
+    color: theme.colors.text.secondary,
+    marginTop: theme.spacing[1],
+  },
   averiaDesc: {
     color: theme.colors.text.secondary,
+    marginTop: theme.spacing[1],
   },
   // Visor a pantalla completa — fondo negro translúcido con barras semitransparentes
   viewerRoot: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)' },

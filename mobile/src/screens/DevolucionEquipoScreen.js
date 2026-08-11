@@ -13,13 +13,18 @@ import ZoomableImage from '../components/ZoomableImage'
 import ErrorState from '../components/ErrorState'
 import LoadingScreen from '../components/LoadingScreen'
 import { theme } from '../theme'
+import { accessoryFields } from '../utils/equipmentForm'
 
-const DEVOLUCION_EVIDENCES = [
+const DEVOLUCION_VISTAS = [
   ['DEVOLUCION_FRONTAL', 'Frontal'],
   ['DEVOLUCION_LATERAL_IZQUIERDO', 'Lateral izquierdo'],
   ['DEVOLUCION_LATERAL_DERECHO', 'Lateral derecho'],
   ['DEVOLUCION_POSTERIOR', 'Posterior'],
 ].map(([key, label]) => ({ key, label }))
+
+const DEVOLUCION_ACCESORIOS = accessoryFields
+  .filter(item => item.evidence)
+  .map(item => ({ key: item.evidence, campo: item.key, label: item.label }))
 
 const HOROMETRO_REGEX = /^\d{1,6}\.\d$/
 const HOROMETRO_ERROR = 'Formato: hasta 6 enteros y 1 decimal (ej. 1234.5)'
@@ -60,7 +65,17 @@ export default function DevolucionEquipoScreen() {
 
   useEffect(() => { load() }, [load])
 
-  const missing = DEVOLUCION_EVIDENCES.filter(item => !evidence[item.key])
+  const evidencias = useMemo(() => {
+    const lista = [...DEVOLUCION_VISTAS]
+    if (equipment) {
+      DEVOLUCION_ACCESORIOS.forEach(item => {
+        if (equipment[item.campo]) lista.push({ key: item.key, label: item.label })
+      })
+    }
+    return lista
+  }, [equipment])
+
+  const missing = evidencias.filter(item => !evidence[item.key])
 
   const handleView = async (tipo) => {
     try {
@@ -174,7 +189,7 @@ export default function DevolucionEquipoScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={DEVOLUCION_EVIDENCES}
+        data={evidencias}
         keyExtractor={item => item.key}
         numColumns={2}
         columnWrapperStyle={styles.columns}
@@ -214,7 +229,7 @@ export default function DevolucionEquipoScreen() {
               disabled={Object.values(uploading).some(Boolean) && !saved}
               style={styles.photoButton}
             >
-              {item.label} *
+              * {item.label}
             </AppButton>
           )
         }}

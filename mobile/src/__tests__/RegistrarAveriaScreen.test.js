@@ -155,8 +155,8 @@ describe('RegistrarAveriaScreen', () => {
       expect(screen.getByText('Tome la foto del horómetro y la Foto 1 para finalizar')).toBeTruthy()
     })
 
-    expect(screen.getByText('Horómetro *')).toBeTruthy()
-    expect(screen.getByText('Foto 1 *')).toBeTruthy()
+    expect(screen.getByText('* Horómetro')).toBeTruthy()
+    expect(screen.getByText('* Foto 1')).toBeTruthy()
     expect(screen.getByText('Foto 2')).toBeTruthy()
   })
 

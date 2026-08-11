@@ -15,25 +15,7 @@ import AppInput from '../components/AppInput'
 import AppButton from '../components/AppButton'
 import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView'
 import { theme } from '../theme'
-
-const formatDateTime = (date) => {
-  const d = new Date(date)
-  const day = String(d.getDate()).padStart(2, '0')
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const year = d.getFullYear()
-  const hours = String(d.getHours()).padStart(2, '0')
-  const minutes = String(d.getMinutes()).padStart(2, '0')
-  const seconds = String(d.getSeconds()).padStart(2, '0')
-  return `${day}/${month}/${year} - ${hours}:${minutes}:${seconds}`
-}
-
-const parseToISO = (displayDate) => {
-  const [datePart, timePart] = displayDate.split(' - ')
-  if (!datePart || !timePart) return new Date().toISOString()
-  const [day, month, year] = datePart.split('/')
-  const [hours, minutes, seconds] = timePart.split(':')
-  return `${year}-${month}-${day}T${hours || '00'}:${minutes || '00'}:${seconds || '00'}-05:00`
-}
+import { formatDateTime, parseToISO } from '../utils/dateTime'
 
 const schema = z.object({
   horometro: z.string().regex(/^\d{1,6}\.\d$/, 'Formato: hasta 6 enteros y 1 decimal (ej. 1234.5)'),
@@ -46,6 +28,8 @@ const PHOTO_SLOTS = [
   { numero: 1, label: 'Foto 1', required: true },
   { numero: 2, label: 'Foto 2', required: false },
 ]
+
+const photoLabel = ({ label, required }) => (required ? `* ${label}` : label)
 
 export default function RegistrarAveriaScreen() {
   const route = useRoute()
@@ -193,7 +177,7 @@ export default function RegistrarAveriaScreen() {
                   <Image source={{ uri: evidencias[numero].uri }} style={styles.photoThumb} resizeMode="cover" />
                 ) : (
                   <View style={styles.photoPlaceholder}>
-                    <Text style={styles.photoPlaceholderText}>{label}{required ? ' *' : ''}</Text>
+                    <Text style={styles.photoPlaceholderText}>{photoLabel({ label, required })}</Text>
                   </View>
                 )}
                 <AppButton

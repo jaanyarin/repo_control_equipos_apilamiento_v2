@@ -52,13 +52,35 @@ class LocalAuthServiceTest {
         when(usuarioRepository.findById(15L)).thenReturn(usuario);
         when(jwtService.generateToken(usuario)).thenReturn("token-definitivo");
 
-        Map<String, Object> result = service.changePassword(15L, "NuevaClave2026");
+        Map<String, Object> result = service.changePassword(15L, "00001234");
 
         assertFalse(usuario.getPasswordResetRequired());
-        assertTrue(BCrypt.checkpw("NuevaClave2026", usuario.getPasswordHash()));
+        assertTrue(BCrypt.checkpw("00001234", usuario.getPasswordHash()));
         assertFalse(BCrypt.checkpw("00000000", usuario.getPasswordHash()));
         assertEquals("token-definitivo", result.get("token"));
         verify(usuarioRepository).persist(usuario);
+    }
+
+    @Test
+    void cambiarPassword_deberiaRechazarMenosDeOchoDigitos() {
+        RuntimeException error = assertThrows(
+                RuntimeException.class,
+                () -> service.changePassword(15L, "1234"));
+
+        assertEquals("La nueva contraseña debe tener exactamente 8 dígitos numéricos", error.getMessage());
+        verify(usuarioRepository, never()).findById(anyLong());
+        verify(usuarioRepository, never()).persist(any(Usuario.class));
+    }
+
+    @Test
+    void cambiarPassword_deberiaRechazarLetras() {
+        RuntimeException error = assertThrows(
+                RuntimeException.class,
+                () -> service.changePassword(15L, "NuevaClave2026"));
+
+        assertEquals("La nueva contraseña debe tener exactamente 8 dígitos numéricos", error.getMessage());
+        verify(usuarioRepository, never()).findById(anyLong());
+        verify(usuarioRepository, never()).persist(any(Usuario.class));
     }
 
     @Test

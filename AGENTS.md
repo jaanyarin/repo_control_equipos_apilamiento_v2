@@ -161,6 +161,10 @@ mapper/EntidadMapper.java          → MapStruct mapper
 | V23__superadmin_protegido.sql | Super Admin protegido (trigger BD: no eliminable, rol/estado inmutable) |
 | V24__backfill_horometro_inicio.sql | Backfill `horometro_inicio` en equipos existentes |
 | V25__averias_horometro_atencion.sql | Columna `horometro_atencion` en averías (atención) |
+| V26__averia_evidencias_max_5.sql | Máximo 5 evidencias por avería |
+| V27__devolucion_evidencias_accesorios.sql | Evidencias de devolución por accesorios |
+| V28__evidencia_extintor.sql | Tipo de evidencia extintor |
+| V29__fix_trigger_superadmin_delete.sql | Fix trigger Super Admin: permite borrado de usuarios, el seed sigue protegido |
 
 ---
 
@@ -430,6 +434,21 @@ db: crear migración V8 para tabla de evidencias
 | OsrRequest.usuarioCreacion + OsrService lee de request (no hardcodea 1L) | ✅ |
 | Tests: AveriaServiceTest 12/12, AveriaResourceTest 3/3, EquipoResourceTest 2/2, DevolucionEquipoServiceTest 7/7; suite backend 74/0 | ✅ |
 | Migraciones soporte V21 (evidencia horómetro inicial), V23 (superadmin protegido), V24 (backfill horómetro_inicio) | ✅ |
+
+### HDT-012 — UX Operativo, Evidencias, Contraseña 8 dígitos, PSR/OSR Finalizado y Sync Motivos→Tipos (IMPLEMENTADO ✅)
+
+| Módulo | Estado |
+|---|---|
+| Identificadores en mayúsculas (número PSR, código, modelo, serie, guía, series de accesorios) | ✅ |
+| Layout de averías en detalle (fecha reporte→atención + horómetros) + fecha/hora de atención editable y validada | ✅ |
+| Sync motivos_psr → tipos_equipo (find-or-create solo en crear) + nombre corto obligatorio | ✅ |
+| Evidencias de ingreso ampliadas (4 vistas + extintor) y de devolución por accesorios | ✅ |
+| Máximo 5 fotos por avería (V26) + 2 evidencias obligatorias al atender | ✅ |
+| Contraseña de exactamente 8 dígitos (DNI) en backend y mobile (autofill 00000000) | ✅ |
+| PSR/OSR finalizado read-only: 409 en backend (editar/eliminar) + UI deshabilitada | ✅ |
+| Fix trigger Super Admin (V29): RETURNS OLD en DELETE, el seed sigue protegido | ✅ |
+| Migraciones V26 (5 fotos avería), V27 (evidencias devolución accesorios), V28 (extintor), V29 (fix trigger) | ✅ |
+| Tests: backend 92/92 unit (excl. MarcaResourceTest @QuarkusTest con BD), mobile 77/77 + ESLint limpio | ✅ |
 
 ---
 

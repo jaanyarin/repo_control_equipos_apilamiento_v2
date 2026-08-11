@@ -74,14 +74,17 @@ export default function PsrOsrScreen() {
   )
 
   const handleEdit = item => {
+    if (item.finalizado) return
     navigation.navigate('CreatePsr', { psr: item })
   }
 
   const handleAddOsr = item => {
+    if (item.finalizado) return
     navigation.navigate('CreatePsr', { psr: item, mode: 'osr' })
   }
 
   const handleDelete = item => {
+    if (item.finalizado) return
     Alert.alert('Eliminar', `¿Eliminar PSR "${item.numeroPsr}"?`, [
       { text: 'Cancelar', style: 'cancel' },
       {
@@ -115,6 +118,7 @@ export default function PsrOsrScreen() {
     const title = item.osr?.numeroOsr
       ? `${item.numeroPsr} - ${item.osr.numeroOsr}`
       : item.numeroPsr || 'Sin PSR'
+    const finalizado = Boolean(item.finalizado)
 
     return (
       <AppCard
@@ -133,8 +137,8 @@ export default function PsrOsrScreen() {
             ) : null}
           </View>
           <StatusChip
-            status={item.estadoActivo ? 'active' : 'cancelled'}
-            label={item.estadoActivo ? 'ACTIVO' : 'INACTIVO'}
+            status={finalizado ? 'cancelled' : item.estadoActivo ? 'active' : 'cancelled'}
+            label={finalizado ? 'FINALIZADO' : item.estadoActivo ? 'ACTIVO' : 'INACTIVO'}
           />
         </View>
 
@@ -173,7 +177,7 @@ export default function PsrOsrScreen() {
 
         {canManage ? (
           <View style={styles.actions}>
-            {!item.osr ? (
+            {!finalizado && !item.osr ? (
               <AppButton
                 tone="secondary"
                 icon="file-plus-outline"
@@ -186,15 +190,17 @@ export default function PsrOsrScreen() {
             ) : null}
             <AppIconButton
               icon="pencil-outline"
-              iconColor={theme.colors.action.primary}
+              iconColor={finalizado ? theme.colors.text.disabled : theme.colors.action.primary}
               size={20}
+              disabled={finalizado}
               accessibilityLabel={`Editar PSR ${item.numeroPsr || ''}`}
               onPress={() => handleEdit(item)}
             />
             <AppIconButton
               icon="delete-outline"
-              iconColor={theme.colors.status.error}
+              iconColor={finalizado ? theme.colors.text.disabled : theme.colors.status.error}
               size={20}
+              disabled={finalizado}
               accessibilityLabel={`Eliminar PSR ${item.numeroPsr || ''}`}
               onPress={() => handleDelete(item)}
             />

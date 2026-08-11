@@ -4,6 +4,7 @@ import com.apilamiento.control.dto.OsrUpdateRequest;
 import com.apilamiento.control.dto.PsrDTO;
 import com.apilamiento.control.dto.PsrRequest;
 import com.apilamiento.control.entity.Campana;
+import com.apilamiento.control.entity.Equipo;
 import com.apilamiento.control.entity.Osr;
 import com.apilamiento.control.entity.Psr;
 import com.apilamiento.control.entity.Sede;
@@ -128,6 +129,108 @@ class PsrServiceTest {
         assertEquals("OSR001", osr.getNumeroOsr());
         assertEquals("26-27", result.getCampanaNombre());
         assertEquals("Packing Uva", result.getSedeNombre());
-        verify(osrRepository, times(2)).findByPsrId(1L);
+        verify(osrRepository, times(3)).findByPsrId(1L);
+    }
+
+    @Test
+    void actualizar_noDebePermitirEditarPsrFinalizado() {
+        Psr psr = new Psr();
+        psr.setId(1L);
+        psr.setNumeroPsr("PSR001");
+        Osr osr = new Osr();
+        osr.setEquipoId(7L);
+        Equipo equipo = new Equipo();
+        equipo.setEstadoOperativo("DEVUELTO");
+
+        when(psrRepository.findById(1L)).thenReturn(psr);
+        when(osrRepository.findByPsrId(1L)).thenReturn(Optional.of(osr));
+        when(equipoRepository.findByIdOptional(7L)).thenReturn(Optional.of(equipo));
+
+        PsrRequest request = new PsrRequest();
+        request.setNumeroPsr("PSR001");
+
+        WebApplicationException exception = assertThrows(
+                WebApplicationException.class,
+                () -> service.actualizar(1L, request));
+
+        assertEquals(409, exception.getResponse().getStatus());
+        verify(equipoRepository).findByIdOptional(7L);
+    }
+
+    @Test
+    void eliminar_noDebePermitirEliminarPsrFinalizado() {
+        Psr psr = new Psr();
+        psr.setId(1L);
+        Osr osr = new Osr();
+        osr.setEquipoId(7L);
+        Equipo equipo = new Equipo();
+        equipo.setEstadoOperativo("DEVUELTO");
+
+        when(psrRepository.findById(1L)).thenReturn(psr);
+        when(osrRepository.findByPsrId(1L)).thenReturn(Optional.of(osr));
+        when(equipoRepository.findByIdOptional(7L)).thenReturn(Optional.of(equipo));
+
+        WebApplicationException exception = assertThrows(
+                WebApplicationException.class,
+                () -> service.eliminar(1L));
+
+        assertEquals(409, exception.getResponse().getStatus());
+        verify(equipoRepository).findByIdOptional(7L);
+    }
+
+    @Test
+    void actualizar_deberiaPermitirEditarPsrConEquipoOperativo() {
+        Psr psr = new Psr();
+        psr.setId(1L);
+        psr.setNumeroPsr("PSR001");
+        Osr osr = new Osr();
+        osr.setEquipoId(7L);
+        Equipo equipo = new Equipo();
+        equipo.setEstadoOperativo("OPERATIVO");
+        Campana campana = new Campana();
+        campana.setNombre("26-27");
+        Sede sede = new Sede();
+        sede.setNombre("Packing Uva");
+
+        when(psrRepository.findById(1L)).thenReturn(psr);
+        when(osrRepository.findByPsrId(1L)).thenReturn(Optional.of(osr));
+        when(equipoRepository.findByIdOptional(7L)).thenReturn(Optional.of(equipo));
+        when(campanaRepository.findByIdOptional(psr.getCampanaId())).thenReturn(Optional.of(campana));
+        when(sedeRepository.findByIdOptional(psr.getSedeId())).thenReturn(Optional.of(sede));
+
+        PsrRequest request = new PsrRequest();
+        request.setNumeroPsr("PSR001");
+
+        PsrDTO result = service.actualizar(1L, request);
+
+        assertEquals(Boolean.FALSE, result.getFinalizado());
+    }
+
+    @Test
+    void listarMarcasFinalizadoTrueCuandoEquipoDevuelto() {
+        Psr psr = new Psr();
+        psr.setId(1L);
+        psr.setNumeroPsr("PSR001");
+        psr.setCampanaId(2L);
+        psr.setSedeId(10L);
+        Osr osr = new Osr();
+        osr.setEquipoId(7L);
+        Equipo equipo = new Equipo();
+        equipo.setEstadoOperativo("DEVUELTO");
+        Campana campana = new Campana();
+        campana.setNombre("26-27");
+        Sede sede = new Sede();
+        sede.setNombre("Packing Uva");
+
+        when(psrRepository.listAll()).thenReturn(java.util.List.of(psr));
+        when(osrRepository.findByPsrId(1L)).thenReturn(Optional.of(osr));
+        when(equipoRepository.findByIdOptional(7L)).thenReturn(Optional.of(equipo));
+        when(campanaRepository.findByIdOptional(2L)).thenReturn(Optional.of(campana));
+        when(sedeRepository.findByIdOptional(10L)).thenReturn(Optional.of(sede));
+
+        java.util.List<PsrDTO> result = service.listarTodas();
+
+        assertEquals(1, result.size());
+        assertEquals(Boolean.TRUE, result.get(0).getFinalizado());
     }
 }

@@ -5,7 +5,7 @@ export const accessoryFields = [
   { key: 'bateriaAdicional', label: 'Batería adicional', serial: 'serieBateriaAdicional', evidence: 'BATERIA_2' },
   { key: 'cargador', label: 'Cargador', serial: 'serieCargador', evidence: 'CARGADOR' },
   { key: 'transformador', label: 'Transformador', serial: 'serieTransformador', evidence: 'TRANSFORMADOR' },
-  { key: 'extintor', label: 'Extintor' },
+  { key: 'extintor', label: 'Extintor', evidence: 'EXTINTOR' },
   { key: 'botiquin', label: 'Botiquín', evidence: 'BOTIQUIN' },
   { key: 'elevadorBateria', label: 'Elevador de batería', evidence: 'ELEVADOR_BATERIA' },
   { key: 'conectorAdicional', label: 'Conector adicional', evidence: 'CONECTOR_ADICIONAL' },
@@ -17,6 +17,10 @@ export const accessoryFields = [
 export const evidenceTypes = [
   ['GUIA_REMISION', 'Guía de remisión'],
   ['HOROMETRO_INICIAL', 'Horómetro inicial'],
+  ['FRONTAL', 'Frontal'],
+  ['LATERAL_IZQUIERDO', 'Lateral izquierdo'],
+  ['LATERAL_DERECHO', 'Lateral derecho'],
+  ['POSTERIOR', 'Posterior'],
   ['BATERIA_1', 'Batería 1'],
   ['BATERIA_2', 'Batería 2'],
   ['CONO', 'Cono'],
@@ -35,6 +39,10 @@ export const evidenceTypes = [
 export const baseRequiredEvidence = [
   'GUIA_REMISION',
   'HOROMETRO_INICIAL',
+  'FRONTAL',
+  'LATERAL_IZQUIERDO',
+  'LATERAL_DERECHO',
+  'POSTERIOR',
 ]
 
 // Retorna el conjunto de tipos de evidencia obligatorios según los accesorios del equipo.
@@ -115,15 +123,19 @@ export const equipmentSchema = z.object({
 })
 
 export function toEquipmentPayload(data) {
+  const serials = Object.fromEntries(
+    accessoryFields.filter(item => item.serial).map(item => [item.serial, String(data[item.serial] || '').trim().toUpperCase()]),
+  )
   return {
     ...data,
+    ...serials,
     proveedorId: Number(data.proveedorId),
     marcaId: Number(data.marcaId),
     tipoEquipoId: Number(data.tipoEquipoId),
     codigo: data.codigo.trim().toUpperCase(),
-    numeroSerie: data.numeroSerie.trim(),
-    modelo: data.modelo.trim(),
-    numeroGuiaRemision: data.numeroGuiaRemision.trim(),
+    numeroSerie: data.numeroSerie.trim().toUpperCase(),
+    modelo: data.modelo.trim().toUpperCase(),
+    numeroGuiaRemision: data.numeroGuiaRemision.trim().toUpperCase(),
     horometroInicio: data.horometroInicio ? Number(data.horometroInicio) : null,
     estadoOperativo: 'OPERATIVO',
     estadoActivo: true,

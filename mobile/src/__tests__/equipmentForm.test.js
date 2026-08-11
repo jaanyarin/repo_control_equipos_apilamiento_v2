@@ -6,7 +6,7 @@ import {
 } from '../utils/equipmentForm'
 
 describe('flujo de ingreso de equipo', () => {
-  it('exige las dos evidencias base y las de accesorios con nro de serie seleccionados', () => {
+  it('exige las evidencias base (guía, horómetro y las 4 vistas) y las de accesorios con nro de serie', () => {
     const required = requiredEvidenceFor({
       bateria: true,
       cargador: true,
@@ -17,6 +17,10 @@ describe('flujo de ingreso de equipo', () => {
     expect([...required]).toEqual(expect.arrayContaining([
       'GUIA_REMISION',
       'HOROMETRO_INICIAL',
+      'FRONTAL',
+      'LATERAL_IZQUIERDO',
+      'LATERAL_DERECHO',
+      'POSTERIOR',
       'BATERIA_1',
       'CARGADOR',
     ]))
@@ -42,16 +46,18 @@ describe('flujo de ingreso de equipo', () => {
     expect(result.error.issues.some(issue => issue.path[0] === 'serieBateria')).toBe(true)
   })
 
-  it('normaliza IDs y código antes de crear el borrador', () => {
+  it('normaliza IDs, código, modelo, series y guía en mayúsculas antes de crear el borrador', () => {
     const payload = toEquipmentPayload({
       ...equipmentDefaults,
       proveedorId: '1',
       marcaId: '2',
       tipoEquipoId: '3',
-      modelo: ' P20 ',
+      modelo: ' p20 ',
       codigo: ' her180 ',
-      numeroSerie: ' TH123 ',
-      numeroGuiaRemision: ' T001 ',
+      numeroSerie: ' th123 ',
+      numeroGuiaRemision: ' t001 ',
+      bateria: true,
+      serieBateria: ' bat-01 ',
     })
 
     expect(payload).toMatchObject({
@@ -62,6 +68,7 @@ describe('flujo de ingreso de equipo', () => {
       codigo: 'HER180',
       numeroSerie: 'TH123',
       numeroGuiaRemision: 'T001',
+      serieBateria: 'BAT-01',
     })
   })
 })

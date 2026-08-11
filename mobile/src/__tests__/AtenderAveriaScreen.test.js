@@ -63,11 +63,11 @@ jest.mock('../components/AppTextArea', () => {
 
 jest.mock('../components/AppButton', () => {
   const React = require('react')
-  const { Pressable, Text } = require('react-native')
+  const { View, Text } = require('react-native')
   return ({ children, onPress, disabled }) => (
-    <Pressable testID={`btn-${children}`} onPress={onPress} disabled={disabled}>
+    <View testID={`btn-${children}`} onPress={onPress} disabled={disabled}>
       <Text>{children}</Text>
-    </Pressable>
+    </View>
   )
 })
 
@@ -130,6 +130,16 @@ describe('AtenderAveriaScreen', () => {
     })
   })
 
+  const clickFotoSlot = async (screen) => {
+    const botones = screen.getAllByTestId('btn-Tomar foto')
+    for (const boton of botones) {
+      fireEvent.press(boton)
+      await waitFor(() => {
+        expect(mockPut).toHaveBeenCalledWith(expect.stringMatching(/\/averias\/5\/evidencias\/[45]$/), expect.anything(), expect.anything())
+      })
+    }
+  }
+
   it('envía el horómetro de atención y la acción al finalizar el servicio', async () => {
     const screen = renderScreen()
 
@@ -139,6 +149,10 @@ describe('AtenderAveriaScreen', () => {
 
     fireEvent.changeText(screen.getByTestId('input-Horómetro de atención *'), '150.5')
     fireEvent.changeText(screen.getByTestId('input-Acción realizada'), 'Cambio de rodamiento y lubricación del mástil')
+    await clickFotoSlot(screen)
+    await waitFor(() => {
+      expect(screen.getByTestId('btn-Finalizar Servicio')).toBeTruthy()
+    })
     fireEvent.press(screen.getByTestId('btn-Finalizar Servicio'))
 
     await waitFor(() => {
@@ -146,6 +160,30 @@ describe('AtenderAveriaScreen', () => {
         estadoAveria: 'ATENDIDA',
         horometroAtencion: 150.5,
         accionRealizada: 'Cambio de rodamiento y lubricación del mástil',
+        fechaHoraAtencion: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/),
+      }))
+    })
+  })
+
+  it('permite editar la fecha y hora de atención (default = ahora)', async () => {
+    const screen = renderScreen()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('input-Fecha y hora de atención')).toBeTruthy()
+    })
+
+    fireEvent.changeText(screen.getByTestId('input-Horómetro de atención *'), '150.5')
+    fireEvent.changeText(screen.getByTestId('input-Fecha y hora de atención'), '15/08/2026 - 10:30:00')
+    fireEvent.changeText(screen.getByTestId('input-Acción realizada'), 'Cambio de rodamiento y lubricación del mástil')
+    await clickFotoSlot(screen)
+    await waitFor(() => {
+      expect(screen.getByTestId('btn-Finalizar Servicio')).toBeTruthy()
+    })
+    fireEvent.press(screen.getByTestId('btn-Finalizar Servicio'))
+
+    await waitFor(() => {
+      expect(mockPut).toHaveBeenCalledWith('/averias/5', expect.objectContaining({
+        fechaHoraAtencion: '2026-08-15T10:30:00-05:00',
       }))
     })
   })
@@ -159,11 +197,43 @@ describe('AtenderAveriaScreen', () => {
 
     fireEvent.changeText(screen.getByTestId('input-Horómetro de atención *'), 'abc')
     fireEvent.changeText(screen.getByTestId('input-Acción realizada'), 'Cambio de rodamiento y lubricación del mástil')
+    await clickFotoSlot(screen)
+    await waitFor(() => {
+      expect(screen.getByTestId('btn-Finalizar Servicio')).toBeTruthy()
+    })
     fireEvent.press(screen.getByTestId('btn-Finalizar Servicio'))
 
     await waitFor(() => {
-      expect(mockPut).not.toHaveBeenCalled()
+      expect(mockPut).not.toHaveBeenCalledWith('/averias/5', expect.objectContaining({
+        estadoAveria: 'ATENDIDA',
+      }))
     })
+  })
+
+  it('bloquea finalizar si faltan las 2 fotografías obligatorias', async () => {
+    const screen = renderScreen()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('input-Horómetro de atención *')).toBeTruthy()
+    })
+
+    fireEvent.changeText(screen.getByTestId('input-Horómetro de atención *'), '150.5')
+    fireEvent.changeText(screen.getByTestId('input-Acción realizada'), 'Cambio de rodamiento y lubricación del mástil')
+
+    expect(screen.getByTestId('btn-Tome las 2 fotografías para finalizar').props.disabled).toBe(true)
+  })
+
+  it('sube las 2 evidencias de atención a los slots 4 y 5', async () => {
+    const screen = renderScreen()
+
+    await waitFor(() => {
+      expect(mockGet).toHaveBeenCalledWith('/averias/5')
+    })
+
+    await clickFotoSlot(screen)
+
+    expect(mockPut).toHaveBeenCalledWith('/averias/5/evidencias/4', expect.anything(), expect.anything())
+    expect(mockPut).toHaveBeenCalledWith('/averias/5/evidencias/5', expect.anything(), expect.anything())
   })
 
   it('muestra trazabilidad de horómetro de atención y días de inactividad', async () => {

@@ -25,7 +25,7 @@ import java.util.Locale;
 public class AveriaService {
 
     private static final long MAX_FILE_SIZE = 5L * 1024 * 1024;
-    private static final int MAX_FOTOS = 3;
+    private static final int MAX_FOTOS = 5;
     private static final java.util.Set<String> MIME_TYPES = java.util.Set.of("image/jpeg", "image/png");
 
     private final AveriaRepository repository;
@@ -132,6 +132,14 @@ public class AveriaService {
         }
     }
 
+    private void validateFechaHoraAtencion(Averia averia, OffsetDateTime value) {
+        if (value != null && averia.getFechaHoraAveria() != null
+                && value.isBefore(averia.getFechaHoraAveria())) {
+            throw error("La fecha de atención no puede ser anterior a la fecha de la avería",
+                    Response.Status.BAD_REQUEST);
+        }
+    }
+
     @Transactional
     public AveriaDTO crear(AveriaDTO dto) {
         Averia entity = new Averia();
@@ -174,7 +182,10 @@ public class AveriaService {
                 }
                 validateHorometroAtencion(entity, dto.getHorometroAtencion());
                 entity.setHorometroAtencion(dto.getHorometroAtencion());
-                entity.setFechaHoraAtencion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+                OffsetDateTime fechaHoraAtencion = dto.getFechaHoraAtencion() != null
+                        ? dto.getFechaHoraAtencion() : OffsetDateTime.now(ZoneId.of("America/Lima"));
+                validateFechaHoraAtencion(entity, fechaHoraAtencion);
+                entity.setFechaHoraAtencion(fechaHoraAtencion);
                 entity.setDiasInactividad((int) calcularDiasInactividad(
                         entity.getFechaHoraAveria(), entity.getFechaHoraAtencion()));
                 Equipo equipo = equipoRepository.findById(entity.getEquipoId());

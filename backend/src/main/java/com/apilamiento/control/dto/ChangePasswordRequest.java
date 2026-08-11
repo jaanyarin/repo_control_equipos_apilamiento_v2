@@ -1,12 +1,12 @@
 package com.apilamiento.control.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 
 public class ChangePasswordRequest {
 
     @NotBlank(message = "La nueva contraseña es obligatoria")
-    @Size(min = 8, message = "La nueva contraseña debe tener al menos 8 caracteres")
+    @Pattern(regexp = "^\\d{8}$", message = "La nueva contraseña debe tener exactamente 8 dígitos numéricos")
     private String newPassword;
 
     public String getNewPassword() { return newPassword; }

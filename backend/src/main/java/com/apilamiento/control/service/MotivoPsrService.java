@@ -2,8 +2,10 @@ package com.apilamiento.control.service;
 
 import com.apilamiento.control.dto.MotivoPsrDTO;
 import com.apilamiento.control.entity.MotivoPsr;
+import com.apilamiento.control.entity.TipoEquipo;
 import com.apilamiento.control.mapper.MotivoPsrMapper;
 import com.apilamiento.control.repository.MotivoPsrRepository;
+import com.apilamiento.control.repository.TipoEquipoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
@@ -15,10 +17,12 @@ public class MotivoPsrService {
 
     private final MotivoPsrRepository repository;
     private final MotivoPsrMapper mapper;
+    private final TipoEquipoRepository tipoEquipoRepository;
 
-    public MotivoPsrService(MotivoPsrRepository repository, MotivoPsrMapper mapper) {
+    public MotivoPsrService(MotivoPsrRepository repository, MotivoPsrMapper mapper, TipoEquipoRepository tipoEquipoRepository) {
         this.repository = repository;
         this.mapper = mapper;
+        this.tipoEquipoRepository = tipoEquipoRepository;
     }
 
     public List<MotivoPsrDTO> listarTodas() {
@@ -55,12 +59,25 @@ public class MotivoPsrService {
     public MotivoPsrDTO crear(MotivoPsrDTO dto) {
         MotivoPsr entity = new MotivoPsr();
         entity.setNombre(dto.getNombre());
-        entity.setNombreCorto(resolverNombreCorto(dto));
+        String nombreCorto = resolverNombreCorto(dto);
+        entity.setNombreCorto(nombreCorto);
         entity.setCodigo(generarCodigo(dto.getNombre()));
         entity.setEstadoActivo(true);
         entity.setUsuarioCreacion(dto.getUsuarioCreacion() != null ? dto.getUsuarioCreacion() : 1L);
         repository.persist(entity);
+        sincronizarTipoEquipo(nombreCorto, dto.getUsuarioCreacion());
         return mapper.toDTO(entity);
+    }
+
+    private void sincronizarTipoEquipo(String nombreCorto, Long usuario) {
+        if (nombreCorto == null || nombreCorto.isBlank()) return;
+        if (tipoEquipoRepository.findByNombre(nombreCorto.trim()).isPresent()) return;
+        TipoEquipo tipo = new TipoEquipo();
+        tipo.setNombre(nombreCorto.trim());
+        tipo.setCodigo(generarCodigo(nombreCorto.trim()));
+        tipo.setEstadoActivo(true);
+        tipo.setUsuarioCreacion(usuario != null ? usuario : 1L);
+        tipoEquipoRepository.persist(tipo);
     }
 
     @Transactional

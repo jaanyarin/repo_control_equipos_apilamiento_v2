@@ -214,6 +214,14 @@ No se usará MySQL en este proyecto.
 | 34 | Card PSR/OSR en detalle de equipo + Marca/Modelo/GRR en PSR/OSR (retroactivo) | ✅ Completado |
 | 35 | CRUD completo campañas mobile (Dialog + date picker) | ✅ Completado |
 | 36 | Tab Catálogos con secciones + permisos por rol (oculto para Usuario) | ✅ Completado |
+| 37 | HDT-012: Identificadores en mayúsculas (número PSR, código, modelo, serie, guía, accesorios) | ✅ Completado |
+| 38 | HDT-012: Layout de averías en detalle (fecha reporte→atención + horómetros) + fecha/hora de atención editable | ✅ Completado |
+| 39 | HDT-012: Sync `motivos_psr → tipos_equipo` (find-or-create solo en crear) | ✅ Completado |
+| 40 | HDT-012: Evidencias de ingreso (4 vistas + extintor) y devolución por accesorios | ✅ Completado |
+| 41 | HDT-012: Máximo 5 fotos en averías + 2 evidencias obligatorias al atender | ✅ Completado |
+| 42 | HDT-012: Contraseña de exactamente 8 dígitos (DNI) en backend y mobile | ✅ Completado |
+| 43 | HDT-012: PSR/OSR finalizado read-only (backend 409 + UI deshabilitada) | ✅ Completado |
+| 44 | HDT-012: Fix trigger Super Admin V29 (permite borrar usuarios, seed sigue protegido) | ✅ Completado |
 
 ---
 
@@ -461,6 +469,20 @@ La estrategia de despliegue considerará:
 8. Tests: `AveriaResourceTest` 3/3 + `EquipoResourceTest` 2/2 + `AveriaServiceTest` 12/12 + `DevolucionEquipoServiceTest` 7/7; suite backend 74/0 ✅
 9. Migraciones soporte: V21 (evidencia horómetro inicial), V23 (superadmin protegido), V24 (backfill horómetro_inicio) ✅
 
+## HDT-012 — UX Operativo, Evidencias, Contraseña 8 dígitos, PSR/OSR Finalizado y Sync Motivos→Tipos de Equipo ✅ (IMPLEMENTADO)
+
+1. Identificadores normalizados a mayúsculas: número PSR (`CreatePsrScreen`), código/modelo/serie/guía y series de accesorios (`EquipmentFormScreen` + `toEquipmentPayload`) ✅
+2. Layout de averías en detalle de equipo: fecha reporte → fecha atención + `Horómetro: reporte — atención` (`EquipoDetailScreen`) ✅
+3. Fecha y hora de atención editable (`AtenderAveriaScreen` + `dateTime.js`) con validación backend: `400` si es anterior a la fecha de la avería (`AveriaService.validateFechaHoraAtencion`) ✅
+4. Sync `motivos_psr → tipos_equipo` find-or-create solo en crear (`MotivoPsrService.sincronizarTipoEquipo` + `TipoEquipoRepository.findByNombre`); `nombre_corto` obligatorio en mobile ✅
+5. Evidencias de ingreso ampliadas: 4 vistas (frontal, laterales, posterior) + extintor (`IngresoEquipoService`, `EquipmentPhotosScreen`, V28) ✅
+6. Evidencias de devolución por accesorios: vistas + accesorios con los que ingresó el equipo (`DevolucionEquipoService.evidenciaRequerida`, `DevolucionEquipoScreen`, V27) ✅
+7. Máximo 5 fotos por avería (V26, `AveriaService.MAX_FOTOS=5`); al atender: 2 evidencias obligatorias (horómetro de atención + evidencia del servicio) ✅
+8. Contraseña de exactamente 8 dígitos (DNI): `ChangePasswordRequest @Pattern ^\d{8}$` + `LocalAuthService` + `PasswordChangeScreen`/`LoginScreen` (autofill `00000000` si `passwordResetRequired`) ✅
+9. PSR/OSR finalizado read-only: `PsrDTO.finalizado` (equipo `DEVUELTO`), `PsrService` bloquea editar/eliminar con `409`, UI deshabilita botones ✅
+10. Fix trigger Super Admin (V29): `RETURN OLD` en DELETE (antes `RETURN NEW` = NULL cancelaba el borrado de cualquier usuario); el seed sigue protegido con `RAISE EXCEPTION` ✅
+11. Tests: backend 92/92 unit (excl. `MarcaResourceTest` @QuarkusTest que requiere BD viva) + mobile 77/77 Jest y ESLint limpio; E2E verificado (sync, delete usuarios, trigger) ✅
+
 ## Feature: Finalización del Servicio ✅ (COMPLETADO)
 
 - Backend: al marcar `ATENDIDA`, restaura `equipo.estadoOperativo = "OPERATIVO"`
@@ -486,6 +508,14 @@ La estrategia de despliegue considerará:
 - Horómetro en registro y atención de averías (V22/V25) + días de inactividad ✅
 - Trazabilidad de `usuario_creacion`/`usuario_actualizacion` desde JWT en todos los CRUD ✅
 - Super Admin protegido por trigger de BD (no eliminable, no cambiable de rol/estado) ✅
+- Identificadores operativos en mayúsculas (número PSR, código, modelo, serie, guía) ✅
+- Layout de averías en detalle (reporte→atención + horómetros) y fecha/hora de atención editable ✅
+- Sync `motivos_psr → tipos_equipo` (find-or-create solo en crear) ✅
+- Evidencias de ingreso (4 vistas + extintor) y de devolución por accesorios ✅
+- Máximo 5 fotos por avería + 2 evidencias obligatorias al atender ✅
+- Contraseña de exactamente 8 dígitos (DNI) en backend y mobile ✅
+- PSR/OSR finalizado read-only (backend 409 + UI deshabilitada) ✅
+- Fix trigger Super Admin (V29): permite borrar usuarios, el seed sigue protegido ✅
 
 ## Próximo foco
 

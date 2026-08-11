@@ -29,6 +29,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
@@ -97,9 +98,18 @@ public class PsrService {
         if (equipo == null) return;
         dto.setModelo(equipo.getModelo());
         dto.setGrr(equipo.getNumeroGuiaRemision());
+        dto.setFinalizado("DEVUELTO".equals(equipo.getEstadoOperativo()));
         marcaRepository.findByIdOptional(equipo.getMarcaId())
                 .map(Marca::getNombre)
                 .ifPresent(dto::setMarca);
+    }
+
+    private boolean estaFinalizado(Psr psr) {
+        return osrRepository.findByPsrId(psr.getId())
+                .flatMap(osr -> Optional.ofNullable(osr.getEquipoId()))
+                .map(equipoId -> equipoRepository.findByIdOptional(equipoId).orElse(null))
+                .map(equipo -> "DEVUELTO".equals(equipo.getEstadoOperativo()))
+                .orElse(false);
     }
 
     private BigDecimal calcularMeses(LocalDate inicio, LocalDate fin) {
@@ -141,6 +151,12 @@ public class PsrService {
         Psr psr = psrRepository.findById(id);
         if (psr == null) return null;
 
+        if (estaFinalizado(psr)) {
+            throw new WebApplicationException(
+                    "El PSR/OSR está finalizado y no puede editarse",
+                    Response.Status.CONFLICT);
+        }
+
         if (request.getNumeroPsr() != null
                 && !Objects.equals(psr.getNumeroPsr(), request.getNumeroPsr().trim())) {
             throw new WebApplicationException(
@@ -180,6 +196,11 @@ public class PsrService {
     public boolean eliminar(Long id) {
         Psr psr = psrRepository.findById(id);
         if (psr == null) return false;
+        if (estaFinalizado(psr)) {
+            throw new WebApplicationException(
+                    "El PSR/OSR está finalizado y no puede eliminarse",
+                    Response.Status.CONFLICT);
+        }
         psrRepository.delete(psr);
         return true;
     }

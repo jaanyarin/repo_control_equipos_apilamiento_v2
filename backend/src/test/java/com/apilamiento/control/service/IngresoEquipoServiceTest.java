@@ -79,12 +79,48 @@ class IngresoEquipoServiceTest {
         when(equipoRepository.findById(1L)).thenReturn(equipo);
         when(evidenciaRepository.listByEquipo(1L)).thenReturn(List.of(
                 evidence(TipoEvidenciaIngreso.GUIA_REMISION),
-                evidence(TipoEvidenciaIngreso.HOROMETRO_INICIAL)));
+                evidence(TipoEvidenciaIngreso.HOROMETRO_INICIAL),
+                evidence(TipoEvidenciaIngreso.FRONTAL),
+                evidence(TipoEvidenciaIngreso.LATERAL_IZQUIERDO),
+                evidence(TipoEvidenciaIngreso.LATERAL_DERECHO),
+                evidence(TipoEvidenciaIngreso.POSTERIOR)));
 
         service.finalizar(1L, 9L);
 
         assertTrue(equipo.getIngresoCompleto());
         assertEquals(9L, equipo.getUsuarioActualizacion());
+    }
+
+    @Test
+    void finalizarRechazaCuandoFaltanLasVistasDelEquipo() {
+        Equipo equipo = draft();
+        when(equipoRepository.findById(1L)).thenReturn(equipo);
+        when(evidenciaRepository.listByEquipo(1L)).thenReturn(List.of(
+                evidence(TipoEvidenciaIngreso.GUIA_REMISION),
+                evidence(TipoEvidenciaIngreso.HOROMETRO_INICIAL)));
+
+        WebApplicationException error = assertThrows(WebApplicationException.class,
+                () -> service.finalizar(1L, 9L));
+
+        assertEquals(400, error.getResponse().getStatus());
+        assertFalse(equipo.getIngresoCompleto());
+    }
+
+    @Test
+    void guardarEvidencia_vistaFrontal_deberiaPersistir() {
+        Equipo equipo = draft();
+        when(equipoRepository.findById(1L)).thenReturn(equipo);
+        when(evidenciaRepository.findByEquipoAndTipo(1L, TipoEvidenciaIngreso.FRONTAL)).thenReturn(Optional.empty());
+        doAnswer(invocation -> {
+            EvidenciaIngresoEquipo e = invocation.getArgument(0);
+            return e;
+        }).when(evidenciaRepository).persist(any(EvidenciaIngresoEquipo.class));
+
+        var dto = service.guardarEvidencia(1L, "FRONTAL", "frontal.jpg", "image/jpeg", new byte[]{1, 2, 3}, 9L);
+
+        assertNotNull(dto);
+        assertEquals("FRONTAL", dto.getTipo());
+        verify(evidenciaRepository).persist(any(EvidenciaIngresoEquipo.class));
     }
 
     @Test

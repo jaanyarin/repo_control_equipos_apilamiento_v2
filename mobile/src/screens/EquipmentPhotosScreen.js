@@ -53,12 +53,17 @@ export default function EquipmentPhotosScreen() {
   // Construye la lista dinámica de botones de fotos en el orden requerido:
   // 1. Guía de Remisión (siempre)
   // 2. Horómetro Inicial (siempre)
-  // 3. Accesorios seleccionados que tengan evidence (en orden de accessoryFields)
+  // 3. Vistas del equipo: frontal, lateral izq., lateral der., posterior (siempre)
+  // 4. Accesorios seleccionados que tengan evidence (en orden de accessoryFields)
   const photoButtons = useMemo(() => {
     if (!equipment) return []
     const buttons = [
       { key: 'GUIA_REMISION', label: 'Guía de Remisión', required: true },
       { key: 'HOROMETRO_INICIAL', label: 'Horómetro Inicial', required: true },
+      { key: 'FRONTAL', label: 'Frontal', required: true },
+      { key: 'LATERAL_IZQUIERDO', label: 'Lateral izquierdo', required: true },
+      { key: 'LATERAL_DERECHO', label: 'Lateral derecho', required: true },
+      { key: 'POSTERIOR', label: 'Posterior', required: true },
     ]
     accessoryFields.forEach(item => {
       if (item.evidence && equipment[item.key]) {
@@ -221,8 +226,7 @@ export default function EquipmentPhotosScreen() {
               disabled={Object.values(uploading).some(Boolean) && !saved}
               style={styles.photoButton}
             >
-              {item.label}
-              {isRequired && <Icon source="camera" size={16} style={{ marginLeft: 4, color: '#fff' }} />}
+              {isRequired ? `* ${item.label}` : item.label}
             </AppButton>
           )
         }}

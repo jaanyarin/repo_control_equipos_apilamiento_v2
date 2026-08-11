@@ -103,6 +103,14 @@ No se usará MySQL en este proyecto.
 | 56 | HDT-011: OsrRequest.usuarioCreacion + OsrService lee de request (no hardcodea 1L) | ✅ Completado |
 | 57 | HDT-011: Tests AveriaResourceTest (3) + EquipoResourceTest (2); suite backend 74/0 | ✅ Completado |
 | 58 | HDT-011: Migraciones soporte V21 (evidencia horómetro inicial), V23 (superadmin protegido), V24 (backfill horometro_inicio) | ✅ Completado |
+| 59 | HDT-012: Identificadores en mayúsculas (número PSR, código, modelo, serie, guía, accesorios) | ✅ Completado |
+| 60 | HDT-012: Layout averías en detalle + fecha/hora de atención editable (validada en backend) | ✅ Completado |
+| 61 | HDT-012: Sync motivos_psr → tipos_equipo (find-or-create solo en crear) | ✅ Completado |
+| 62 | HDT-012: Evidencias de ingreso (4 vistas + extintor) y devolución por accesorios | ✅ Completado |
+| 63 | HDT-012: Máximo 5 fotos avería + 2 evidencias obligatorias al atender | ✅ Completado |
+| 64 | HDT-012: Contraseña de exactamente 8 dígitos (DNI) backend + mobile | ✅ Completado |
+| 65 | HDT-012: PSR/OSR finalizado read-only (409 backend + UI deshabilitada) | ✅ Completado |
+| 66 | HDT-012: Fix trigger Super Admin (V29) — borrado de usuarios restaurado | ✅ Completado |
 
 ---
 
@@ -153,6 +161,10 @@ No se usará MySQL en este proyecto.
 | DB-018 | Configurar índices y relaciones | Alta | ✅ |
 | DB-019 | Configurar restricciones de integridad | Alta | ✅ |
 | DB-020 | HDT-011: V21 evidencia horómetro inicial + V22 horómetro avería + V23 superadmin protegido + V24 backfill horómetro_inicio + V25 horómetro_atención | Alta | ✅ |
+| DB-021 | HDT-012: V26 máximo 5 evidencias por avería | Alta | ✅ |
+| DB-022 | HDT-012: V27 evidencias de devolución por accesorios | Alta | ✅ |
+| DB-023 | HDT-012: V28 evidencia extintor (ingreso + devolución) | Alta | ✅ |
+| DB-024 | HDT-012: V29 fix trigger superadmin delete (RETURN OLD; seed sigue protegido) | Alta | ✅ |
 
 ---
 
@@ -195,6 +207,13 @@ No se usará MySQL en este proyecto.
 | BE-032 | HDT-011: AveriaService no revierte OPERATIVO si equipo ya devuelto + ApiResponse.error | Alta | ✅ |
 | BE-033 | HDT-011: Horómetro en crear (V22) y atender (V25) avería + dias_inactividad | Alta | ✅ |
 | BE-034 | HDT-011: Trazabilidad usuario JWT en 11 controllers (crear/actualizar) + OsrService/OsrRequest | Alta | ✅ |
+| BE-035 | HDT-012: AveriaService fechaHoraAtencion editable + validación no anterior a fecha avería + MAX_FOTOS=5 | Alta | ✅ |
+| BE-036 | HDT-012: Sync motivos_psr → tipos_equipo (MotivoPsrService + TipoEquipoRepository.findByNombre) | Alta | ✅ |
+| BE-037 | HDT-012: IngresoEquipoService 4 vistas + extintor requeridos | Alta | ✅ |
+| BE-038 | HDT-012: DevolucionEquipoService.evidenciaRequerida por accesorios + usuario/fecha en evidencias | Alta | ✅ |
+| BE-039 | HDT-012: ChangePasswordRequest @Pattern ^\d{8}$ + LocalAuthService 8 dígitos + passwordResetRequired | Alta | ✅ |
+| BE-040 | HDT-012: PsrDTO.finalizado + PsrService bloquea editar/eliminar PSR/OSR finalizado (409) | Alta | ✅ |
+| BE-041 | HDT-012: V29 fix trigger superadmin delete | Alta | ✅ |
 
 ---
 
@@ -266,6 +285,14 @@ No se usará MySQL en este proyecto.
 | AND-029 | Tab Catálogos con secciones agrupadas + ocultar para rol Usuario; headerRight en Catalog/Roles | Alta | ✅ |
 | AND-030 | HDT-011: filterEquiposByMode oculta DEVUELTO en select/manage | Alta | ✅ |
 | AND-031 | HDT-011: AtenderAveriaScreen input horómetro atención + display días inactivo | Alta | ✅ |
+| AND-032 | HDT-012: Número PSR e identificadores de equipo en mayúsculas (CreatePsr, EquipmentForm, toEquipmentPayload) | Alta | ✅ |
+| AND-033 | HDT-012: Layout averías en detalle (reporte→atención + horómetros) | Alta | ✅ |
+| AND-034 | HDT-012: Fecha/hora de atención editable (AtenderAveriaScreen + util dateTime.js) + 2 evidencias obligatorias | Alta | ✅ |
+| AND-035 | HDT-012: Campo nombre corto en MotivosPsrScreen + flag uppercase en CatalogScreen | Alta | ✅ |
+| AND-036 | HDT-012: EquipmentPhotosScreen 4 vistas obligatorias + extintor | Alta | ✅ |
+| AND-037 | HDT-012: DevolucionEquipoScreen evidencias por accesorios del equipo | Alta | ✅ |
+| AND-038 | HDT-012: Contraseña 8 dígitos (PasswordChangeScreen + LoginScreen autofill 00000000) | Alta | ✅ |
+| AND-039 | HDT-012: PsrOsrScreen PSR/OSR finalizado read-only (chips/botones) | Alta | ✅ |
 
 ---
 

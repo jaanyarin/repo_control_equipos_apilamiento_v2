@@ -38,6 +38,7 @@ public class LocalAuthService {
                     m.put("nombre", u.getNombre());
                     m.put("area", u.getArea());
                     m.put("rolId", u.getRolId());
+                    m.put("passwordResetRequired", u.getPasswordResetRequired());
                     return m;
                 })
                 .toList();
@@ -75,8 +76,8 @@ public class LocalAuthService {
 
     @Transactional
     public Map<String, Object> changePassword(Long usuarioId, String newPassword) {
-        if (newPassword == null || newPassword.length() < 8) {
-            throw new RuntimeException("La nueva contraseña debe tener al menos 8 caracteres");
+        if (newPassword == null || !newPassword.matches("\\d{8}")) {
+            throw new RuntimeException("La nueva contraseña debe tener exactamente 8 dígitos numéricos");
         }
 
         Usuario user = usuarioRepository.findById(usuarioId);

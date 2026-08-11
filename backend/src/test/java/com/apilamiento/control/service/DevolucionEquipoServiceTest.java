@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -100,8 +101,9 @@ class DevolucionEquipoServiceTest {
     @Test
     void finalizar_guardaHorometroFinalYMarcaDevuelto() {
         Equipo equipo = equipoEnDevolucion();
+        List<EvidenciaDevolucionEquipo> evidencias = todasLasEvidencias();
         when(equipoRepository.findById(1L)).thenReturn(equipo);
-        when(evidenciaRepository.listByEquipo(1L)).thenReturn(todasLasEvidencias());
+        when(evidenciaRepository.listByEquipo(1L)).thenReturn(evidencias);
 
         service.finalizar(1L, new BigDecimal("150.5"), 9L);
 
@@ -109,6 +111,83 @@ class DevolucionEquipoServiceTest {
         assertEquals("DEVUELTO", equipo.getEstadoOperativo());
         assertNotNull(equipo.getFechaDevolucion());
         assertEquals(9L, equipo.getUsuarioActualizacion());
+        assertTrue(evidencias.stream().allMatch(e -> e.getUsuarioActualizacion() != null
+                && e.getFechaActualizacion() != null));
+    }
+
+    @Test
+    void finalizar_rechazaSiFaltanEvidenciasDeAccesoriosPresentes() {
+        Equipo equipo = equipoEnDevolucion();
+        equipo.setBateria(true);
+        equipo.setCargador(true);
+        when(equipoRepository.findById(1L)).thenReturn(equipo);
+        when(evidenciaRepository.listByEquipo(1L)).thenReturn(todasLasEvidencias());
+
+        WebApplicationException error = assertThrows(WebApplicationException.class,
+                () -> service.finalizar(1L, new BigDecimal("150.5"), 9L));
+
+        assertEquals(400, error.getResponse().getStatus());
+        assertTrue(error.getMessage().contains("BATERIA_1"));
+        assertTrue(error.getMessage().contains("CARGADOR"));
+    }
+
+    @Test
+    void finalizar_aceptaEvidenciasDeAccesoriosPresentes() {
+        Equipo equipo = equipoEnDevolucion();
+        equipo.setBateria(true);
+        equipo.setCargador(true);
+        when(equipoRepository.findById(1L)).thenReturn(equipo);
+        List<EvidenciaDevolucionEquipo> todas = new java.util.ArrayList<>(todasLasEvidencias());
+        todas.add(evidencia(TipoEvidenciaDevolucion.BATERIA_1));
+        todas.add(evidencia(TipoEvidenciaDevolucion.CARGADOR));
+        when(evidenciaRepository.listByEquipo(1L)).thenReturn(todas);
+
+        service.finalizar(1L, new BigDecimal("150.5"), 9L);
+
+        assertEquals("DEVUELTO", equipo.getEstadoOperativo());
+    }
+
+    @Test
+    void guardarEvidencia_accesorio_deberiaPersistir() {
+        Equipo equipo = equipoEnDevolucion();
+        when(equipoRepository.findById(1L)).thenReturn(equipo);
+        when(evidenciaRepository.findByEquipoAndTipo(1L, TipoEvidenciaDevolucion.CARGADOR))
+                .thenReturn(java.util.Optional.empty());
+
+        var dto = service.guardarEvidencia(1L, TipoEvidenciaDevolucion.CARGADOR.name(),
+                "cargador.jpg", "image/jpeg", new byte[]{1, 2}, 9L);
+
+        assertNotNull(dto);
+        assertEquals("CARGADOR", dto.getTipo());
+        verify(evidenciaRepository).persist(any(EvidenciaDevolucionEquipo.class));
+    }
+
+    @Test
+    void finalizar_rechazaSiFaltaExtintorPresente() {
+        Equipo equipo = equipoEnDevolucion();
+        equipo.setExtintor(true);
+        when(equipoRepository.findById(1L)).thenReturn(equipo);
+        when(evidenciaRepository.listByEquipo(1L)).thenReturn(todasLasEvidencias());
+
+        WebApplicationException error = assertThrows(WebApplicationException.class,
+                () -> service.finalizar(1L, new BigDecimal("150.5"), 9L));
+
+        assertEquals(400, error.getResponse().getStatus());
+        assertTrue(error.getMessage().contains("EXTINTOR"));
+    }
+
+    @Test
+    void finalizar_aceptaExtintorPresente() {
+        Equipo equipo = equipoEnDevolucion();
+        equipo.setExtintor(true);
+        when(equipoRepository.findById(1L)).thenReturn(equipo);
+        List<EvidenciaDevolucionEquipo> todas = new java.util.ArrayList<>(todasLasEvidencias());
+        todas.add(evidencia(TipoEvidenciaDevolucion.EXTINTOR));
+        when(evidenciaRepository.listByEquipo(1L)).thenReturn(todas);
+
+        service.finalizar(1L, new BigDecimal("150.5"), 9L);
+
+        assertEquals("DEVUELTO", equipo.getEstadoOperativo());
     }
 
     private Equipo equipoEnDevolucion() {

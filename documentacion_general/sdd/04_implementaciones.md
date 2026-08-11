@@ -1155,3 +1155,147 @@ Datos de prueba limpiados (avería 19 y equipo 18 eliminados).
 
 (V22 y V25 documentadas en la sección 29.)
 
+## 32. UX de operación — mayúsculas, layout de averías y fecha/hora de atención (HDT-012, 2026-08-11)
+
+### 32.1 Identificadores en mayúsculas
+
+| Pantalla | Campo(s) | Cambio |
+|---|---|---|
+| `CreatePsrScreen.js` | Número PSR | `toUpperCase` en `onChangeText` + `autoCapitalize="characters"`; payload con `.trim().toUpperCase()` |
+| `EquipmentFormScreen.js` | Código, modelo, serie principal | `toUpperCase` en `onChangeText` + `autoCapitalize="characters"` |
+| `EquipmentFormScreen.js` | Series de accesorios | `toUpperCase` + `autoCapitalize="characters"` |
+| `utils/equipmentForm.js` | `toEquipmentPayload` | Normaliza a mayúsculas `codigo`, `numeroSerie`, `modelo`, `numeroGuiaRemision` y todas las series de accesorios (defensa en la capa de payload) |
+
+### 32.2 Utilidad compartida `mobile/src/utils/dateTime.js` (nuevo)
+
+Extraída de `RegistrarAveriaScreen` para reutilizarla en la atención:
+
+| Función | Salida |
+|---|---|
+| `formatDateTime(date)` | `dd/MM/yyyy - HH:mm:ss` (retorna `''` si la fecha es inválida) |
+| `parseToISO(displayDate)` | `yyyy-MM-ddTHH:mm:ss-05:00` (timezone `America/Lima`); default `now` si el formato es inválido |
+
+### 32.3 Layout de averías en el detalle de equipo — `EquipoDetailScreen.js`
+
+- Fecha de reporte **→** fecha de atención (`formatAveriaDateTime`, `dd/MM/yyyy HH:mm`).
+- Nueva línea `Horómetro: <reporte> — <atención>` (2 decimales, `formatAveriaHorometro`).
+- Separación visual entre fecha/horómetro y descripción.
+
+### 32.4 Fecha y hora de atención editable — `AtenderAveriaScreen.js` + backend
+
+| Archivo | Cambio |
+|---|---|
+| `AtenderAveriaScreen.js` | Campo "Fecha y hora de atención" (default `now`, editable mientras la avería no esté `ATENDIDA`); se envía `fechaHoraAtencion` como ISO. |
+| `service/AveriaService.java` | `actualizar` usa `dto.getFechaHoraAtencion()` si viene (si no, `now`); `validateFechaHoraAtencion` → `400` si la atención es anterior a la fecha de la avería. |
+
+**Pruebas**: `AveriaServiceTest` y `AtenderAveriaScreen.test.js` ampliados. `RegistrarAveriaScreen.js` refactorizado para usar `dateTime.js`.
+
+## 33. Sync `motivos_psr → tipos_equipo` find-or-create (HDT-012, 2026-08-11)
+
+### 33.1 Problema
+
+Los **motivos de PSR** y los **tipos de equipo** describen conceptos que en la práctica coinciden (p.ej. "Daño por manipulación"). El usuario pidió que al crear un motivo con su **nombre corto**, ese nombre quede registrado automáticamente como **tipo de equipo**, sin duplicar catálogos manualmente.
+
+### 33.2 Decisión
+
+Sync **unidireccional y solo en crear**: si ya existe un `tipos_equipo` con el mismo nombre (case-insensitive) se reutiliza; si no, se crea. Editar/eliminar el motivo no afecta `tipos_equipo`.
+
+| Archivo | Cambio |
+|---|---|
+| `repository/TipoEquipoRepository.java` | Nuevo `findByNombre` → `find("lower(nombre) = lower(?1)", nombre)`. |
+| `service/MotivoPsrService.java` | Inyecta `TipoEquipoRepository`; `crear` persiste el motivo y llama `sincronizarTipoEquipo(nombreCorto, usuario)` (find-or-create; `nombreCorto` vacío → no sincroniza). |
+| `mobile/src/screens/MotivosPsrScreen.js` | Campos: `nombre` (Nombre completo, obligatorio, mayúsculas) + `nombreCorto` (Nombre corto, obligatorio, mayúsculas). |
+| `mobile/src/screens/CatalogScreen.js` | Soporta flag `uppercase` por campo (`autoCapitalize="characters"` + `toUpperCase`). |
+
+### 33.3 Validación E2E (producción local Docker)
+
+- `POST /motivos-psr { nombre: "PRUEBA AUTOMATIZADA E2E", nombreCorto: "PRUEBA E2E" }` → motivo id 14 + `tipos_equipo` id 10 creados.
+- Segundo `POST` con otro nombre y el mismo nombre corto → solo motivo id 15; `tipos_equipo` **no se duplica** (find-or-create OK).
+- Datos de prueba eliminados.
+
+**Pruebas**: `MotivoPsrServiceTest` 7/7 (3 nuevos) + `CatalogScreensConfig.test.js` actualizado.
+
+## 34. Evidencias de ingreso ampliadas y máximo 5 fotos por avería (HDT-012, 2026-08-11)
+
+### 34.1 Problema
+
+El ingreso solo exigía guía de remisión y horómetro inicial; faltaban las **4 vistas del equipo** y el **extintor**. Las averías admitían máximo 3 fotos.
+
+### 34.2 Solución
+
+| Archivo | Cambio |
+|---|---|
+| `V26__averia_evidencias_max_5.sql` | `chk_numero_foto_averia` → `numero_foto BETWEEN 1 AND 5`. |
+| `V28__evidencia_extintor.sql` | `EXTINTOR` aceptado en checks de ingreso y devolución. |
+| `entity/TipoEvidenciaIngreso.java` | Nuevo valor `EXTINTOR`. |
+| `service/AveriaService.java` | `MAX_FOTOS` 3 → **5**. |
+| `service/IngresoEquipoService.java` | `BASE_REQUIRED` + 4 vistas; `requiredEvidence` + `EXTINTOR` si el equipo lo tiene. |
+| `utils/equipmentForm.js` | `evidenceTypes`/`baseRequiredEvidence` + 4 vistas y extintor. |
+| `EquipmentPhotosScreen.js` | Guía + horómetro + 4 vistas obligatorias + accesorios; botones obligatorios prefijados `*`. |
+
+## 35. Evidencias de devolución por accesorios (HDT-012, 2026-08-11)
+
+### 35.1 Problema
+
+Al devolver un equipo solo se exigían las 4 vistas de devolución; los **accesorios con los que ingresó** no tenían evidencia de devolución.
+
+### 35.2 Solución
+
+| Archivo | Cambio |
+|---|---|
+| `V27__devolucion_evidencias_accesorios.sql` | `chk_evidencia_devolucion_tipo` ampliado a 11 accesorios. |
+| `entity/TipoEvidenciaDevolucion.java` | Enumerado ampliado (extintor, baterías, cono, botiquín, cargador, transformador, cable, mesa de rodillos, elevador, conector). |
+| `service/DevolucionEquipoService.java` | `evidenciaRequerida(equipo)` = vistas obligatorias + accesorios marcados en el equipo; al devolver actualiza `usuario_actualizacion`/`fecha_actualizacion` en cada evidencia. |
+| `DevolucionEquipoScreen.js` | Grid dinámico: vistas de devolución + accesorios del equipo. |
+| `utils/equipmentForm.js` | `extintor` con `evidence: 'EXTINTOR'`. |
+
+**Pruebas**: `DevolucionEquipoServiceTest` + `DevolucionEquipoScreen.test.js` ampliados.
+
+## 36. Contraseña de exactamente 8 dígitos (DNI) (HDT-012, 2026-08-11)
+
+| Archivo | Cambio |
+|---|---|
+| `dto/ChangePasswordRequest.java` | `@Size(min=8)` → `@Pattern(regexp = "^\\d{8}$")`. |
+| `service/LocalAuthService.java` | `changePassword` valida `matches("\\d{8}")`; `usuarios-by-rol` expone `passwordResetRequired`. |
+| `PasswordChangeScreen.js` | `keyboardType="number-pad"`, `maxLength=8`, filtro `[^0-9]`, validación de 8 dígitos. |
+| `LoginScreen.js` | Contraseña numérica de 8 dígitos; autocompleta `00000000` cuando `passwordResetRequired`. |
+
+**Pruebas**: `LocalAuthServiceTest` ampliado, `PasswordChangeScreen.test.js` actualizado, `LoginScreen.test.js` nuevo.
+
+## 37. PSR/OSR finalizado read-only (HDT-012, 2026-08-11)
+
+### 37.1 Problema
+
+Con un equipo **devuelto** (`DEVUELTO`), su PSR/OSR quedaba históricamente finalizado pero la app seguía permitiendo editarlo, eliminarlo o agregar OSR.
+
+### 37.2 Solución
+
+| Archivo | Cambio |
+|---|---|
+| `dto/PsrDTO.java` | Campo `finalizado` (`Boolean`). |
+| `service/PsrService.java` | `enriquecerDto` setea `finalizado` según el estado del equipo asociado; `estaFinalizado(psr)` bloquea `actualizar`/`eliminar` con `409`. |
+| `PsrOsrScreen.js` | Chip `FINALIZADO`; editar/eliminar/agregar OSR deshabilitados (iconos apagados, handlers no-op). |
+
+**Pruebas**: `PsrServiceTest` ampliado.
+
+## 38. Fix trigger Super Admin (V29) (HDT-012, 2026-08-11)
+
+### 38.1 Problema (bug latente 🟠 Alto)
+
+`V23` creó `proteger_super_admin()` con `RETURN NEW`. En un `BEFORE DELETE`, `NEW` es `NULL` y retornar `NULL` **cancela el borrado de cualquier fila**, no solo del Super Admin: `DELETE /usuarios/{id}` respondía `200` pero la fila seguía en BD.
+
+### 38.2 Solución — `V29__fix_trigger_superadmin_delete.sql`
+
+`CREATE OR REPLACE FUNCTION proteger_super_admin()`:
+- En `DELETE` devuelve **`OLD`** (el borrado procede).
+- Solo el seed (`id_microsoft = 'seed-superadmin'`) sigue protegido con `RAISE EXCEPTION` (no eliminable; rol/estado/nombre/correo inmutables).
+
+### 38.3 Validación E2E (producción local Docker)
+
+| Operación | Resultado |
+|---|---|
+| `DELETE /usuarios/{usuario normal}` | `DELETE 1` (fila eliminada) |
+| `DELETE /usuarios/1` (seed) | `RAISE EXCEPTION` "El usuario Super Admin no puede ser eliminado" |
+| `flyway_schema_history` | versión 29 aplicada con éxito |
+
+

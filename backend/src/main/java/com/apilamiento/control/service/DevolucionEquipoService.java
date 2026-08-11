@@ -16,6 +16,8 @@ import jakarta.ws.rs.core.Response;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -24,7 +26,7 @@ import java.util.Set;
 public class DevolucionEquipoService {
     private static final long MAX_FILE_SIZE = 5L * 1024 * 1024;
     private static final Set<String> MIME_TYPES = Set.of("image/jpeg", "image/png");
-    private static final Set<TipoEvidenciaDevolucion> EVIDENCIA_OBLIGATORIA = Set.of(
+    private static final Set<TipoEvidenciaDevolucion> VISTAS_OBLIGATORIAS = Set.of(
             TipoEvidenciaDevolucion.DEVOLUCION_FRONTAL,
             TipoEvidenciaDevolucion.DEVOLUCION_LATERAL_IZQUIERDO,
             TipoEvidenciaDevolucion.DEVOLUCION_LATERAL_DERECHO,
@@ -99,10 +101,11 @@ public class DevolucionEquipoService {
             throw error("El equipo ya fue devuelto", Response.Status.CONFLICT);
         }
         validateHorometroFin(equipo, horometroFin);
-        List<TipoEvidenciaDevolucion> actuales = evidenciaRepository.listByEquipo(equipoId).stream()
+        List<EvidenciaDevolucionEquipo> evidencias = evidenciaRepository.listByEquipo(equipoId);
+        List<TipoEvidenciaDevolucion> actuales = evidencias.stream()
                 .map(EvidenciaDevolucionEquipo::getTipo)
                 .toList();
-        List<String> faltantes = EVIDENCIA_OBLIGATORIA.stream()
+        List<String> faltantes = evidenciaRequerida(equipo).stream()
                 .filter(tipo -> !actuales.contains(tipo))
                 .map(Enum::name)
                 .toList();
@@ -110,11 +113,16 @@ public class DevolucionEquipoService {
             throw error("Faltan evidencias obligatorias de devolución: " + String.join(", ", faltantes),
                     Response.Status.BAD_REQUEST);
         }
+        OffsetDateTime ahora = OffsetDateTime.now(ZoneId.of("America/Lima"));
+        for (EvidenciaDevolucionEquipo evidencia : evidencias) {
+            evidencia.setUsuarioActualizacion(usuarioId);
+            evidencia.setFechaActualizacion(ahora);
+        }
         equipo.setHorometroFin(horometroFin);
-        equipo.setFechaDevolucion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+        equipo.setFechaDevolucion(ahora);
         equipo.setEstadoOperativo("DEVUELTO");
         equipo.setUsuarioActualizacion(usuarioId);
-        equipo.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+        equipo.setFechaActualizacion(ahora);
         return equipoMapper.toDTO(equipo);
     }
 
@@ -131,6 +139,22 @@ public class DevolucionEquipoService {
             throw error("El horómetro final no puede ser menor que el horómetro inicial",
                     Response.Status.BAD_REQUEST);
         }
+    }
+
+    private Set<TipoEvidenciaDevolucion> evidenciaRequerida(Equipo equipo) {
+        Set<TipoEvidenciaDevolucion> result = EnumSet.copyOf(VISTAS_OBLIGATORIAS);
+        if (Boolean.TRUE.equals(equipo.getExtintor())) result.add(TipoEvidenciaDevolucion.EXTINTOR);
+        if (Boolean.TRUE.equals(equipo.getBateria())) result.add(TipoEvidenciaDevolucion.BATERIA_1);
+        if (Boolean.TRUE.equals(equipo.getBateriaAdicional())) result.add(TipoEvidenciaDevolucion.BATERIA_2);
+        if (Boolean.TRUE.equals(equipo.getConoSeguridad())) result.add(TipoEvidenciaDevolucion.CONO);
+        if (Boolean.TRUE.equals(equipo.getBotiquin())) result.add(TipoEvidenciaDevolucion.BOTIQUIN);
+        if (Boolean.TRUE.equals(equipo.getCargador())) result.add(TipoEvidenciaDevolucion.CARGADOR);
+        if (Boolean.TRUE.equals(equipo.getTransformador())) result.add(TipoEvidenciaDevolucion.TRANSFORMADOR);
+        if (Boolean.TRUE.equals(equipo.getCableAdicional())) result.add(TipoEvidenciaDevolucion.CABLE_ADICIONAL);
+        if (Boolean.TRUE.equals(equipo.getMesaRodillos())) result.add(TipoEvidenciaDevolucion.MESA_RODILLOS);
+        if (Boolean.TRUE.equals(equipo.getElevadorBateria())) result.add(TipoEvidenciaDevolucion.ELEVADOR_BATERIA);
+        if (Boolean.TRUE.equals(equipo.getConectorAdicional())) result.add(TipoEvidenciaDevolucion.CONECTOR_ADICIONAL);
+        return result;
     }
 
     private Equipo requireEquipo(Long id) {

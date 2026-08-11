@@ -67,16 +67,49 @@ describe('PasswordChangeScreen', () => {
       </SafeAreaProvider>
     )
 
-    fireEvent.changeText(screen.getByTestId('input-Nueva contraseña'), 'NuevaClave2026')
-    fireEvent.changeText(screen.getByTestId('input-Confirmar contraseña'), 'NuevaClave2026')
+    fireEvent.changeText(screen.getByTestId('input-Nueva contraseña'), '76543210')
+    fireEvent.changeText(screen.getByTestId('input-Confirmar contraseña'), '76543210')
     fireEvent.press(screen.getByTestId('button-Cambiar contraseña'))
 
     await waitFor(() => {
       expect(mockPost).toHaveBeenCalledWith('/auth/change-password', {
-        newPassword: 'NuevaClave2026',
+        newPassword: '76543210',
       })
       expect(mockSetToken).toHaveBeenCalledWith('token-definitivo')
       expect(mockRefreshUser).toHaveBeenCalledWith('token-definitivo')
     })
+  })
+
+  it('filtra letras, símbolos y más de 8 dígitos en los inputs', async () => {
+    const screen = render(
+      <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 360, height: 640 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } }}>
+        <PasswordChangeScreen />
+      </SafeAreaProvider>
+    )
+
+    fireEvent.changeText(screen.getByTestId('input-Nueva contraseña'), '12abc-34 890123')
+    fireEvent.changeText(screen.getByTestId('input-Confirmar contraseña'), '12abc-34 890123')
+
+    await waitFor(() => {
+      expect(screen.getByTestId('input-Nueva contraseña').props.value).toBe('12348901')
+      expect(screen.getByTestId('input-Confirmar contraseña').props.value).toBe('12348901')
+    })
+  })
+
+  it('no envía cuando la contraseña no tiene exactamente 8 dígitos', async () => {
+    const screen = render(
+      <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 360, height: 640 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } }}>
+        <PasswordChangeScreen />
+      </SafeAreaProvider>
+    )
+
+    fireEvent.changeText(screen.getByTestId('input-Nueva contraseña'), '12345')
+    fireEvent.changeText(screen.getByTestId('input-Confirmar contraseña'), '12345')
+    fireEvent.press(screen.getByTestId('button-Cambiar contraseña'))
+
+    await waitFor(() => {
+      expect(screen.getByText('La contraseña debe tener exactamente 8 dígitos numéricos')).toBeTruthy()
+    })
+    expect(mockPost).not.toHaveBeenCalled()
   })
 })

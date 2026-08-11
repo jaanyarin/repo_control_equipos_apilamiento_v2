@@ -17,8 +17,8 @@ export default function PasswordChangeScreen() {
   const [success, setSuccess] = useState(false)
 
   const handleChangePassword = async () => {
-    if (!newPassword || newPassword.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres')
+    if (!/^\d{8}$/.test(newPassword)) {
+      setError('La contraseña debe tener exactamente 8 dígitos numéricos')
       return
     }
     if (newPassword !== confirmPassword) {
@@ -68,7 +68,7 @@ export default function PasswordChangeScreen() {
             Bienvenido, {user?.nombre}. Debe cambiar su contraseña predeterminada.
           </Text>
           <Text variant="bodySmall" style={styles.hintText}>
-            Use su número de DNI como nueva contraseña.
+            Use su número de DNI (8 dígitos) como nueva contraseña.
           </Text>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -76,8 +76,10 @@ export default function PasswordChangeScreen() {
           <TextInput
             label="Nueva contraseña"
             value={newPassword}
-            onChangeText={setNewPassword}
+            onChangeText={value => setNewPassword(value.replace(/[^0-9]/g, '').slice(0, 8))}
             secureTextEntry
+            keyboardType="number-pad"
+            maxLength={8}
             mode="outlined"
             style={styles.input}
             disabled={success}
@@ -85,8 +87,10 @@ export default function PasswordChangeScreen() {
           <TextInput
             label="Confirmar contraseña"
             value={confirmPassword}
-            onChangeText={setConfirmPassword}
+            onChangeText={value => setConfirmPassword(value.replace(/[^0-9]/g, '').slice(0, 8))}
             secureTextEntry
+            keyboardType="number-pad"
+            maxLength={8}
             mode="outlined"
             style={styles.input}
             disabled={success}

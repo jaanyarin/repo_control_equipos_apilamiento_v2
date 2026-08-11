@@ -16,11 +16,18 @@ import AppButton from '../components/AppButton'
 import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView'
 import StatusChip from '../components/StatusChip'
 import { theme } from '../theme'
+import { formatDateTime, parseToISO } from '../utils/dateTime'
 
 const schema = z.object({
   horometroAtencion: z.string().regex(/^\d{1,6}\.\d$/, 'Formato: hasta 6 enteros y 1 decimal (ej. 1234.5)'),
   accionRealizada: z.string().min(10, 'La acción debe tener al menos 10 caracteres'),
+  fechaHoraAtencion: z.string().min(1, 'La fecha es requerida'),
 })
+
+const ATENDER_PHOTO_SLOTS = [
+  { numero: 4, label: 'Horómetro de atención', required: true },
+  { numero: 5, label: 'Evidencia del servicio', required: true },
+]
 
 export default function AtenderAveriaScreen() {
   const route = useRoute()
@@ -29,7 +36,9 @@ export default function AtenderAveriaScreen() {
   const [averia, setAveria] = useState(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [localPhotoUri, setLocalPhotoUri] = useState(null)
+  const [evidencias, setEvidencias] = useState({})
+  const [uploading, setUploading] = useState({})
+  const currentDate = formatDateTime(new Date())
 
   useEffect(() => {
     ;(async () => {
@@ -46,29 +55,18 @@ export default function AtenderAveriaScreen() {
 
   const { control, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { horometroAtencion: '', accionRealizada: '' },
+    defaultValues: { horometroAtencion: '', accionRealizada: '', fechaHoraAtencion: currentDate },
   })
 
   const onSubmit = async (formData) => {
     setSubmitting(true)
     try {
-      if (localPhotoUri) {
-        const form = new FormData()
-        form.append('archivo', {
-          uri: localPhotoUri,
-          type: 'image/jpeg',
-          name: `foto_1_${Date.now()}.jpg`,
-        })
-        await api.put(`/averias/${averiaId}/evidencias/1`, form, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          timeout: 30000,
-        })
-      }
       await api.put(`/averias/${averiaId}`, {
         equipoId: averia.equipoId,
         descripcionFalla: averia.descripcionFalla,
         estadoAveria: 'ATENDIDA',
         horometroAtencion: formData.horometroAtencion ? Number(formData.horometroAtencion) : null,
+        fechaHoraAtencion: parseToISO(formData.fechaHoraAtencion),
         accionRealizada: formData.accionRealizada,
       })
       Alert.alert('Éxito', 'Avería atendida correctamente', [
@@ -81,7 +79,7 @@ export default function AtenderAveriaScreen() {
     }
   }
 
-  const takePhoto = async () => {
+  const takePhoto = async (numero) => {
     const result = await launchCamera({
       mediaType: 'photo', cameraType: 'back',
       quality: 0.7, maxWidth: 1600, maxHeight: 1600,
@@ -93,8 +91,27 @@ export default function AtenderAveriaScreen() {
       return
     }
     const asset = result.assets[0]
-    setLocalPhotoUri(asset.uri)
+    const form = new FormData()
+    form.append('archivo', {
+      uri: asset.uri,
+      type: asset.type || 'image/jpeg',
+      name: asset.fileName || `foto_${numero}_${Date.now()}.jpg`,
+    })
+    setUploading(current => ({ ...current, [numero]: true }))
+    try {
+      await api.put(`/averias/${averiaId}/evidencias/${numero}`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 30000,
+      })
+      setEvidencias(current => ({ ...current, [numero]: { uri: asset.uri } }))
+    } catch (e) {
+      Alert.alert('No se guardó la foto', e.response?.data?.error || e.message || 'Intente nuevamente')
+    } finally {
+      setUploading(current => ({ ...current, [numero]: false }))
+    }
   }
+
+  const allPhotosDone = ATENDER_PHOTO_SLOTS.every(slot => !slot.required || evidencias[slot.numero])
 
   if (loading) return <LoadingScreen />
 
@@ -134,27 +151,32 @@ export default function AtenderAveriaScreen() {
 
         {averia && averia.estadoAveria !== 'ATENDIDA' && (
           <AppCard style={styles.photoCard}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>Evidencia Fotográfica</Text>
+            <Text variant="titleMedium" style={styles.sectionTitle}>Fotografías de la atención</Text>
             <Divider style={styles.divider} />
-            <Text style={styles.hint}>Tome 1 fotografía como evidencia del servicio realizado.</Text>
-            <View style={styles.photoSlot}>
-              {localPhotoUri ? (
-                <Image source={{ uri: localPhotoUri }} style={styles.photoThumb} resizeMode="cover" />
-              ) : (
-                <View style={styles.photoPlaceholder}>
-                  <Text style={styles.photoPlaceholderText}>Evidencia</Text>
+            <Text style={styles.hint}>Tome las 2 fotografías: horómetro de atención y evidencia del servicio. Ambas son obligatorias y se guardan automáticamente.</Text>
+            <View style={styles.photoGrid}>
+              {ATENDER_PHOTO_SLOTS.map(({ numero, label }) => (
+                <View key={numero} style={styles.photoSlot}>
+                  {evidencias[numero] ? (
+                    <Image source={{ uri: evidencias[numero].uri }} style={styles.photoThumb} resizeMode="cover" />
+                  ) : (
+                    <View style={styles.photoPlaceholder}>
+                      <Text style={styles.photoPlaceholderText}>* {label}</Text>
+                    </View>
+                  )}
+                  <AppButton
+                    variant={evidencias[numero] ? 'secondary' : 'primary'}
+                    icon={uploading[numero] ? 'progress-clock' : 'camera'}
+                    onPress={() => takePhoto(numero)}
+                    loading={Boolean(uploading[numero])}
+                    disabled={false}
+                    fullWidth
+                    style={styles.photoBtn}
+                  >
+                    {evidencias[numero] ? 'Cambiar foto' : 'Tomar foto'}
+                  </AppButton>
                 </View>
-              )}
-              <AppButton
-                variant={localPhotoUri ? 'secondary' : 'primary'}
-                icon={'camera'}
-                onPress={takePhoto}
-                disabled={false}
-                fullWidth
-                style={styles.photoBtn}
-              >
-                {localPhotoUri ? 'Cambiar foto' : 'Tomar foto'}
-              </AppButton>
+              ))}
             </View>
           </AppCard>
         )}
@@ -180,6 +202,22 @@ export default function AtenderAveriaScreen() {
               )}
             />
           )}
+          {averia?.estadoAveria !== 'ATENDIDA' && (
+            <Controller
+              control={control}
+              name="fechaHoraAtencion"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <AppInput
+                  label="Fecha y hora de atención"
+                  value={value}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  errorMessage={errors.fechaHoraAtencion?.message}
+                  style={styles.input}
+                />
+              )}
+            />
+          )}
           <Controller
             control={control}
             name="accionRealizada"
@@ -195,8 +233,8 @@ export default function AtenderAveriaScreen() {
             )}
           />
           {averia?.estadoAveria !== 'ATENDIDA' && (
-            <AppButton variant="primary" onPress={handleSubmit(onSubmit)} disabled={submitting} loading={submitting} style={styles.button} fullWidth>
-              Finalizar Servicio
+            <AppButton variant="primary" onPress={handleSubmit(onSubmit)} disabled={submitting || !allPhotosDone} loading={submitting} style={styles.button} fullWidth>
+              {allPhotosDone ? 'Finalizar Servicio' : 'Tome las 2 fotografías para finalizar'}
             </AppButton>
           )}
         </AppCard>
@@ -219,6 +257,7 @@ const styles = StyleSheet.create({
   input: { marginBottom: theme.spacing[3] },
   button: { marginTop: theme.spacing[2] },
   hint: { ...theme.typography.caption, color: theme.colors.text.tertiary, marginBottom: theme.spacing[3] },
+  photoGrid: { gap: theme.spacing[3], marginBottom: theme.spacing[3] },
   photoSlot: { alignItems: 'center' },
   photoThumb: { width: '100%', height: 160, borderRadius: theme.radius.sm, marginBottom: theme.spacing[1] },
   photoPlaceholder: {

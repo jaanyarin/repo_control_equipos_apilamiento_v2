@@ -188,15 +188,18 @@ describe('Formularios simplificados de catálogos', () => {
     })
   })
 
-  it('Motivo PSR: solo Nombre completo obligatorio, Nombre corto oculto, guarda solo nombre', async () => {
+  it('Motivo PSR: Nombre completo y Nombre corto obligatorios y en mayúsculas, guarda ambos', async () => {
     const screen = await openCreateDialog(<MotivosPsrScreen />)
     await waitFor(() => expect(screen.getByTestId('input-Nombre completo')).toBeTruthy())
-    expect(screen.queryByTestId('input-Nombre corto')).toBeNull()
+    expect(screen.getByTestId('input-Nombre corto')).toBeTruthy()
 
     fireEvent.changeText(screen.getByTestId('input-Nombre completo'), 'Daño por manipulación')
+    expect(screen.getByTestId('input-Nombre completo').props.value).toBe('DAÑO POR MANIPULACIÓN')
+    fireEvent.changeText(screen.getByTestId('input-Nombre corto'), 'Daño')
+    expect(screen.getByTestId('input-Nombre corto').props.value).toBe('DAÑO')
     fireEvent.press(screen.getByTestId('button-Crear'))
     await waitFor(() => {
-      expect(mockPost).toHaveBeenCalledWith(endpoints['motivos-psr'], { nombre: 'Daño por manipulación' })
+      expect(mockPost).toHaveBeenCalledWith(endpoints['motivos-psr'], { nombre: 'DAÑO POR MANIPULACIÓN', nombreCorto: 'DAÑO' })
     })
   })
 })

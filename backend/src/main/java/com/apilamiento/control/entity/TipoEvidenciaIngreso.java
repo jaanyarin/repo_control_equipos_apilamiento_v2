@@ -5,6 +5,7 @@ public enum TipoEvidenciaIngreso {
     LATERAL_DERECHO,
     FRONTAL,
     POSTERIOR,
+    EXTINTOR,
     BATERIA_1,
     BATERIA_2,
     CONO,

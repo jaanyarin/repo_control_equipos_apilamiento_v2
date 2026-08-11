@@ -72,6 +72,7 @@ export default function EquipmentFormScreen() {
     proveedorId: String(editing.proveedorId || ''),
     marcaId: String(editing.marcaId || ''),
     tipoEquipoId: String(editing.tipoEquipoId || ''),
+    horometroInicio: editing.horometroInicio != null ? String(editing.horometroInicio) : '',
   } : equipmentDefaults, [editing])
 
   const { control, handleSubmit, watch, formState: { errors } } = useForm({
@@ -202,10 +203,10 @@ export default function EquipmentFormScreen() {
               <AppInput
                 label={label}
                 value={field.value}
-                onChangeText={field.onChange}
+                onChangeText={text => field.onChange(text.toUpperCase())}
                 onBlur={field.onBlur}
                 errorMessage={errors[name]?.message}
-                autoCapitalize={name === 'codigo' ? 'characters' : 'sentences'}
+                autoCapitalize="characters"
                 style={styles.input}
               />
             )} />
@@ -242,9 +243,10 @@ export default function EquipmentFormScreen() {
                   <AppInput
                     label={`Serie de ${item.label.toLowerCase()} *`}
                     value={field.value}
-                    onChangeText={field.onChange}
+                    onChangeText={text => field.onChange(text.toUpperCase())}
                     onBlur={field.onBlur}
                     errorMessage={errors[item.serial]?.message}
+                    autoCapitalize="characters"
                     style={styles.input}
                   />
                 )} />

@@ -155,6 +155,46 @@ class AveriaServiceTest {
     }
 
     @Test
+    void actualizar_atenderDeberiaPersistirFechaHoraAtencionEnviada() {
+        Averia entity = new Averia();
+        entity.setId(1L);
+        entity.setEquipoId(5L);
+        entity.setHorometro(new BigDecimal("100.5"));
+        entity.setFechaHoraAveria(OffsetDateTime.of(2026, 8, 10, 8, 0, 0, 0, ZoneOffset.of("-05:00")));
+        when(repository.findById(1L)).thenReturn(entity);
+
+        OffsetDateTime atencion = OffsetDateTime.of(2026, 8, 11, 9, 0, 0, 0, ZoneOffset.of("-05:00"));
+        AveriaDTO dto = new AveriaDTO();
+        dto.setEstadoAveria("ATENDIDA");
+        dto.setHorometroAtencion(new BigDecimal("150.5"));
+        dto.setFechaHoraAtencion(atencion);
+
+        service.actualizar(1L, dto);
+
+        assertEquals(atencion, entity.getFechaHoraAtencion());
+        assertEquals(Integer.valueOf(1), entity.getDiasInactividad());
+    }
+
+    @Test
+    void actualizar_atenderFechaHoraAtencionAnteriorAveria_deberiaFallar() {
+        Averia entity = new Averia();
+        entity.setId(1L);
+        entity.setEquipoId(5L);
+        entity.setHorometro(new BigDecimal("100.5"));
+        entity.setFechaHoraAveria(OffsetDateTime.of(2026, 8, 11, 9, 0, 0, 0, ZoneOffset.of("-05:00")));
+        when(repository.findById(1L)).thenReturn(entity);
+
+        AveriaDTO dto = new AveriaDTO();
+        dto.setEstadoAveria("ATENDIDA");
+        dto.setHorometroAtencion(new BigDecimal("150.5"));
+        dto.setFechaHoraAtencion(OffsetDateTime.of(2026, 8, 10, 9, 0, 0, 0, ZoneOffset.of("-05:00")));
+
+        WebApplicationException error = assertThrows(WebApplicationException.class,
+                () -> service.actualizar(1L, dto));
+        assertEquals(400, error.getResponse().getStatus());
+    }
+
+    @Test
     void actualizar_atenderSinHorometroAtencion_deberiaFallar() {
         Averia entity = new Averia();
         entity.setId(1L);
@@ -217,7 +257,7 @@ class AveriaServiceTest {
         assertThrows(WebApplicationException.class, () ->
                 service.guardarEvidencia(1L, (short) 0, "foto.jpg", "image/jpeg", new byte[]{1}, 1L));
         assertThrows(WebApplicationException.class, () ->
-                service.guardarEvidencia(1L, (short) 4, "foto.jpg", "image/jpeg", new byte[]{1}, 1L));
+                service.guardarEvidencia(1L, (short) 6, "foto.jpg", "image/jpeg", new byte[]{1}, 1L));
         verify(evidenciaRepository, never()).persist(any(EvidenciaAveria.class));
     }
 
@@ -248,6 +288,44 @@ class AveriaServiceTest {
 
         assertNotNull(dto);
         assertEquals((short) 3, dto.getNumeroFoto());
+        verify(evidenciaRepository).persist(any(EvidenciaAveria.class));
+    }
+
+    @Test
+    void guardarEvidencia_slot4HorometroAtencion_deberiaPersistir() {
+        Averia averia = new Averia();
+        averia.setId(1L);
+        when(repository.findById(1L)).thenReturn(averia);
+        when(evidenciaRepository.findByAveriaAndNumero(1L, (short) 4)).thenReturn(Optional.empty());
+        doAnswer(invocation -> {
+            EvidenciaAveria e = invocation.getArgument(0);
+            e.setId(51L);
+            return null;
+        }).when(evidenciaRepository).persist(any(EvidenciaAveria.class));
+
+        var dto = service.guardarEvidencia(1L, (short) 4, "hor_aten.jpg", "image/jpeg", new byte[]{1, 2, 3}, 1L);
+
+        assertNotNull(dto);
+        assertEquals((short) 4, dto.getNumeroFoto());
+        verify(evidenciaRepository).persist(any(EvidenciaAveria.class));
+    }
+
+    @Test
+    void guardarEvidencia_slot5EvidenciaServicio_deberiaPersistir() {
+        Averia averia = new Averia();
+        averia.setId(1L);
+        when(repository.findById(1L)).thenReturn(averia);
+        when(evidenciaRepository.findByAveriaAndNumero(1L, (short) 5)).thenReturn(Optional.empty());
+        doAnswer(invocation -> {
+            EvidenciaAveria e = invocation.getArgument(0);
+            e.setId(52L);
+            return null;
+        }).when(evidenciaRepository).persist(any(EvidenciaAveria.class));
+
+        var dto = service.guardarEvidencia(1L, (short) 5, "servicio.jpg", "image/jpeg", new byte[]{1, 2, 3}, 1L);
+
+        assertNotNull(dto);
+        assertEquals((short) 5, dto.getNumeroFoto());
         verify(evidenciaRepository).persist(any(EvidenciaAveria.class));
     }
 

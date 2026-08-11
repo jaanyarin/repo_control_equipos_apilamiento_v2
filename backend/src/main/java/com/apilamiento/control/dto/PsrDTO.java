@@ -20,6 +20,7 @@ public class PsrDTO {
     private BigDecimal meses;
     private String observaciones;
     private Boolean estadoActivo;
+    private Boolean finalizado;
     private Long usuarioCreacion;
     private Long usuarioActualizacion;
     private OffsetDateTime fechaCreacion;
@@ -73,6 +74,9 @@ public class PsrDTO {
 
     public Boolean getEstadoActivo() { return estadoActivo; }
     public void setEstadoActivo(Boolean estadoActivo) { this.estadoActivo = estadoActivo; }
+
+    public Boolean getFinalizado() { return finalizado; }
+    public void setFinalizado(Boolean finalizado) { this.finalizado = finalizado; }
 
     public Long getUsuarioCreacion() { return usuarioCreacion; }
     public void setUsuarioCreacion(Long usuarioCreacion) { this.usuarioCreacion = usuarioCreacion; }

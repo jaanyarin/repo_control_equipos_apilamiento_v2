@@ -19,7 +19,11 @@ public class IngresoEquipoService {
     private static final Set<String> MIME_TYPES = Set.of("image/jpeg", "image/png");
     private static final Set<TipoEvidenciaIngreso> BASE_REQUIRED = EnumSet.of(
             TipoEvidenciaIngreso.GUIA_REMISION,
-            TipoEvidenciaIngreso.HOROMETRO_INICIAL);
+            TipoEvidenciaIngreso.HOROMETRO_INICIAL,
+            TipoEvidenciaIngreso.FRONTAL,
+            TipoEvidenciaIngreso.LATERAL_IZQUIERDO,
+            TipoEvidenciaIngreso.LATERAL_DERECHO,
+            TipoEvidenciaIngreso.POSTERIOR);
 
     private final PsrRepository psrRepository;
     private final OsrRepository osrRepository;
@@ -251,6 +255,7 @@ public class IngresoEquipoService {
 
     private Set<TipoEvidenciaIngreso> requiredEvidence(Equipo equipo) {
         Set<TipoEvidenciaIngreso> result = EnumSet.copyOf(BASE_REQUIRED);
+        if (Boolean.TRUE.equals(equipo.getExtintor())) result.add(TipoEvidenciaIngreso.EXTINTOR);
         if (Boolean.TRUE.equals(equipo.getBateria())) result.add(TipoEvidenciaIngreso.BATERIA_1);
         if (Boolean.TRUE.equals(equipo.getBateriaAdicional())) result.add(TipoEvidenciaIngreso.BATERIA_2);
         if (Boolean.TRUE.equals(equipo.getConoSeguridad())) result.add(TipoEvidenciaIngreso.CONO);

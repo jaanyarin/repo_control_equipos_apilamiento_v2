@@ -205,7 +205,7 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
                   f.multiline ? (
                     <AppTextArea key={f.key} label={f.label} value={formData[f.key] || ''} onChangeText={(v) => setFormData(prev => ({ ...prev, [f.key]: v }))} style={styles.dialogInput} />
                   ) : (
-                    <AppInput key={f.key} label={f.label} value={formData[f.key] || ''} onChangeText={(v) => setFormData(prev => ({ ...prev, [f.key]: v }))} style={styles.dialogInput} />
+                    <AppInput key={f.key} label={f.label} value={formData[f.key] || ''} autoCapitalize={f.uppercase ? 'characters' : undefined} onChangeText={(v) => setFormData(prev => ({ ...prev, [f.key]: f.uppercase ? v.toUpperCase() : v }))} style={styles.dialogInput} />
                   )
                 ))}
               </ScrollView>

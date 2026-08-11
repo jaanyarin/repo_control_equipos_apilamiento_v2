@@ -282,7 +282,7 @@ export default function CreatePsrScreen() {
       const payload = {
         campanaId: Number(formData.campanaId),
         sedeId: Number(formData.sedeId),
-        numeroPsr: formData.numeroPsr.trim(),
+        numeroPsr: formData.numeroPsr.trim().toUpperCase(),
         fechaPsr: formData.fechaPsr,
         motivoId: Number(formData.motivoId),
         fechaInicioUso: formData.fechaInicioUso,
@@ -407,9 +407,10 @@ export default function CreatePsrScreen() {
                 label="Número PSR"
                 value={value}
                 onBlur={onBlur}
-                onChangeText={onChange}
+                onChangeText={text => onChange(text.toUpperCase())}
                 errorMessage={errors.numeroPsr?.message}
                 editable={!isEditing && !isOsrMode}
+                autoCapitalize="characters"
                 style={styles.input}
               />
             )}

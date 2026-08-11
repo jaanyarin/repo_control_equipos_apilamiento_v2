@@ -12,4 +12,8 @@ public class TipoEquipoRepository implements PanacheRepository<TipoEquipo> {
     public Optional<TipoEquipo> findByCodigo(String codigo) {
         return find("codigo", codigo).firstResultOptional();
     }
+
+    public Optional<TipoEquipo> findByNombre(String nombre) {
+        return find("lower(nombre) = lower(?1)", nombre).firstResultOptional();
+    }
 }

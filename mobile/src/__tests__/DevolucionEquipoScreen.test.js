@@ -27,6 +27,14 @@ const EQUIPO = {
   horometroInicio: 1234.5,
 }
 
+const EQUIPO_CON_ACCESORIOS = {
+  ...EQUIPO,
+  bateria: true,
+  cargador: true,
+  extintor: true,
+  botiquin: true,
+}
+
 jest.mock('../api', () => ({
   __esModule: true,
   default: {
@@ -149,6 +157,53 @@ describe('DevolucionEquipoScreen', () => {
       errorCode: null,
       assets: [{ uri: 'file:///tmp/foto.jpg', type: 'image/jpeg', fileName: 'foto.jpg' }],
     })
+  })
+
+  it('muestra botones de accesorios presentes en el equipo', async () => {
+    mockGet.mockImplementation(url => {
+      if (String(url).includes('/evidencias')) {
+        return Promise.resolve({ data: { success: true, data: [] } })
+      }
+      return Promise.resolve({ data: { success: true, data: EQUIPO_CON_ACCESORIOS } })
+    })
+    const screen = renderScreen()
+
+    await waitFor(() => {
+      expect(screen.getByText(/Batería/)).toBeTruthy()
+      expect(screen.getByText(/Cargador/)).toBeTruthy()
+      expect(screen.getByText(/Extintor/)).toBeTruthy()
+      expect(screen.getByText(/Botiquín/)).toBeTruthy()
+      expect(screen.getByText(/Frontal/)).toBeTruthy()
+    })
+  })
+
+  it('bloquea finalizar si faltan fotos de accesorios presente', async () => {
+    mockGet.mockImplementation(url => {
+      if (String(url).includes('/evidencias')) {
+        return Promise.resolve({ data: { success: true, data: [] } })
+      }
+      return Promise.resolve({ data: { success: true, data: EQUIPO_CON_ACCESORIOS } })
+    })
+    const screen = renderScreen()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('input-Horómetro final *')).toBeTruthy()
+    })
+
+    fireEvent.changeText(screen.getByTestId('input-Horómetro final *'), '1234.5')
+    expect(screen.getByTestId('btn-Finalizar y devolver equipo').props.disabled).toBe(true)
+  })
+
+  it('no muestra accesorios ausentes del equipo', async () => {
+    const screen = renderScreen()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('input-Horómetro final *')).toBeTruthy()
+      expect(screen.getByText(/Frontal/)).toBeTruthy()
+    })
+
+    expect(screen.queryByText(/Batería/)).toBeNull()
+    expect(screen.queryByText(/Cargador/)).toBeNull()
   })
 
   it('muestra el horómetro inicial de solo lectura y el campo final', async () => {
