@@ -265,6 +265,24 @@ mapper/EntidadMapper.java          → MapStruct mapper
 | 13 | Los commits DEBEN seguir Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, etc.) |
 | 14 | Cada cambio DEBE compilar sin errores antes de commitear |
 | 15 | Las migraciones nuevas DEBEN numerarse secuencialmente (V8+, no repetir números) |
+| 16 | Cada cierre de HITO DEBE incrementar la versión minor (`npm run version:minor` en `mobile/`) y agregar la entrada en `mobile/src/constants/versionHistory.js`; los `fix:` incrementan patch (`npm run version:patch`) |
+
+---
+
+## 8.1 Convención de Versionado (SemVer)
+
+La versión de la aplicación se cuantifica con **SemVer `X.Y.Z`** y se muestra automáticamente en `PerfilScreen` y `SettingsScreen` (lee `mobile/package.json` vía `mobile/src/constants/appVersion.js`).
+
+| Incremento | Cuándo | Cómo |
+|---|---|---|
+| **MAJOR (X)** | Rompe compatibilidad / migración de stack | Manual, con autorización |
+| **MINOR (Y)** | **+1 por cada HITO implementado** (nuevas funcionalidades) | `npm run version:minor` |
+| **PATCH (Z)** | Correcciones (`fix:`) | `npm run version:patch` |
+
+- `docs:`, `refactor:`, `test:`, `chore:` **NO** cambian versión.
+- El script `mobile/scripts/bump-version.js` actualiza `package.json` y `android/app/build.gradle` (`versionName` + `versionCode` = `MAJOR*10000 + MINOR*100 + PATCH`, monótono).
+- **Versión actual: `1.9.0`** (1.0.0 = HDT-001+002 base; +0.1.0 por cada HDT implementado hasta HDT-012; HDT-005 cancelado no cuenta).
+- El historial completo vive en `mobile/src/constants/versionHistory.js` y se consulta desde el Perfil (botón de historial).
 
 ---
 

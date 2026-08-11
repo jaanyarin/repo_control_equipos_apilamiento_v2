@@ -4,6 +4,7 @@ import { Text, TextInput, Button, Surface, Divider } from 'react-native-paper'
 import { loadApiUrl, setApiUrl, BUILT_IN_API_URL } from '../api'
 import ErrorBoundary from '../components/ErrorBoundary'
 import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView'
+import { APP_VERSION } from '../constants/appVersion'
 import { theme } from '../theme'
 
 export default function SettingsScreen() {
@@ -75,7 +76,7 @@ export default function SettingsScreen() {
           </View>
           <View style={styles.row}>
             <Text variant="bodySmall" style={styles.label}>Versión</Text>
-            <Text variant="bodyMedium" style={styles.value}>1.0.0</Text>
+            <Text variant="bodyMedium" style={styles.value}>{APP_VERSION}</Text>
           </View>
           <View style={styles.row}>
             <Text variant="bodySmall" style={styles.label}>Plataforma</Text>

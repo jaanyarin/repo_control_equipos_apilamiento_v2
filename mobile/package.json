@@ -12,6 +12,8 @@
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "version:minor": "node scripts/bump-version.js minor",
+    "version:patch": "node scripts/bump-version.js patch",
     "lint": "eslint ."
   },
   "dependencies": {
