@@ -6,7 +6,7 @@ import {
 } from '../utils/equipmentForm'
 
 describe('flujo de ingreso de equipo', () => {
-  it('exige las cinco evidencias base y las de accesorios presentes', () => {
+  it('exige las dos evidencias base y las de accesorios con nro de serie seleccionados', () => {
     const required = requiredEvidenceFor({
       bateria: true,
       cargador: true,
@@ -15,11 +15,8 @@ describe('flujo de ingreso de equipo', () => {
     })
 
     expect([...required]).toEqual(expect.arrayContaining([
-      'LATERAL_IZQUIERDO',
-      'LATERAL_DERECHO',
-      'FRONTAL',
-      'POSTERIOR',
       'GUIA_REMISION',
+      'HOROMETRO_INICIAL',
       'BATERIA_1',
       'CARGADOR',
     ]))

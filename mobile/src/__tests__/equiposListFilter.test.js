@@ -45,4 +45,30 @@ describe('filterEquiposByMode', () => {
   it('maneja listas vacías sin errores', () => {
     expect(filterEquiposByMode([], { mode: 'view' })).toEqual([])
   })
+
+  it('oculta equipos con fechaDevolucion aunque su estado sea OPERATIVO (inconsistente)', () => {
+    const equiposInconsistentes = [
+      { id: 4, codigo: 'EQ-004', estadoOperativo: 'OPERATIVO', fechaDevolucion: '2026-08-06T10:38:00Z' },
+      { id: 5, codigo: 'EQ-005', estadoOperativo: 'OPERATIVO', fechaDevolucion: null },
+    ]
+    const result = filterEquiposByMode(equiposInconsistentes, { mode: 'manage' })
+    expect(result.map(e => e.codigo)).toEqual(['EQ-005'])
+  })
+
+  it('oculta equipos con fechaDevolucion en modo select', () => {
+    const equiposInconsistentes = [
+      { id: 4, codigo: 'EQ-004', estadoOperativo: 'OPERATIVO', fechaDevolucion: '2026-08-06T10:38:00Z' },
+      { id: 5, codigo: 'EQ-005', estadoOperativo: 'OPERATIVO', fechaDevolucion: null },
+    ]
+    const result = filterEquiposByMode(equiposInconsistentes, { mode: 'select' })
+    expect(result.map(e => e.codigo)).toEqual(['EQ-005'])
+  })
+
+  it('muestra equipos con fechaDevolucion en modo view', () => {
+    const equiposInconsistentes = [
+      { id: 4, codigo: 'EQ-004', estadoOperativo: 'OPERATIVO', fechaDevolucion: '2026-08-06T10:38:00Z' },
+    ]
+    const result = filterEquiposByMode(equiposInconsistentes, { mode: 'view' })
+    expect(result.map(e => e.codigo)).toEqual(['EQ-004'])
+  })
 })

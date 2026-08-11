@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react'
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native'
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { Divider, Text, TouchableRipple } from 'react-native-paper'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
@@ -144,9 +144,12 @@ export default function EquipmentFormScreen() {
   if (!isEdit && !psr) return <ErrorState title="PSR no disponible" message="Seleccione una PSR antes de registrar el equipo." />
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: 96 + insets.bottom }]}
+        contentContainerStyle={[styles.content, { paddingBottom: theme.spacing[8] }]}
         keyboardShouldPersistTaps="handled"
       >
         {!isEdit ? (
@@ -212,6 +215,18 @@ export default function EquipmentFormScreen() {
               <DateField value={field.value} onChange={field.onChange} error={errors.fechaIngreso?.message} />
             </View>
           )} />
+          <Controller control={control} name="horometroInicio" render={({ field }) => (
+            <AppInput
+              label="Horómetro Inicio *"
+              value={field.value}
+              onChangeText={v => field.onChange(v.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'))}
+              onBlur={field.onBlur}
+              errorMessage={errors.horometroInicio?.message}
+              keyboardType="numeric"
+              placeholder="Ej: 1234.5"
+              style={styles.input}
+            />
+          )} />
         </AppCard>
 
         <AppCard style={styles.section}>
@@ -256,7 +271,7 @@ export default function EquipmentFormScreen() {
           {isEdit ? 'Actualizar equipo' : 'Guardar e ingresar fotos'}
         </AppButton>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   )
 }
 

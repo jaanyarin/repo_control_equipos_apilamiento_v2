@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ScrollView, StyleSheet, Alert, View, Image } from 'react-native'
+import { StyleSheet, Alert, View, Image } from 'react-native'
 import { Text } from 'react-native-paper'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import { useForm, Controller } from 'react-hook-form'
@@ -13,6 +13,7 @@ import AppCard from '../components/AppCard'
 import AppTextArea from '../components/AppTextArea'
 import AppInput from '../components/AppInput'
 import AppButton from '../components/AppButton'
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView'
 import { theme } from '../theme'
 
 const formatDateTime = (date) => {
@@ -35,11 +36,16 @@ const parseToISO = (displayDate) => {
 }
 
 const schema = z.object({
+  horometro: z.string().regex(/^\d{1,6}\.\d$/, 'Formato: hasta 6 enteros y 1 decimal (ej. 1234.5)'),
   descripcionFalla: z.string().min(10, 'La descripción debe tener al menos 10 caracteres'),
   fechaHoraAveria: z.string().min(1, 'La fecha es requerida'),
 })
 
-const FOTO_LABELS = { 1: 'Foto 1', 2: 'Foto 2' }
+const PHOTO_SLOTS = [
+  { numero: 3, label: 'Horómetro', required: true },
+  { numero: 1, label: 'Foto 1', required: true },
+  { numero: 2, label: 'Foto 2', required: false },
+]
 
 export default function RegistrarAveriaScreen() {
   const route = useRoute()
@@ -54,7 +60,7 @@ export default function RegistrarAveriaScreen() {
 
   const { control, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { descripcionFalla: '', fechaHoraAveria: currentDate },
+    defaultValues: { horometro: '', descripcionFalla: '', fechaHoraAveria: currentDate },
   })
 
   const onSubmit = async (formData) => {
@@ -62,6 +68,7 @@ export default function RegistrarAveriaScreen() {
     try {
       const res = await api.post('/averias', {
         equipoId,
+        horometro: formData.horometro ? Number(formData.horometro) : null,
         descripcionFalla: formData.descripcionFalla,
         fechaHoraAveria: parseToISO(formData.fechaHoraAveria),
       })
@@ -108,14 +115,31 @@ export default function RegistrarAveriaScreen() {
     }
   }
 
-  const allPhotosDone = [1, 2].every(n => evidencias[n])
+  const allPhotosDone = PHOTO_SLOTS.every(slot => !slot.required || evidencias[slot.numero])
 
   if (!averiaId) {
     return (
       <ErrorBoundary>
-        <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: theme.spacing[8] + insets.bottom }]} keyboardShouldPersistTaps="handled">
+        <KeyboardAwareScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: theme.spacing[8] + insets.bottom }]} keyboardShouldPersistTaps="handled">
           <AppCard style={styles.formCard} accessibilityLabel="Formulario para registrar avería">
             <Text variant="titleMedium" style={styles.title}>Registrar Avería</Text>
+
+            <Controller
+              control={control}
+              name="horometro"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <AppInput
+                  label="Horómetro *"
+                  value={value}
+                  onBlur={onBlur}
+                  onChangeText={v => onChange(v.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'))}
+                  errorMessage={errors.horometro?.message}
+                  keyboardType="numeric"
+                  placeholder="Ej: 1234.5"
+                  style={styles.input}
+                />
+              )}
+            />
 
             <Controller
               control={control}
@@ -151,47 +175,47 @@ export default function RegistrarAveriaScreen() {
               Registrar Avería
             </AppButton>
           </AppCard>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </ErrorBoundary>
     )
   }
 
   return (
     <ErrorBoundary>
-      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: theme.spacing[8] + insets.bottom }]} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: theme.spacing[8] + insets.bottom }]} keyboardShouldPersistTaps="handled">
         <AppCard style={styles.formCard}>
           <Text variant="titleMedium" style={styles.title}>Fotografías de la Avería</Text>
-          <Text style={styles.hint}>Tome 2 fotografías como evidencia de la falla. Se guardan automáticamente.</Text>
+          <Text style={styles.hint}>Tome la foto del horómetro y 2 fotografías de la falla. El horómetro y la Foto 1 son obligatorios; la Foto 2 es opcional. Se guardan automáticamente.</Text>
           <View style={styles.photoGrid}>
-            {[1, 2].map(num => (
-              <View key={num} style={styles.photoSlot}>
-                {evidencias[num] ? (
-                  <Image source={{ uri: evidencias[num].uri }} style={styles.photoThumb} resizeMode="cover" />
+            {PHOTO_SLOTS.map(({ numero, label, required }) => (
+              <View key={numero} style={styles.photoSlot}>
+                {evidencias[numero] ? (
+                  <Image source={{ uri: evidencias[numero].uri }} style={styles.photoThumb} resizeMode="cover" />
                 ) : (
                   <View style={styles.photoPlaceholder}>
-                    <Text style={styles.photoPlaceholderText}>{FOTO_LABELS[num]}</Text>
+                    <Text style={styles.photoPlaceholderText}>{label}{required ? ' *' : ''}</Text>
                   </View>
                 )}
                 <AppButton
                   mode="contained"
-                  tone={evidencias[num] ? undefined : 'primary'}
-                  icon={uploading[num] ? 'progress-clock' : 'camera'}
-                  onPress={() => takePhoto(num)}
-                  loading={Boolean(uploading[num])}
+                  tone={evidencias[numero] ? undefined : 'primary'}
+                  icon={uploading[numero] ? 'progress-clock' : 'camera'}
+                  onPress={() => takePhoto(numero)}
+                  loading={Boolean(uploading[numero])}
                   disabled={Object.values(uploading).some(Boolean)}
                   fullWidth
                   style={styles.photoBtn}
                 >
-                  {evidencias[num] ? 'Retomar' : 'Tomar foto'}
+                  {evidencias[numero] ? 'Retomar' : 'Tomar foto'}
                 </AppButton>
               </View>
             ))}
           </View>
           <AppButton variant="primary" onPress={() => navigation.goBack()} fullWidth style={styles.button} disabled={!allPhotosDone}>
-            {allPhotosDone ? 'Finalizar' : 'Tome ambas fotos para finalizar'}
+            {allPhotosDone ? 'Finalizar' : 'Tome la foto del horómetro y la Foto 1 para finalizar'}
           </AppButton>
         </AppCard>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </ErrorBoundary>
   )
 }

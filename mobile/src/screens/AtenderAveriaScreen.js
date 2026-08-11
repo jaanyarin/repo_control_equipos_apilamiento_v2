@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ScrollView, StyleSheet, Alert, View, Image } from 'react-native'
+import { StyleSheet, Alert, View, Image } from 'react-native'
 import { Text, Divider } from 'react-native-paper'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import { useForm, Controller } from 'react-hook-form'
@@ -11,11 +11,14 @@ import LoadingScreen from '../components/LoadingScreen'
 import ErrorBoundary from '../components/ErrorBoundary'
 import AppCard from '../components/AppCard'
 import AppTextArea from '../components/AppTextArea'
+import AppInput from '../components/AppInput'
 import AppButton from '../components/AppButton'
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView'
 import StatusChip from '../components/StatusChip'
 import { theme } from '../theme'
 
 const schema = z.object({
+  horometroAtencion: z.string().regex(/^\d{1,6}\.\d$/, 'Formato: hasta 6 enteros y 1 decimal (ej. 1234.5)'),
   accionRealizada: z.string().min(10, 'La acción debe tener al menos 10 caracteres'),
 })
 
@@ -43,7 +46,7 @@ export default function AtenderAveriaScreen() {
 
   const { control, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { accionRealizada: '' },
+    defaultValues: { horometroAtencion: '', accionRealizada: '' },
   })
 
   const onSubmit = async (formData) => {
@@ -65,6 +68,7 @@ export default function AtenderAveriaScreen() {
         equipoId: averia.equipoId,
         descripcionFalla: averia.descripcionFalla,
         estadoAveria: 'ATENDIDA',
+        horometroAtencion: formData.horometroAtencion ? Number(formData.horometroAtencion) : null,
         accionRealizada: formData.accionRealizada,
       })
       Alert.alert('Éxito', 'Avería atendida correctamente', [
@@ -96,7 +100,7 @@ export default function AtenderAveriaScreen() {
 
   return (
     <ErrorBoundary>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {averia ? (
           <AppCard style={styles.infoCard} accessibilityLabel="Información de la avería">
             <Text variant="titleMedium" style={styles.sectionTitle}>Información de la Avería</Text>
@@ -104,6 +108,18 @@ export default function AtenderAveriaScreen() {
             <View style={styles.row}>
               <Text variant="bodySmall" style={styles.label}>Descripción</Text>
               <Text variant="bodyMedium" style={styles.value}>{averia.descripcionFalla || '-'}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text variant="bodySmall" style={styles.label}>Horómetro</Text>
+              <Text variant="bodyMedium" style={styles.value}>{averia.horometro != null ? averia.horometro : '-'}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text variant="bodySmall" style={styles.label}>Horómetro atención</Text>
+              <Text variant="bodyMedium" style={styles.value}>{averia.horometroAtencion != null ? averia.horometroAtencion : '-'}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text variant="bodySmall" style={styles.label}>Días inactivo</Text>
+              <Text variant="bodyMedium" style={styles.value}>{averia.diasInactividad != null ? averia.diasInactividad : '-'}</Text>
             </View>
             <View style={styles.row}>
               <Text variant="bodySmall" style={styles.label}>Fecha</Text>
@@ -146,6 +162,24 @@ export default function AtenderAveriaScreen() {
         <AppCard style={styles.formCard} accessibilityLabel="Formulario para atender avería">
           <Text variant="titleMedium" style={styles.sectionTitle}>Atender Avería</Text>
           <Divider style={styles.divider} />
+          {averia?.estadoAveria !== 'ATENDIDA' && (
+            <Controller
+              control={control}
+              name="horometroAtencion"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <AppInput
+                  label="Horómetro de atención *"
+                  value={value}
+                  onBlur={onBlur}
+                  onChangeText={v => onChange(v.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'))}
+                  errorMessage={errors.horometroAtencion?.message}
+                  keyboardType="numeric"
+                  placeholder="Ej: 1234.5"
+                  style={styles.input}
+                />
+              )}
+            />
+          )}
           <Controller
             control={control}
             name="accionRealizada"
@@ -166,7 +200,7 @@ export default function AtenderAveriaScreen() {
             </AppButton>
           )}
         </AppCard>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </ErrorBoundary>
   )
 }

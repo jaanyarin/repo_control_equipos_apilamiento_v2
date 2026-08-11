@@ -15,10 +15,8 @@ export const accessoryFields = [
 ]
 
 export const evidenceTypes = [
-  ['LATERAL_IZQUIERDO', 'Lateral izquierdo'],
-  ['FRONTAL', 'Frontal'],
-  ['LATERAL_DERECHO', 'Lateral derecho'],
-  ['POSTERIOR', 'Posterior'],
+  ['GUIA_REMISION', 'Guía de remisión'],
+  ['HOROMETRO_INICIAL', 'Horómetro inicial'],
   ['BATERIA_1', 'Batería 1'],
   ['BATERIA_2', 'Batería 2'],
   ['CONO', 'Cono'],
@@ -29,14 +27,14 @@ export const evidenceTypes = [
   ['MESA_RODILLOS', 'Mesa de rodillos'],
   ['ELEVADOR_BATERIA', 'Elevador de batería'],
   ['CONECTOR_ADICIONAL', 'Conector adicional'],
-  ['GUIA_REMISION', 'Guía de remisión'],
   ['DETALLE_1', 'Detalle 1'],
   ['DETALLE_2', 'Detalle 2'],
   ['DETALLE_3', 'Detalle 3'],
 ].map(([key, label]) => ({ key, label }))
 
 export const baseRequiredEvidence = [
-  'LATERAL_IZQUIERDO', 'LATERAL_DERECHO', 'FRONTAL', 'POSTERIOR', 'GUIA_REMISION',
+  'GUIA_REMISION',
+  'HOROMETRO_INICIAL',
 ]
 
 // Retorna el conjunto de tipos de evidencia obligatorios según los accesorios del equipo.
@@ -45,7 +43,7 @@ export function requiredEvidenceFor(equipment) {
   const required = new Set(baseRequiredEvidence)
   if (!equipment) return required
   accessoryFields.forEach(item => {
-    if (item.evidence && equipment[item.key]) required.add(item.evidence)
+    if (item.serial && equipment[item.key]) required.add(item.evidence)
   })
   return required
 }
@@ -58,6 +56,7 @@ export const equipmentDefaults = {
   codigo: '',
   numeroSerie: '',
   fechaIngreso: new Date().toISOString().slice(0, 10),
+  horometroInicio: '',
   numeroGuiaRemision: '',
   bateria: false,
   serieBateria: '',
@@ -85,6 +84,7 @@ export const equipmentSchema = z.object({
   codigo: z.string().trim().min(1, 'Ingrese el código'),
   numeroSerie: z.string().trim().min(1, 'Ingrese el número de serie'),
   fechaIngreso: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Seleccione una fecha válida'),
+  horometroInicio: z.string().regex(/^\d{1,6}\.\d$/, 'Formato: hasta 6 enteros y 1 decimal (ej. 1234.5)'),
   numeroGuiaRemision: z.string().trim().min(1, 'Ingrese la guía de remisión'),
   bateria: z.boolean(),
   serieBateria: z.string(),
@@ -124,18 +124,19 @@ export function toEquipmentPayload(data) {
     numeroSerie: data.numeroSerie.trim(),
     modelo: data.modelo.trim(),
     numeroGuiaRemision: data.numeroGuiaRemision.trim(),
+    horometroInicio: data.horometroInicio ? Number(data.horometroInicio) : null,
     estadoOperativo: 'OPERATIVO',
     estadoActivo: true,
   }
 }
 
 // Filtra la lista de equipos según el modo de navegación.
-// - mode 'select' y 'manage': oculta equipos DEVUELTO (no operativos para gestionar).
+// - mode 'select' y 'manage': oculta equipos DEVUELTO o ya devueltos (fechaDevolucion seteada).
 // - mode 'view': muestra todos (OPERATIVO, AVERIADO y DEVUELTO).
 // - filterEstado: si se define, solo equipos con ese estadoOperativo.
 export function filterEquiposByMode(equipos, { mode = 'manage', filterEstado } = {}) {
   return equipos.filter(item => {
-    if (mode !== 'view' && item.estadoOperativo === 'DEVUELTO') return false
+    if (mode !== 'view' && (item.estadoOperativo === 'DEVUELTO' || item.fechaDevolucion)) return false
     if (filterEstado && item.estadoOperativo !== filterEstado) return false
     return true
   })

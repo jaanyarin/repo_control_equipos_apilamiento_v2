@@ -28,7 +28,7 @@ export default function Averias() {
   const [error, setError] = useState(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [formData, setFormData] = useState({ equipoId: '', descripcionFalla: '', fechaHoraAveria: '' })
+  const [formData, setFormData] = useState({ equipoId: '', descripcionFalla: '', horometro: '', fechaHoraAveria: '' })
   const [saving, setSaving] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null)
@@ -100,7 +100,7 @@ export default function Averias() {
 
   const openCreate = () => {
     setEditing(null)
-    setFormData({ equipoId: '', descripcionFalla: '', fechaHoraAveria: '' })
+    setFormData({ equipoId: '', descripcionFalla: '', horometro: '', fechaHoraAveria: '' })
     setDialogOpen(true)
   }
 
@@ -109,7 +109,9 @@ export default function Averias() {
     setFormData({
       equipoId: item.equipoId || '',
       descripcionFalla: item.descripcionFalla || '',
+      horometro: item.horometro || '',
       fechaHoraAveria: item.fechaHoraAveria || '',
+      horometroAtencion: item.horometroAtencion || '',
       fechaHoraAtencion: item.fechaHoraAtencion || '',
       accionRealizada: item.accionRealizada || '',
       estadoAveria: item.estadoAveria || '',
@@ -125,7 +127,9 @@ export default function Averias() {
         const payload = {
           equipoId: formData.equipoId,
           descripcionFalla: formData.descripcionFalla,
+          horometro: formData.horometro ? Number(formData.horometro) : null,
           fechaHoraAveria: formData.fechaHoraAveria,
+          horometroAtencion: formData.horometroAtencion ? Number(formData.horometroAtencion) : null,
           fechaHoraAtencion: formData.fechaHoraAtencion,
           accionRealizada: formData.accionRealizada,
           estadoAveria: formData.estadoAveria,
@@ -135,6 +139,7 @@ export default function Averias() {
         await api.post('/averias', {
           equipoId: formData.equipoId,
           descripcionFalla: formData.descripcionFalla,
+          horometro: formData.horometro ? Number(formData.horometro) : null,
           fechaHoraAveria: formData.fechaHoraAveria,
         })
       }
@@ -184,9 +189,12 @@ export default function Averias() {
     },
     { field: 'fechaHoraAveria', label: 'Fecha Avería', render: (row) => formatDate(row.fechaHoraAveria) },
     { field: 'fechaHoraAtencion', label: 'Fecha Atención', render: (row) => formatDate(row.fechaHoraAtencion) },
+    { field: 'horometro', label: 'Horómetro', render: (row) => row.horometro ?? '-' },
+    { field: 'horometroAtencion', label: 'Hor. Atención', render: (row) => row.horometroAtencion ?? '-' },
     {
       field: 'diasInact', label: 'Días Inact.',
       render: (row) => {
+        if (row.diasInactividad != null) return row.diasInactividad
         if (!row.fechaHoraAveria) return '-'
         const avg = new Date(row.fechaHoraAveria)
         const atn = row.fechaHoraAtencion ? new Date(row.fechaHoraAtencion) : new Date()
@@ -267,6 +275,9 @@ export default function Averias() {
             <TextField label="ID Equipo" value={formData.equipoId}
               onChange={(e) => setFormData({ ...formData, equipoId: e.target.value })}
               required fullWidth size="small" />
+            <TextField label="Horómetro" type="number" value={formData.horometro}
+              onChange={(e) => setFormData({ ...formData, horometro: e.target.value })}
+              fullWidth size="small" />
             <TextField label="Descripción de la Falla" value={formData.descripcionFalla}
               onChange={(e) => setFormData({ ...formData, descripcionFalla: e.target.value })}
               required fullWidth size="small" multiline rows={3} />
@@ -275,6 +286,9 @@ export default function Averias() {
               required fullWidth size="small" InputLabelProps={{ shrink: true }} />
             {editing && (
               <>
+                <TextField label="Horómetro de Atención" type="number" value={formData.horometroAtencion || ''}
+                  onChange={(e) => setFormData({ ...formData, horometroAtencion: e.target.value })}
+                  fullWidth size="small" />
                 <TextField label="Fecha y Hora de Atención" type="datetime-local" value={formData.fechaHoraAtencion || ''}
                   onChange={(e) => setFormData({ ...formData, fechaHoraAtencion: e.target.value })}
                   fullWidth size="small" InputLabelProps={{ shrink: true }} />

@@ -11,7 +11,7 @@ import AppCard from '../components/AppCard'
 import ZoomableImage from '../components/ZoomableImage'
 import ErrorState from '../components/ErrorState'
 import LoadingScreen from '../components/LoadingScreen'
-import { evidenceTypes, requiredEvidenceFor } from '../utils/equipmentForm'
+import { accessoryFields, evidenceTypes, requiredEvidenceFor } from '../utils/equipmentForm'
 import { theme } from '../theme'
 
 export default function EquipmentPhotosScreen() {
@@ -26,7 +26,7 @@ export default function EquipmentPhotosScreen() {
   const [loading, setLoading] = useState(true)
   const [finishing, setFinishing] = useState(false)
   const [error, setError] = useState('')
-  const [viewer, setViewer] = useState(null) // { tipo, uri, headers }
+  const [viewer, setViewer] = useState(null)
 
   const load = useCallback(async () => {
     try {
@@ -45,25 +45,38 @@ export default function EquipmentPhotosScreen() {
     }
   }, [equipoId])
 
-
-
   useEffect(() => { load() }, [load])
-
-  useEffect(() => { if (viewer) console.error('VIEWER_SET:' + viewer.tipo + '|' + viewer.uri) }, [viewer])
 
   const required = useMemo(() => requiredEvidenceFor(equipment), [equipment])
   const missing = [...required].filter(type => !evidence[type])
 
+  // Construye la lista dinámica de botones de fotos en el orden requerido:
+  // 1. Guía de Remisión (siempre)
+  // 2. Horómetro Inicial (siempre)
+  // 3. Accesorios seleccionados que tengan evidence (en orden de accessoryFields)
+  const photoButtons = useMemo(() => {
+    if (!equipment) return []
+    const buttons = [
+      { key: 'GUIA_REMISION', label: 'Guía de Remisión', required: true },
+      { key: 'HOROMETRO_INICIAL', label: 'Horómetro Inicial', required: true },
+    ]
+    accessoryFields.forEach(item => {
+      if (item.evidence && equipment[item.key]) {
+        const isRequired = !!item.serial // obligatorio si tiene nro de serie por agregar
+        buttons.push({ key: item.evidence, label: item.label, required: isRequired })
+      }
+    })
+    return buttons
+  }, [equipment])
+
   const handleView = async (tipo) => {
-    console.error('VIEWER_OPEN:' + tipo)
     try {
       const baseUrl = await loadApiUrl()
       const token = await getToken()
       const uri = `${baseUrl}/ingresos-equipo/${equipoId}/evidencias/${tipo}/archivo`
-      console.error('VIEWER_URI:' + uri)
       setViewer({ tipo, uri, headers: token ? { Authorization: `Bearer ${token}` } : {} })
     } catch (e) {
-      console.error('VIEWER_ERR:' + (e.message || e))
+      Alert.alert('Error', e.message || 'No se pudo abrir la imagen')
     }
   }
 
@@ -100,11 +113,11 @@ export default function EquipmentPhotosScreen() {
     }
   }
 
-  const takePhoto = async item => {
+  const takePhoto = async (button) => {
     const result = await launchCamera({
       mediaType: 'photo',
       cameraType: 'back',
-      quality: 0.7,
+      quality: 0.8,
       maxWidth: 1600,
       maxHeight: 1600,
       saveToPhotos: false,
@@ -119,27 +132,27 @@ export default function EquipmentPhotosScreen() {
     form.append('archivo', {
       uri: asset.uri,
       type: asset.type || 'image/jpeg',
-      name: asset.fileName || `${item.key}.jpg`,
+      name: asset.fileName || `${button.key}.jpg`,
     })
-    setUploading(current => ({ ...current, [item.key]: true }))
+    setUploading(current => ({ ...current, [button.key]: true }))
     try {
       const response = await api.put(
-        `/ingresos-equipo/${equipoId}/evidencias/${item.key}`,
+        `/ingresos-equipo/${equipoId}/evidencias/${button.key}`,
         form,
         { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 30000 }
       )
       const saved = response.data?.data || response.data
-      setEvidence(current => ({ ...current, [item.key]: saved }))
+      setEvidence(current => ({ ...current, [button.key]: saved }))
     } catch (e) {
       Alert.alert('No se guardó la foto', e.response?.data?.error || e.message || 'Intente nuevamente')
     } finally {
-      setUploading(current => ({ ...current, [item.key]: false }))
+      setUploading(current => ({ ...current, [button.key]: false }))
     }
   }
 
   const finish = async () => {
     if (missing.length > 0) {
-      Alert.alert('Fotografías pendientes', 'Complete todas las evidencias marcadas como obligatorias (*).')
+      Alert.alert('Fotografías pendientes', 'Complete todas las evidencias marcadas con ícono de cámara (son obligatorias).')
       return
     }
     setFinishing(true)
@@ -184,7 +197,7 @@ export default function EquipmentPhotosScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={evidenceTypes}
+        data={photoButtons}
         keyExtractor={item => item.key}
         numColumns={2}
         columnWrapperStyle={styles.columns}
@@ -193,7 +206,7 @@ export default function EquipmentPhotosScreen() {
           <AppCard style={styles.summary}>
             <Text style={styles.title}>{psr?.numeroPsr || 'PSR'} · {psr?.numeroOsr || 'OSR'}</Text>
             <Text style={styles.meta}>{equipment?.codigo} · {equipment?.modelo}</Text>
-            <Text style={styles.help}>Tome cada fotografía. Las marcadas con * son obligatorias y se guardan inmediatamente.</Text>
+            <Text style={styles.help}>Tome cada fotografía. Las marcadas con ícono de cámara son obligatorias y se guardan inmediatamente.</Text>
           </AppCard>
         )}
         renderItem={({ item }) => {
@@ -203,12 +216,13 @@ export default function EquipmentPhotosScreen() {
             <AppButton
               tone={saved ? 'secondary' : 'primary'}
               icon={uploading[item.key] ? 'progress-clock' : saved ? 'check-circle-outline' : 'camera'}
-              onPress={() => saved ? handleView(item.key) : takePhoto(item)}
+              onPress={() => takePhoto(item)}
               loading={Boolean(uploading[item.key])}
               disabled={Object.values(uploading).some(Boolean) && !saved}
               style={styles.photoButton}
             >
-              {item.label}{isRequired ? ' *' : ''}
+              {item.label}
+              {isRequired && <Icon source="camera" size={16} style={{ marginLeft: 4, color: '#fff' }} />}
             </AppButton>
           )
         }}
@@ -227,12 +241,6 @@ export default function EquipmentPhotosScreen() {
           Cancelar ingreso
         </AppButton>
       </View>
-      {/*
-       * Visor de imagen a pantalla completa (Modal).
-       * - Barra superior: flecha de retroceso + nombre del tipo de evidencia
-       * - Centro: ZoomableImage con soporte pinza, arrastre y doble tap
-       * - Barra inferior: botón para descargar la imagen al dispositivo
-       */}
       <Modal visible={!!viewer} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setViewer(null)}>
         <StatusBar hidden />
         <View style={styles.viewerRoot}>
@@ -272,7 +280,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.paper,
     borderTopWidth: 1, borderTopColor: theme.colors.border.subtle,
   },
-  // Visor a pantalla completa — fondo negro translúcido con barras semitransparentes
   viewerRoot: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.95)',
   },

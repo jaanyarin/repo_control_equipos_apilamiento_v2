@@ -8,6 +8,7 @@ import ReactNativeBlobUtil from 'react-native-blob-util'
 import api, { loadApiUrl, getToken } from '../api'
 import AppButton from '../components/AppButton'
 import AppCard from '../components/AppCard'
+import AppInput from '../components/AppInput'
 import ZoomableImage from '../components/ZoomableImage'
 import ErrorState from '../components/ErrorState'
 import LoadingScreen from '../components/LoadingScreen'
@@ -19,6 +20,11 @@ const DEVOLUCION_EVIDENCES = [
   ['DEVOLUCION_LATERAL_DERECHO', 'Lateral derecho'],
   ['DEVOLUCION_POSTERIOR', 'Posterior'],
 ].map(([key, label]) => ({ key, label }))
+
+const HOROMETRO_REGEX = /^\d{1,6}\.\d$/
+const HOROMETRO_ERROR = 'Formato: hasta 6 enteros y 1 decimal (ej. 1234.5)'
+
+const sanitizeHorometro = (value) => value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')
 
 export default function DevolucionEquipoScreen() {
   const route = useRoute()
@@ -32,6 +38,8 @@ export default function DevolucionEquipoScreen() {
   const [finishing, setFinishing] = useState(false)
   const [error, setError] = useState('')
   const [viewer, setViewer] = useState(null)
+  const [horometroFin, setHorometroFin] = useState('')
+  const horometroValido = HOROMETRO_REGEX.test(horometroFin)
 
   const load = useCallback(async () => {
     try {
@@ -136,13 +144,17 @@ export default function DevolucionEquipoScreen() {
   }
 
   const finish = async () => {
+    if (!horometroValido) {
+      Alert.alert('Horómetro final pendiente', 'Ingrese el horómetro final en formato de hasta 6 enteros y 1 decimal (ej. 1234.5).')
+      return
+    }
     if (missing.length > 0) {
       Alert.alert('Fotografías pendientes', 'Complete todas las evidencias de devolución (*) antes de finalizar.')
       return
     }
     setFinishing(true)
     try {
-      await api.post(`/devolucion-equipos/${equipoId}/finalizar`)
+      await api.post(`/devolucion-equipos/${equipoId}/finalizar`, { horometroFin: Number(horometroFin) })
       Alert.alert(
         'Equipo devuelto',
         'El equipo fue marcado como DEVUELTO y la finalización del servicio quedó registrada.',
@@ -171,6 +183,23 @@ export default function DevolucionEquipoScreen() {
           <AppCard style={styles.summary}>
             <Text style={styles.title}>{equipment?.codigo} · {equipment?.modelo}</Text>
             <Text style={styles.meta}>{equipment?.marcaNombre} · {equipment?.tipoEquipoNombre}</Text>
+            <View style={styles.horometroSection}>
+              <AppInput
+                label="Horómetro inicial"
+                value={equipment?.horometroInicio != null ? String(equipment.horometroInicio) : ''}
+                editable={false}
+                style={styles.input}
+              />
+              <AppInput
+                label="Horómetro final *"
+                value={horometroFin}
+                onChangeText={v => setHorometroFin(sanitizeHorometro(v))}
+                errorMessage={horometroFin && !horometroValido ? HOROMETRO_ERROR : undefined}
+                keyboardType="numeric"
+                placeholder="Ej: 1234.5"
+                style={styles.input}
+              />
+            </View>
             <Text style={styles.help}>Tome las fotografías de devolución, tal como se recepcionó el equipo. Todas son obligatorias y se guardan inmediatamente.</Text>
           </AppCard>
         )}
@@ -197,7 +226,7 @@ export default function DevolucionEquipoScreen() {
         ) : null}
       />
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, theme.spacing[3]) }]}>
-        <AppButton onPress={finish} loading={finishing} disabled={finishing || missing.length > 0} fullWidth>
+        <AppButton onPress={finish} loading={finishing} disabled={finishing || missing.length > 0 || !horometroValido} fullWidth>
           Finalizar y devolver equipo
         </AppButton>
       </View>
@@ -229,6 +258,8 @@ const styles = StyleSheet.create({
   summary: { marginBottom: theme.spacing[4] },
   title: { ...theme.typography.subtitle1, color: theme.colors.text.primary },
   meta: { ...theme.typography.body2, color: theme.colors.text.secondary, marginTop: theme.spacing[1] },
+  horometroSection: { marginTop: theme.spacing[3], gap: theme.spacing[2] },
+  input: { marginTop: theme.spacing[1] },
   help: { ...theme.typography.caption, color: theme.colors.text.tertiary, marginTop: theme.spacing[3] },
   columns: { gap: theme.spacing[2] },
   photoButton: { flex: 1, marginBottom: theme.spacing[2] },
