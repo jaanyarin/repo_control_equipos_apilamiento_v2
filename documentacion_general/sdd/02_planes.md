@@ -434,6 +434,33 @@ La estrategia de despliegue considerará:
 7. CRUD completo campañas mobile (Dialog + date picker nativo) ✅
 8. Tab Catálogos con secciones + permisos por rol; CatalogScreen/RolesScreen con `headerRight` ✅
 
+## HDT-009 — Teclado móvil no cubre los inputs (UX) ✅ (IMPLEMENTADO)
+
+1. Componente `KeyboardAwareScrollView` (KeyboardAvoidingView + ScrollView) ✅
+2. Migración de pantallas con inputs: Login, PasswordChange, CreateEditUser, CreatePsr, RegistrarAveria, AtenderAveria, Settings ✅
+3. `EquipmentFormScreen` con `KeyboardAvoidingView` + footer sticky fuera del scroll ✅
+4. Diálogos con inputs protegidos (Campanas, Catalog) ✅
+5. Tests verdes: 38/38 (nuevo test del componente + corrección de `PasswordChangeScreen` y `AuthContext`) ✅
+
+## HDT-010 — Usuarios Mobile: solo Nombre obligatorio y Ubicación desde Sedes ✅ (IMPLEMENTADO)
+
+1. `CreateEditUserScreen` simplificado: solo Nombre, Rol y Ubicación (schema solo `nombre` obligatorio) ✅
+2. Ubicación como `AppSelect` poblado con las Sedes activas ✅
+3. Backend: crear usuario sin correo ni rol (rol "Usuario" por defecto), nombre obligatorio (400) ✅
+4. Tests: `UsuarioServiceTest` 6/6 + `CreateEditUserScreen.test.js` 4 tests; suite Jest 42/42 ✅
+
+## HDT-011 — Horómetro en Averías y Trazabilidad de Usuario (Auditoría) ✅ (IMPLEMENTADO)
+
+1. Fix 409 devolución: `AveriaService` no revierte `OPERATIVO` si `fecha_devolucion` seteada; `ApiResponse.error` expone el mensaje real al cliente ✅
+2. `filterEquiposByMode` (mobile) oculta equipos `DEVUELTO` en `select`/`manage` ✅
+3. Horómetro en registro de avería (V22) + `AveriaService.crear` usa `fechaHoraAveria` del DTO (no siempre `now`) ✅
+4. Horómetro al atender (V25): `AveriaService.actualizar` exige y valida `horometroAtencion >= horometro`, setea `fechaHoraAtencion`, calcula `diasInactividad` ✅
+5. Mobile `AtenderAveriaScreen` (input horómetro atención + días inactivo) + Web `Averias.jsx` (columnas horómetro atención/días inactivo) ✅
+6. Trazabilidad usuario JWT: 11 controllers inyectan `SecurityContext` y setean `usuarioCreacion`/`usuarioActualizacion` desde el token (no más fallback `1L` en flujo HTTP) ✅
+7. `OsrRequest.usuarioCreacion` + `OsrService` lee de request (no hardcodea `1L`) ✅
+8. Tests: `AveriaResourceTest` 3/3 + `EquipoResourceTest` 2/2 + `AveriaServiceTest` 12/12 + `DevolucionEquipoServiceTest` 7/7; suite backend 74/0 ✅
+9. Migraciones soporte: V21 (evidencia horómetro inicial), V23 (superadmin protegido), V24 (backfill horómetro_inicio) ✅
+
 ## Feature: Finalización del Servicio ✅ (COMPLETADO)
 
 - Backend: al marcar `ATENDIDA`, restaura `equipo.estadoOperativo = "OPERATIVO"`
@@ -454,10 +481,15 @@ La estrategia de despliegue considerará:
 - Filtro de equipos por modo de navegación ✅
 - Referencias PSR/OSR y Marca/Modelo/GRR retroactivas ✅
 - CRUD completo campañas mobile + tab Catálogos con secciones y permisos ✅
+- Teclado móvil no cubre inputs (`KeyboardAwareScrollView` en pantallas y diálogos) ✅
+- Usuario mobile simplificado (solo Nombre obligatorio, Ubicación desde Sedes) ✅
+- Horómetro en registro y atención de averías (V22/V25) + días de inactividad ✅
+- Trazabilidad de `usuario_creacion`/`usuario_actualizacion` desde JWT en todos los CRUD ✅
+- Super Admin protegido por trigger de BD (no eliminable, no cambiable de rol/estado) ✅
 
 ## Próximo foco
 
-Evidencias Fotográficas (integración completa), Dashboard KPI, Reportes PDF, QA Integral, rebuild APK EAS Cloud, Firebase Crashlytics, fix preview foto Xiaomi/HyperOS. Fix de preview fotográfica en dispositivo Xiaomi/HyperOS.
+Evidencias Fotográficas (integración completa), Dashboard KPI, Reportes PDF, QA Integral, rebuild APK EAS Cloud, Firebase Crashlytics, fix preview foto Xiaomi/HyperOS.
 
 ---
 

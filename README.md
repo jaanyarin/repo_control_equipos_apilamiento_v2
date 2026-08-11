@@ -31,8 +31,11 @@ Plataforma full-stack para la gestión operativa de equipos de apilamiento alqui
 | HDT-006 — Gestión móvil PSR/OSR | ✅ Cerrado |
 | HDT-007 — CRUD Usuarios Mobile | ✅ Cerrado |
 | HDT-008 — UX Desplegables, Catálogos en Tiempo Real y Referencias PSR/OSR | ✅ Implementado |
+| HDT-009 — Teclado móvil no cubre los inputs (UX) | ✅ Implementado |
+| HDT-010 — Usuarios Mobile: solo Nombre obligatorio y Ubicación desde Sedes | ✅ Implementado |
+| HDT-011 — Horómetro en Averías y Trazabilidad de Usuario (Auditoría) | ✅ Implementado |
 
-**Features adicionales:** Finalización del Servicio (al atender una avería se restaura el estado operativo del equipo) · Devolución de equipos con 4 evidencias · Desplegables AppSelect con Portal + ScrollView completo · Catálogos sincronizados en tiempo real entre dispositivos · Card PSR/OSR en detalle de equipo y Marca/Modelo/GRR en PSR/OSR (retroactivo).
+**Features adicionales:** Finalización del Servicio (al atender una avería se restaura el estado operativo del equipo) · Devolución de equipos con 4 evidencias · Desplegables AppSelect con Portal + ScrollView completo · Catálogos sincronizados en tiempo real entre dispositivos · Card PSR/OSR en detalle de equipo y Marca/Modelo/GRR en PSR/OSR (retroactivo) · Teclado móvil que no cubre los inputs (KeyboardAwareScrollView en pantallas y diálogos) · Creación de usuarios mobile con solo Nombre obligatorio y Ubicación desplegable desde Sedes · Horómetro en registro y atención de averías con cálculo de días de inactividad · Trazabilidad de `usuario_creacion`/`usuario_actualizacion` desde el JWT en todos los CRUD (auditoría real) · Super Admin protegido por trigger de BD.
 
 ---
 
@@ -50,7 +53,7 @@ Plataforma full-stack para la gestión operativa de equipos de apilamiento alqui
 | Marcas | ✅ | ✅ | ✅ |
 | Equipos (con detalle + estado dinámico) | ✅ | ✅ | ✅ |
 | PSR / OSR (con date picker nativo) | ✅ | ✅ | ✅ |
-| Averías (registrar + atender + finalizar) | ✅ | ✅ | ✅ |
+| Averías (registrar + atender + finalizar, con horómetro y días de inactividad) | ✅ | ✅ | ✅ |
 | Finalización del Servicio | ✅ | — | ✅ |
 | Evidencias Fotográficas (1 foto) | ✅ | — | ✅ |
 | Auditoría de Eventos | ✅ | ✅ | ✅ |
@@ -101,3 +104,4 @@ npm run build:android:apk   # EAS Cloud
 - Tareas y roadmap: `documentacion_general/sdd/03_tareas.md`
 - Implementación detallada: `documentacion_general/sdd/04_implementaciones.md`
 - Convenciones del proyecto: `AGENTS.md`
+- Hitos: `documentacion_general/sdd/05_hito_*.md` (001–011)

@@ -147,6 +147,20 @@ mapper/EntidadMapper.java          → MapStruct mapper
 | V9__seed_usuarios_local.sql | Datos semilla de usuarios locales |
 | V10__auditoria_eventos.sql | Tabla de auditoría de eventos |
 | V11__seed_auditoria_tipos.sql | Datos semilla de auditoría |
+| V12__backfill_password_usuarios.sql | Backfill de contraseñas locales (BCrypt) |
+| V13__hacer_osr_opcional.sql | OSR opcional en PSR |
+| V14__dim_motivo_psr.sql | Catálogo de motivos de PSR |
+| V15__psr_campos_uso.sql | Motivo, fechas y meses de uso en PSR |
+| V16__osr_costo_moneda.sql | Costo unitario y moneda en OSR |
+| V17__recalcular_meses_psr_calendario.sql | Recalcular meses PSR por calendario (inclusive) |
+| V18__ingreso_equipo_evidencias.sql | Ingreso de equipos + evidencias |
+| V19__averia_evidencias_contenido.sql | Contenido BYTEA en evidencias de avería |
+| V20__devolucion_equipo.sql | Devolución de equipos (fecha_devolucion + estado DEVUELTO + 4 evidencias) |
+| V21__evidencia_horometro_inicial.sql | Tipo de evidencia `HOROMETRO_INICIAL` |
+| V22__averias_horometro.sql | Columna `horometro` en averías (reporte) |
+| V23__superadmin_protegido.sql | Super Admin protegido (trigger BD: no eliminable, rol/estado inmutable) |
+| V24__backfill_horometro_inicio.sql | Backfill `horometro_inicio` en equipos existentes |
+| V25__averias_horometro_atencion.sql | Columna `horometro_atencion` en averías (atención) |
 
 ---
 
@@ -383,6 +397,39 @@ db: crear migración V8 para tabla de evidencias
 | CRUD completo campañas mobile (Dialog + date picker) | ✅ |
 | Tab Catálogos con secciones + permisos por rol | ✅ |
 | Rebuild Docker backend + verificación retroactiva | ✅ |
+
+### HDT-009 — Teclado móvil no cubre los inputs (IMPLEMENTADO ✅)
+
+| Módulo | Estado |
+|---|---|
+| Componente KeyboardAwareScrollView (KeyboardAvoidingView + ScrollView) | ✅ |
+| Migración pantallas con inputs: Login, PasswordChange, CreateEditUser, CreatePsr, RegistrarAveria, AtenderAveria, Settings | ✅ |
+| EquipmentFormScreen con KeyboardAvoidingView + footer sticky fuera del scroll | ✅ |
+| Diálogos con inputs protegidos (Campanas, Catalog) | ✅ |
+| Suite Jest 38/38 (test nuevo + corrección PasswordChangeScreen/AuthContext) | ✅ |
+
+### HDT-010 — Usuarios Mobile simplificado (IMPLEMENTADO ✅)
+
+| Módulo | Estado |
+|---|---|
+| CreateEditUserScreen solo Nombre/Rol/Ubicación (schema Zod solo exige nombre) | ✅ |
+| Ubicación como AppSelect con valores de Sedes activas | ✅ |
+| Backend: crear usuario sin correo ni rol (rol "Usuario" por defecto) y 400 si falta nombre | ✅ |
+| Tests: UsuarioServiceTest 6/6 + CreateEditUserScreen 4 tests; Jest 42/42 | ✅ |
+
+### HDT-011 — Horómetro en Averías y Trazabilidad de Usuario (IMPLEMENTADO ✅)
+
+| Módulo | Estado |
+|---|---|
+| Fix 409 devolución: AveriaService no revierte OPERATIVO si equipo ya devuelto + ApiResponse.error | ✅ |
+| filterEquiposByMode oculta DEVUELTO en select/manage (mobile) | ✅ |
+| Horómetro en registro de avería (V22) + fecha reportada respetada (no siempre now) | ✅ |
+| Horómetro al atender (V25): validación >= reportado, fechaHoraAtencion, diasInactividad | ✅ |
+| Mobile AtenderAveriaScreen (input horómetro atención + días inactivo) + Web Averias.jsx | ✅ |
+| Trazabilidad usuario JWT: 11 controllers inyectan SecurityContext (usuarioCreacion/usuarioActualizacion desde token) | ✅ |
+| OsrRequest.usuarioCreacion + OsrService lee de request (no hardcodea 1L) | ✅ |
+| Tests: AveriaServiceTest 12/12, AveriaResourceTest 3/3, EquipoResourceTest 2/2, DevolucionEquipoServiceTest 7/7; suite backend 74/0 | ✅ |
+| Migraciones soporte V21 (evidencia horómetro inicial), V23 (superadmin protegido), V24 (backfill horómetro_inicio) | ✅ |
 
 ---
 

@@ -859,3 +859,299 @@ Equipo → Osr.equipoId → Osr.psrId → Psr → (Sede, Campaña)
 - **Mobile**: ESLint limpio en `EquipoDetailScreen` y `PsrOsrScreen`. Suite Jest: 33 pass / 2 fail **pre-existentes y ajenos** (`PasswordChangeScreen.test.js` sin `SafeAreaProvider`; `AuthContext.test.js` flaky por timing que pasa aislado).
 - **Dispositivos**: card PSR/OSR y línea Marca|Modelo|GRR visibles en los 2 celulares (REDMI admin + Xiaomi usuario).
 
+## 26. Teclado móvil no cubre los inputs (HDT-009, 2026-08-06)
+
+### 26.1 Problema
+
+Hallazgo del perfil de auditor (G-MOB-UI / adaptación a tamaños de pantalla): en el celular, al enfocar un campo (contraseña, nombre, observaciones), el teclado virtual **cubría el input**, impidiendo ver lo que se escribe. El `AndroidManifest.xml` ya tenía `android:windowSoftInputMode="adjustResize"` correcto (mobile/android/app/src/main/AndroidManifest.xml:24), pero la mayoría de pantallas no reaccionaban al teclado.
+
+### 26.2 Solución — componente `mobile/src/components/KeyboardAwareScrollView.js` (nuevo)
+
+| Aspecto | Detalle |
+|---|---|
+| Estructura | `KeyboardAvoidingView` (Android `behavior="height"`, iOS `behavior="padding"`) envolviendo un `ScrollView` con `keyboardShouldPersistTaps="handled"`. |
+| Props | `behavior` (anula el default por plataforma), `keyboardVerticalOffset` (default `0`, para iOS descontar el header), `contentContainerStyle`, `style`, resto se pasan al `ScrollView`. |
+| Decisión de diseño | Primera versión usaba `useHeaderHeight` de `@react-navigation/elements`; se descartó porque ese hook lanza error fuera de un navigator (rompía los tests que renderizan pantallas aisladas). |
+
+### 26.3 Pantallas migradas
+
+| Pantalla | Antes | Después |
+|---|---|---|
+| `LoginScreen.js` | `ScrollView` | `KeyboardAwareScrollView` |
+| `PasswordChangeScreen.js` | `View` (sin scroll) + `flex: 1` | `KeyboardAwareScrollView` + `flexGrow: 1` en `contentContainerStyle` |
+| `CreateEditUserScreen.js` | `ScrollView` | `KeyboardAwareScrollView` |
+| `CreatePsrScreen.js` | `ScrollView` | `KeyboardAwareScrollView` |
+| `RegistrarAveriaScreen.js` | `ScrollView` | `KeyboardAwareScrollView` (2 bloques: formulario y fotos) |
+| `AtenderAveriaScreen.js` | `ScrollView` | `KeyboardAwareScrollView` |
+| `SettingsScreen.js` | `ScrollView` | `KeyboardAwareScrollView` |
+
+**Excepción `EquipmentFormScreen.js`**: tiene un footer sticky (botón guardar) que debe quedar **por encima del teclado** pero **fuera del scroll**. Se reestructuró con `KeyboardAvoidingView` (hermano del footer) + `ScrollView` interno (el footer permanece fuera del scroll y se eleva con el teclado).
+
+**Dialogs con inputs**: en `CampanasScreen.js` y `CatalogScreen.js`, el `ScrollView` interno de `Dialog.ScrollArea` se envolvió en `KeyboardAvoidingView` (`padding` iOS / `height` Android) + `keyboardShouldPersistTaps="handled"`, de modo que el teclado no tapa los campos del diálogo.
+
+### 26.4 Corrección de tests pre-existentes
+
+| Test | Problema | Corrección |
+|---|---|---|
+| `PasswordChangeScreen.test.js` | Fallaba por "No safe area value available" (la pantalla usa `useSafeAreaInsets` y el test no la envolvía en `SafeAreaProvider`) | El render se envuelve en `SafeAreaProvider` con `initialMetrics` |
+| `AuthContext.test.js` | Flaky por timing: timeout de 5s excedido bajo carga paralela (pasaba aislado) | Timeout del test elevado a 15s |
+
+### 26.5 Pruebas de Código
+
+- Mobile: `npm run lint` → exit 0.
+- Mobile: `npm test` → **38/38 pass** (12 suites). Nuevo `KeyboardAwareScrollView.test.js` (3 casos: renderiza hijos, respeta `behavior`, `keyboardShouldPersistTaps="handled"` por defecto).
+
+### 26.6 Archivos Modificados/Creados
+
+| Archivo | Acción |
+|---|---|
+| `mobile/src/components/KeyboardAwareScrollView.js` | Nuevo |
+| `mobile/src/LoginScreen.js` | Modificado |
+| `mobile/src/screens/PasswordChangeScreen.js` | Modificado |
+| `mobile/src/screens/CreateEditUserScreen.js` | Modificado |
+| `mobile/src/screens/CreatePsrScreen.js` | Modificado |
+| `mobile/src/screens/EquipmentFormScreen.js` | Modificado (KAV + ScrollView, footer sticky fuera) |
+| `mobile/src/screens/RegistrarAveriaScreen.js` | Modificado |
+| `mobile/src/screens/AtenderAveriaScreen.js` | Modificado |
+| `mobile/src/screens/SettingsScreen.js` | Modificado |
+| `mobile/src/screens/CampanasScreen.js` | Modificado (KAV en dialog) |
+| `mobile/src/screens/CatalogScreen.js` | Modificado (KAV en dialog) |
+| `mobile/src/__tests__/KeyboardAwareScrollView.test.js` | Nuevo |
+| `mobile/src/__tests__/PasswordChangeScreen.test.js` | Modificado (SafeAreaProvider) |
+| `mobile/src/__tests__/AuthContext.test.js` | Modificado (timeout 15s) |
+
+## 27. Usuarios Mobile — solo Nombre obligatorio y Ubicación desde Sedes (HDT-010, 2026-08-06)
+
+### 27.1 Problema
+
+En `CreateEditUserScreen.js` el formulario pedía Correo, Área, Puesto, Empresa y Departamento (campos que el usuario comentó), pero el schema Zod **todavía exigía `correo` y `rolId`** (además de `nombre`), y `ubicacion` era un input libre. Al comentar los campos, el submit quedaba bloqueado por la validación de correo ausente. Además, el backend exigía correo obligatorio (`UsuarioService.crear`) y `rolId` `@NotNull` (`UsuarioDTO`), y la columna `rol_id` es `NOT NULL` en BD.
+
+### 27.2 Solución — Mobile `CreateEditUserScreen.js`
+
+| Aspecto | Detalle |
+|---|---|
+| Schema | Solo `nombre` obligatorio (`min(1)`). `rolId` y `ubicacion` opcionales. Se eliminan correo/área/puesto/empresa/departamento. |
+| Catálogos | `loadCatalogs()` carga en paralelo `/roles` y `/sedes` (refetch silencioso en focus + `onOpen`). |
+| Rol | `AppSelect` con los roles (sigue excluyendo Super Admin); opcional con placeholder "Seleccione un rol (opcional)". |
+| Ubicación | Reemplaza `AppInput` por `AppSelect` con opciones desde **Sedes** (value = nombre de la sede, label = `nombre (codigo)`), filtrando inactivas. Placeholder "Seleccione la ubicación (opcional)". |
+| Payload | `{ nombre, rolId: Number|null, ubicacion: string|null }` — ya no envía correo. |
+
+### 27.3 Backend
+
+| Archivo | Cambio |
+|---|---|
+| `dto/UsuarioDTO.java` | Se elimina `@NotNull` sobre `rolId` (rol deja de ser obligatorio). |
+| `repository/RolRepository.java` | Nuevo `findByNombre(String)` (Panache `find("nombre", ...)`). |
+| `service/UsuarioService.java` | `crear`: ya no exige correo (si viene vacío → `null`; el conflicto de unicidad solo se valida cuando hay correo). Si `rolId` es `null`, resuelve por defecto el rol **"Usuario"** vía `RolRepository.findByNombre` (si no existe, `BadRequestException`). `nombre` es obligatorio: si es nulo/vacío tras `trim()` → `BadRequestException("El nombre es obligatorio")`. |
+
+### 27.4 Validación (producción local Docker)
+
+- `mvn test` (Docker `maven:3.9-eclipse-temurin-21`): **`UsuarioServiceTest` 6/6 PASS** (nuevo: crear solo con nombre → rol "Usuario" por defecto; nombre vacío → 400; correo duplicado → 409; sin rol "Usuario" en catálogo → 400; actualizar nombre; actualizar inexistente → null). Únicos 2 errores de la suite: **pre-existentes** (`MarcaResourceTest` error de QuarkusTest por ruta `/app/target/classes` en entorno Docker; `MarcaServiceTest` UnnecessaryStubbing) — confirmados en el commit base sin mis cambios.
+- `docker compose build backend && up -d backend` → health check `UP`.
+- API real con JWT de prueba (RS256 firmado con `privatekey.pem`):
+  - `POST /usuarios { nombre: "Usuario Test Solo Nombre" }` → **201**, `rolId: 3` (Usuario), `correo: null`.
+  - `POST /usuarios { nombre: "...", rolId: 2, ubicacion: "Packing Uva" }` → **201**, `rolId: 2`, `ubicacion: "Packing Uva"`.
+  - `POST /usuarios {}` → **400** "El nombre es obligatorio".
+  - Usuarios de prueba eliminados vía `DELETE /usuarios/{id}` (DB limpia).
+- Mobile: ESLint limpio. Suite Jest **42/42** (nuevo `CreateEditUserScreen.test.js` con 4 casos: solo muestra Nombre/Rol/Ubicación; crea solo con nombre → `{rolId: null, ubicacion: null}`; selecciona rol y ubicación desde catálogos; edita preservando valores).
+
+### 27.5 Archivos Modificados/Creados
+
+| Archivo | Acción |
+|---|---|
+| `backend/.../dto/UsuarioDTO.java` | Modificado (sin `@NotNull` en rolId) |
+| `backend/.../repository/RolRepository.java` | Modificado (`findByNombre`) |
+| `backend/.../service/UsuarioService.java` | Modificado (crear sin correo, rol por defecto, nombre obligatorio) |
+| `backend/.../service/UsuarioServiceTest.java` | Nuevo (6 tests) |
+| `mobile/src/screens/CreateEditUserScreen.js` | Modificado (schema solo nombre, sedes, Ubicación AppSelect, payload) |
+| `mobile/src/__tests__/CreateEditUserScreen.test.js` | Nuevo (4 tests) |
+
+## 28. Fix 409 al devolver equipo y trazabilidad de devolución (2026-08-09)
+
+### 28.1 Problema
+
+Al atender una avería sobre un equipo que ya había sido devuelto (`fecha_devolucion` seteada), `AveriaService.marcarAtendida` igualaba el equipo a `OPERATIVO`, revirtiendo la devolución. Además, el listado mobile mostraba equipos `DEVUELTO` en selecciones/gestión, y la API devolvía `409` con un mensaje genérico sin detalle útil para el cliente.
+
+### 28.2 Solución
+
+| Archivo | Cambio |
+|---|---|
+| `service/AveriaService.java` | `marcarAtendida` solo restaura `estadoOperativo = "OPERATIVO"` si `fechaDevolucion == null` (no revierte un equipo ya devuelto). |
+| `dto/ApiResponse.java` | Nuevo campo `error` en el wrapper `{ success, message, data, error, errorCode, timestamp }` para que el cliente reciba el mensaje real del backend (no solo "request failed with status code 409"). |
+| `mobile/src/utils/equipmentForm.js` | `filterEquiposByMode` oculta equipos `DEVUELTO` en modos `select`/`manage` (los equipos fuera de servicio ya no saturan las listas operativas). |
+| `test/.../service/MarcaServiceTest.java` | Se eliminó un stub muerto (`when(repository.findById(any()))` no usado en `crear_deberiaPersistirYRetornarDTO`) que generaba `UnnecessaryStubbing`. Ahora 6/6. |
+
+### 28.3 Pruebas
+
+- `DevolucionEquipoServiceTest` (nuevo) — 7/7.
+- `AveriaServiceTest` ampliado a 12/12 (caso: atender no revierte devolución).
+- Suite backend unit: 67/67 (sin contar `MarcaResourceTest` @QuarkusTest que requiere env OIDC, pre-existente).
+- Mobile: 16/16.
+
+### 28.4 Archivos Modificados/Creados
+
+| Archivo | Acción |
+|---|---|
+| `backend/.../service/AveriaService.java` | Modificado |
+| `backend/.../dto/ApiResponse.java` | Modificado (campo `error`) |
+| `mobile/src/utils/equipmentForm.js` | Modificado (`filterEquiposByMode` oculta DEVUELTO) |
+| `backend/.../test/service/DevolucionEquipoServiceTest.java` | Nuevo (7 tests) |
+| `backend/.../test/service/AveriaServiceTest.java` | Modificado (12 tests) |
+| `backend/.../test/service/MarcaServiceTest.java` | Modificado (eliminado stub muerto) |
+
+## 29. Horómetro en el registro y atención de averías (2026-08-09 / 2026-08-10)
+
+### 29.1 Problema
+
+El registro de avería no capturaba el horómetro de la máquina en el momento de la falla, y al atender tampoco se registraba el horómetro al quedar operativa ni los días de inactividad. La trazabilidad del horómetro a lo largo del ciclo de vida del equipo quedaba incompleta.
+
+### 29.2 Migraciones
+
+| Archivo | Contenido |
+|---|---|
+| `V22__averias_horometro.sql` | Agrega `horometro NUMERIC(12,2)` a `fac_averias` (horómetro en el reporte). |
+| `V25__averias_horometro_atencion.sql` | Agrega `horometro_atencion NUMERIC(12,2)` a `fac_averias` (horómetro al atender). |
+
+### 29.3 Backend
+
+| Archivo | Cambio |
+|---|---|
+| `entity/Averia.java` | Campos `horometro`, `horometroAtencion` (`BigDecimal`) + `diasInactividad` (transient, calculado). |
+| `dto/AveriaDTO.java` | `horometro`, `horometroAtencion`, `diasInactividad` con validación `@DecimalMin`/`@Digits(integer=12, fraction=2)`. |
+| `mapper/AveriaMapper.java` | Mapeo bidireccional + cálculo de `diasInactividad` vía `ChronoUnit.DAYS.between(fechaHoraAveria, fechaHoraAtencion)`. |
+| `service/AveriaService.java` | `crear` usa `dto.getFechaHoraAveria()` si viene (no siempre `now`) y valida formato de `horometro`. `actualizar` con `estadoAveria="ATENDIDA"`: exige `horometroAtencion` en la primera atención (400 si falta), valida formato, valida `horometroAtencion >= horometro` reportado (400 si la máquina "retrocedió"), setea `fechaHoraAtencion = now`, calcula y persiste `diasInactividad`. |
+
+### 29.4 Mobile — `AtenderAveriaScreen.js`
+
+| Aspecto | Detalle |
+|---|---|
+| Input | "Horómetro de atención *" (numérico; solo lectura si ya atendida). |
+| Display | Tras atender, muestra horómetro de atención + "Días inactivo: N". |
+| Validación UI | Bloquea submit si el horómetro está vacío o es menor al reportado. |
+
+### 29.5 Web — `frontend/src/pages/Averias.jsx`
+
+- Columna "Horómetro Atención" en la tabla (muestra `horometroAtencion`).
+- Columna "Días Inactivo" calculada desde `diasInactividad` del DTO.
+
+### 29.6 Pruebas
+
+- `AveriaServiceTest` — 12/12 (incluye: atender exige horómetro, valida `>=` reportado, calcula días).
+- `AtenderAveriaScreen.test.js` (nuevo) — 3/3 (requiere mocks de tema con `action.secondary` y `LoadingScreen`).
+
+### 29.7 Validación E2E (producción local Docker)
+
+| Paso | Resultado |
+|---|---|
+| Reportar avería (fecha `2026-06-30T10:30-05:00`, horómetro `12800.5`) | BD guarda la fecha reportada (no `now`) y el horómetro |
+| Atender con `horometroAtencion=12800.5` (igual al reportado) | `400` (debe ser `>` al reportado) |
+| Atender con `horometroAtencion=12900.5` | `200`, `fechaHoraAtencion = now`, `dias_inactividad = 41` |
+| Limpieza | Avería 19 eliminada, equipo 12 restaurado a `AVERIADO` |
+
+### 29.8 Archivos Modificados/Creados
+
+| Archivo | Acción |
+|---|---|
+| `backend/.../entity/Averia.java` | Modificado |
+| `backend/.../dto/AveriaDTO.java` | Modificado |
+| `backend/.../mapper/AveriaMapper.java` | Modificado |
+| `backend/.../service/AveriaService.java` | Modificado |
+| `backend/.../db/migration/V22__averias_horometro.sql` | Nueva |
+| `backend/.../db/migration/V25__averias_horometro_atencion.sql` | Nueva |
+| `backend/.../test/service/AveriaServiceTest.java` | Modificado (12 tests) |
+| `mobile/src/screens/AtenderAveriaScreen.js` | Modificado |
+| `mobile/src/__tests__/AtenderAveriaScreen.test.js` | Nuevo (3 tests) |
+| `frontend/src/pages/Averias.jsx` | Modificado |
+
+## 30. Trazabilidad de usuario desde JWT en todos los CRUD (2026-08-10)
+
+### 30.1 Problema
+
+Todos los `Resource` usaban el patrón `dto.getUsuarioCreacion() != null ? ... : 1L` en los services, pero los controllers **no inyectaban el usuario del JWT**. Como los clientes nunca envían `usuarioCreacion`/`usuarioActualizacion`, el fallback `1L` (Super Admin) se disparaba siempre. Verificación en BD: todas las averías y equipos tenían `usuario_creacion = 1` y `usuario_actualizacion = 1`, aun cuando el operador real era un usuario distinto (p.ej. José Anyarín, id 17).
+
+### 30.2 Solución — usuario tomado del token, inmutable por el cliente
+
+Cada controller inyecta `@Context SecurityContext context` en `crear`/`actualizar` y asigna el id del JWT al DTO/Request antes de delegar al service:
+
+```java
+dto.setUsuarioCreacion(SecurityUtil.getUsuarioId(context));      // crear
+dto.setUsuarioActualizacion(SecurityUtil.getUsuarioId(context)); // actualizar
+```
+
+`SecurityUtil.getUsuarioId(context)` lee el `subject` del `JsonWebToken` (id numérico del usuario autenticado). El service mantiene el fallback `1L` solo como defensa para llamadas internas/sin token, pero en el flujo HTTP el id siempre viene del JWT.
+
+### 30.3 Controllers corregidos (11 + soporte OsrRequest)
+
+| Controller | `crear` | `actualizar` |
+|---|---|---|
+| `AveriaResource` | ✅ | ✅ |
+| `EquipoResource` | ✅ (nuevo) | ✅ (ya existía) |
+| `CampanaResource` | ✅ | ✅ |
+| `MarcaResource` | ✅ | ✅ |
+| `MotivoPsrResource` | ✅ | ✅ |
+| `ProveedorResource` | ✅ | ✅ |
+| `RolResource` | ✅ | ✅ |
+| `SedeResource` | ✅ | ✅ |
+| `TipoEquipoResource` | ✅ | ✅ |
+| `UsuarioResource` | ✅ | ✅ |
+| `PsrResource` | ✅ (PsrRequest; también setea `osr.usuarioActualizacion`) | ✅ |
+| `OsrResource` | ✅ (OsrRequest) | — (solo crear) |
+
+`OsrRequest` no tenía campos de usuario: se añadió `usuarioCreacion` + getter/setter, y `OsrService.crear` dejó de hardcodear `1L` para leer `request.getUsuarioCreacion() != null ? ... : 1L`.
+
+> Los endpoints de evidencias (`AveriaResource.subirEvidencia`, `DevolucionEquipoResource`, `IngresoEquipoResource`) **ya** pasaban `SecurityUtil.getUsuarioId(context)` explícitamente, por lo que sus registros sí quedaban correctos. Este hito cierra la brecha en los CRUD transaccionales.
+
+### 30.4 Pruebas
+
+| Test | Resultado |
+|---|---|
+| `AveriaResourceTest` (nuevo) | 3/3 — crear asigna usuario del token, actualizar asigna usuario del token, sin token → null |
+| `EquipoResourceTest` (nuevo) | 2/2 — crear/actualizar asignan usuario del token |
+| Suite backend completa | **74 tests, 0 fallos**, 1 error pre-existente (`MarcaResourceTest` @QuarkusTest requiere env OIDC), 1 skipeado |
+
+### 30.5 Validación E2E (producción local Docker)
+
+Autenticado como usuario **23** (Carla Huamanorqque):
+
+| Operación | Resultado BD |
+|---|---|
+| `POST /averias` (crear avería 19) | `fac_averias.usuario_creacion = 23` |
+| `PUT /averias/19` (atender) | `fac_averias.usuario_actualizacion = 23` |
+| `POST /equipos` (crear equipo 18) | `fac_equipos.usuario_creacion = 23` |
+| `PUT /equipos/18` (actualizar) | `fac_equipos.usuario_actualizacion = 23` |
+
+> Con el login real de José Anyarín (id 17) todos los registros quedan a su nombre. Los registros históricos (ya con `usuario_creacion = 1`) **no se modificaron**: el fix es hacia adelante.
+
+Datos de prueba limpiados (avería 19 y equipo 18 eliminados).
+
+### 30.6 Archivos Modificados/Creados
+
+| Archivo | Acción |
+|---|---|
+| `controller/AveriaResource.java` | Modificado |
+| `controller/EquipoResource.java` | Modificado |
+| `controller/CampanaResource.java` | Modificado |
+| `controller/MarcaResource.java` | Modificado |
+| `controller/MotivoPsrResource.java` | Modificado |
+| `controller/ProveedorResource.java` | Modificado |
+| `controller/RolResource.java` | Modificado |
+| `controller/SedeResource.java` | Modificado |
+| `controller/TipoEquipoResource.java` | Modificado |
+| `controller/UsuarioResource.java` | Modificado |
+| `controller/PsrResource.java` | Modificado |
+| `controller/OsrResource.java` | Modificado |
+| `dto/OsrRequest.java` | Modificado (`usuarioCreacion`) |
+| `service/OsrService.java` | Modificado (lee de request, no hardcodea 1L) |
+| `test/.../controller/AveriaResourceTest.java` | Nuevo (3 tests) |
+| `test/.../controller/EquipoResourceTest.java` | Nuevo (2 tests) |
+
+## 31. Migraciones de soporte V21–V25 (2026-08-09 / 2026-08-10)
+
+| Archivo | Contenido |
+|---|---|
+| `V21__evidencia_horometro_inicial.sql` | Amplía `chk_evidencia_ingreso_tipo` para aceptar `HOROMETRO_INICIAL` como tipo de evidencia de ingreso. |
+| `V23__superadmin_protegido.sql` | Corrige `rol_id` del Super Admin seed a 1 y crea trigger `proteger_super_admin` que impide eliminarlo, cambiar su rol/estado/id_microsoft/nombre/correo. |
+| `V24__backfill_horometro_inicio.sql` | Completa `horometro_inicio` NULL en `fac_equipos` con un valor aleatorio entre 1234.5 y 24345.6 (bug: `IngresoEquipoService.applyData` no persistía horómetros en borradores). |
+
+(V22 y V25 documentadas en la sección 29.)
+

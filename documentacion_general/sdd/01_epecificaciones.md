@@ -263,6 +263,12 @@ HDT-007 (CRUD Usuarios Mobile) completado: CreateEditUserScreen con permisos por
 
 HDT-008 (UX Desplegables, Catálogos en Tiempo Real y Referencias PSR/OSR) completado: AppSelect con Portal + ScrollView completo, catálogos sincronizados en tiempo real entre dispositivos, filtro DEVUELTO por modo, card PSR/OSR en detalle de equipo, línea Marca|Modelo|GRR en PSR/OSR (retroactivo), CRUD completo de campañas mobile y tab Catálogos con secciones y permisos.
 
+HDT-009 (Teclado móvil no cubre los inputs - UX) completado: componente `KeyboardAwareScrollView` (KeyboardAvoidingView + ScrollView) aplicado a Login, PasswordChange, CreateEditUser, CreatePsr, RegistrarAveria, AtenderAveria y Settings; `EquipmentFormScreen` con KeyboardAvoidingView + footer sticky; diálogos de Campanas y Catalog protegidos; suite Jest 38/38 (con corrección de tests pre-existentes `PasswordChangeScreen` y `AuthContext`).
+
+HDT-010 (Usuarios Mobile simplificado) completado: `CreateEditUserScreen` solo con Nombre, Rol y Ubicación (schema Zod solo exige `nombre`); Ubicación como desplegable con las Sedes activas; backend crea usuarios sin correo ni rol (asigna rol "Usuario" por defecto) y rechaza con 400 si falta el nombre. Tests: `UsuarioServiceTest` 6/6 y `CreateEditUserScreen.test.js` 4 casos; suite Jest 42/42; API validada en producción local Docker.
+
+HDT-011 (Horómetro en Averías y Trazabilidad de Usuario) completado: fix del 409 al devolver (no se revierte el estado `OPERATIVO` si el equipo ya fue devuelto), registro del horómetro al reportar (V22) y al atender (V25) una avería con cálculo de días de inactividad (`AveriaService`, `AtenderAveriaScreen` mobile, `Averias.jsx` web), y trazabilidad de `usuario_creacion`/`usuario_actualizacion` desde el JWT en 11 controllers (Equipo, Avería, Campana, Marca, MotivoPsr, Proveedor, Rol, Sede, TipoEquipo, Usuario, PSR/OSR). `ApiResponse` ahora expone el campo `error` con el mensaje real del backend. Migraciones V21–V25 aplicadas (incluye trigger de protección del Super Admin). Tests: `AveriaServiceTest` 12/12, `AveriaResourceTest` 3/3, `EquipoResourceTest` 2/2, `DevolucionEquipoServiceTest` 7/7; suite backend 74 tests 0 fallos; validación E2E en producción local Docker.
+
 **Feature Finalización del Servicio** completado: backend restaura estado operativo, mobile con foto + botón "Finalizar Servicio".
 
 **Próximo foco:** Evidencias fotográficas completas, Dashboard KPI, Reportes PDF, QA Integral, rebuild APK EAS Cloud, Firebase Crashlytics.

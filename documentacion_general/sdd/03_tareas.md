@@ -85,6 +85,24 @@ No se usará MySQL en este proyecto.
 | 38 | HDT-008: Card PSR/OSR en detalle + Marca/Modelo/GRR en PSR/OSR | ✅ Completado |
 | 39 | HDT-008: CRUD completo campañas mobile (Dialog + date picker) | ✅ Completado |
 | 40 | HDT-008: Tab Catálogos con secciones + permisos por rol | ✅ Completado |
+| 41 | HDT-009: Componente KeyboardAwareScrollView reutilizable | ✅ Completado |
+| 42 | HDT-009: Migración pantallas con inputs (Login, PasswordChange, CreateEditUser, CreatePsr, RegistrarAveria, AtenderAveria, Settings) | ✅ Completado |
+| 43 | HDT-009: EquipmentFormScreen con KeyboardAvoidingView + footer sticky | ✅ Completado |
+| 44 | HDT-009: Diálogos con inputs protegidos (Campanas, Catalog) | ✅ Completado |
+| 45 | HDT-009: Tests del componente + corrección PasswordChangeScreen/AuthContext (38/38) | ✅ Completado |
+| 46 | HDT-010: CreateEditUserScreen solo Nombre/Rol/Ubicación (schema solo nombre obligatorio) | ✅ Completado |
+| 47 | HDT-010: Ubicación como AppSelect con valores de Sedes | ✅ Completado |
+| 48 | HDT-010: Backend crear usuario sin correo/rol (rol "Usuario" por defecto, nombre obligatorio) | ✅ Completado |
+| 49 | HDT-010: Tests UsuarioServiceTest (6) + CreateEditUserScreen (4); Jest 42/42 | ✅ Completado |
+| 50 | HDT-011: Fix 409 devolución (no revertir OPERATIVO si fecha_devolucion seteada) + ApiResponse.error | ✅ Completado |
+| 51 | HDT-011: filterEquiposByMode oculta DEVUELTO en select/manage (mobile) | ✅ Completado |
+| 52 | HDT-011: Migración V22 (horometro en fac_averias) + AveriaDTO/Mapper/Service | ✅ Completado |
+| 53 | HDT-011: Migración V25 (horometro_atencion) + validar horómetro atención >= reportado + dias_inactividad | ✅ Completado |
+| 54 | HDT-011: AtenderAveriaScreen (input horómetro atención + display días inactivo) + Averias.jsx web | ✅ Completado |
+| 55 | HDT-011: Trazabilidad usuario JWT en 11 controllers (crear/actualizar setean usuario del token) | ✅ Completado |
+| 56 | HDT-011: OsrRequest.usuarioCreacion + OsrService lee de request (no hardcodea 1L) | ✅ Completado |
+| 57 | HDT-011: Tests AveriaResourceTest (3) + EquipoResourceTest (2); suite backend 74/0 | ✅ Completado |
+| 58 | HDT-011: Migraciones soporte V21 (evidencia horómetro inicial), V23 (superadmin protegido), V24 (backfill horometro_inicio) | ✅ Completado |
 
 ---
 
@@ -134,6 +152,7 @@ No se usará MySQL en este proyecto.
 | DB-017 | Crear migración `auditoria_eventos` (V10) | Alta | ✅ |
 | DB-018 | Configurar índices y relaciones | Alta | ✅ |
 | DB-019 | Configurar restricciones de integridad | Alta | ✅ |
+| DB-020 | HDT-011: V21 evidencia horómetro inicial + V22 horómetro avería + V23 superadmin protegido + V24 backfill horómetro_inicio + V25 horómetro_atención | Alta | ✅ |
 
 ---
 
@@ -173,6 +192,9 @@ No se usará MySQL en este proyecto.
 | BE-029 | HDT-008: Campos `PsrDTO.marca/modelo/grr` (resolución vía OSR→Equipo→Marca) | Alta | ✅ |
 | BE-030 | HDT-008: Tests EquipoServiceTest + PsrServiceTest con nuevos mocks | Alta | ✅ |
 | BE-031 | HDT-008: Rebuild Docker backend + verificación retroactiva (GET /equipos/6, GET /psr) | Alta | ✅ |
+| BE-032 | HDT-011: AveriaService no revierte OPERATIVO si equipo ya devuelto + ApiResponse.error | Alta | ✅ |
+| BE-033 | HDT-011: Horómetro en crear (V22) y atender (V25) avería + dias_inactividad | Alta | ✅ |
+| BE-034 | HDT-011: Trazabilidad usuario JWT en 11 controllers (crear/actualizar) + OsrService/OsrRequest | Alta | ✅ |
 
 ---
 
@@ -197,6 +219,7 @@ No se usará MySQL en este proyecto.
 | WEB-015 | Implementar equipos | Crítica | ✅ |
 | WEB-016 | Implementar PSR / OSR | Crítica | ✅ |
 | WEB-017 | Implementar averías | Alta | ✅ |
+| WEB-018 | HDT-011: Averias.jsx columnas horómetro atención + días inactivo | Alta | ✅ |
 | WEB-018 | Implementar evidencias | Alta | ⏳ |
 | WEB-019 | Implementar dashboard KPI | Media | ⏳ |
 | WEB-020 | Implementar reportes PDF | Media | ⏳ |
@@ -241,6 +264,8 @@ No se usará MySQL en este proyecto.
 | AND-027 | Card PSR/OSR en EquipoDetail + línea Marca/Modelo/GRR en PsrOsrScreen | Alta | ✅ |
 | AND-028 | CRUD completo campañas mobile (crear/editar en Dialog + date picker nativo) | Alta | ✅ |
 | AND-029 | Tab Catálogos con secciones agrupadas + ocultar para rol Usuario; headerRight en Catalog/Roles | Alta | ✅ |
+| AND-030 | HDT-011: filterEquiposByMode oculta DEVUELTO en select/manage | Alta | ✅ |
+| AND-031 | HDT-011: AtenderAveriaScreen input horómetro atención + display días inactivo | Alta | ✅ |
 
 ---
 
