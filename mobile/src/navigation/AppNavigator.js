@@ -8,6 +8,7 @@ import { Icon, Text, Button, IconButton } from 'react-native-paper'
 import { useAuth } from '../AuthContext'
 import LoginScreen from '../LoginScreen'
 import PasswordChangeScreen from '../screens/PasswordChangeScreen'
+import ServerCheckScreen from '../screens/ServerCheckScreen'
 import HomeScreen from '../screens/HomeScreen'
 import EquiposListScreen from '../screens/EquiposListScreen'
 import EquipoDetailScreen from '../screens/EquipoDetailScreen'
@@ -226,6 +227,11 @@ function MainNavigator() {
 function AuthNavigator({ initialRouteName }) {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRouteName}>
+      <AuthStack.Screen name="ServerCheck">
+        {({ navigation }) => (
+          <ServerCheckScreen onReady={() => navigation.replace('Login')} />
+        )}
+      </AuthStack.Screen>
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="PasswordChange" component={PasswordChangeScreen} />
     </AuthStack.Navigator>
@@ -256,7 +262,7 @@ export default function AppNavigator() {
           <MainNavigator />
         )
       ) : (
-        <AuthNavigator key="login" initialRouteName="Login" />
+        <AuthNavigator key="login" initialRouteName="ServerCheck" />
       )}
     </NavigationContainer>
   )
