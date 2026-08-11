@@ -1,13 +1,10 @@
 package com.apilamiento.control.dto;
 
-import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 
 public class UsuarioDTO {
 
     private String nombre;
-
-    @NotNull(message = "El rol es obligatorio")
     private Long rolId;
     private Long id;
     private String idMicrosoft;

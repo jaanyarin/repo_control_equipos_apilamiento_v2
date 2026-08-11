@@ -80,6 +80,7 @@ export default function UsuariosScreen() {
   }
 
   const canModify = (item) => {
+    if (item?.id === 1) return false
     return isSuperAdmin(user) || !isTargetSuperAdmin(item)
   }
 

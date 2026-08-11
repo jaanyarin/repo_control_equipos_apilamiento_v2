@@ -49,6 +49,8 @@ function buildNameFromEmail(email) {
     .join(' ') || 'Usuario'
 }
 
+const esSuperAdminProtegido = (user) => user?.id === 1
+
 export default function Usuarios() {
   const { user } = useApp()
   const [usuarios, setUsuarios] = useState([])
@@ -111,7 +113,11 @@ export default function Usuarios() {
 
   const openEdit = (user) => {
     setEditingUser(user)
-    setFormData({ correo: user.correo, rolId: user.rolId, estadoActivo: user.estadoActivo ? 'true' : 'false' })
+    setFormData({
+      correo: user.correo,
+      rolId: esSuperAdminProtegido(user) ? 1 : user.rolId,
+      estadoActivo: esSuperAdminProtegido(user) ? 'true' : (user.estadoActivo ? 'true' : 'false'),
+    })
     setDialogOpen(true)
   }
 
@@ -188,20 +194,23 @@ export default function Usuarios() {
     },
   ]
 
-  const renderActions = (item) => (
-    <>
-      <Tooltip title="Editar">
-        <IconButton size="small" onClick={() => openEdit(item)}>
-          <EditIcon fontSize="small" color="primary" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Eliminar">
-        <IconButton size="small" onClick={() => openDelete(item)}>
-          <DeleteIcon fontSize="small" color="error" />
-        </IconButton>
-      </Tooltip>
-    </>
-  )
+  const renderActions = (item) => {
+    if (esSuperAdminProtegido(item)) return null
+    return (
+      <>
+        <Tooltip title="Editar">
+          <IconButton size="small" onClick={() => openEdit(item)}>
+            <EditIcon fontSize="small" color="primary" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Eliminar">
+          <IconButton size="small" onClick={() => openDelete(item)}>
+            <DeleteIcon fontSize="small" color="error" />
+          </IconButton>
+        </Tooltip>
+      </>
+    )
+  }
 
   const renderCard = (item) => (
     <Box>
@@ -292,8 +301,9 @@ export default function Usuarios() {
                 <FormControl size="small" fullWidth>
                   <InputLabel>Activo</InputLabel>
                   <Select
-                    value={formData.estadoActivo}
+                    value={esSuperAdminProtegido(editingUser) ? 'true' : formData.estadoActivo}
                     label="Activo"
+                    disabled={esSuperAdminProtegido(editingUser)}
                     onChange={(e) => setFormData({ ...formData, estadoActivo: e.target.value })}
                   >
                     <MenuItem value="true">Sí</MenuItem>
@@ -305,13 +315,18 @@ export default function Usuarios() {
             <FormControl size="small" fullWidth required>
               <InputLabel>Rol</InputLabel>
               <Select
-                value={formData.rolId}
+                value={esSuperAdminProtegido(editingUser) ? 1 : formData.rolId}
                 label="Rol"
+                disabled={esSuperAdminProtegido(editingUser)}
                 onChange={(e) => setFormData({ ...formData, rolId: e.target.value })}
               >
-                {filteredRoles.map((r) => (
-                  <MenuItem key={r.id} value={r.id}>{r.nombre}</MenuItem>
-                ))}
+                {esSuperAdminProtegido(editingUser) ? (
+                  <MenuItem value={1}>Super Admin</MenuItem>
+                ) : (
+                  filteredRoles.map((r) => (
+                    <MenuItem key={r.id} value={r.id}>{r.nombre}</MenuItem>
+                  ))
+                )}
               </Select>
             </FormControl>
           </Box>

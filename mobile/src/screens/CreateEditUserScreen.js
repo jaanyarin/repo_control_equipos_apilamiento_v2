@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react'
-import { Alert, ScrollView, StyleSheet, View } from 'react-native'
+import { Alert, StyleSheet, View } from 'react-native'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -11,24 +11,30 @@ import AppInput from '../components/AppInput'
 import AppSelect from '../components/AppSelect'
 import ErrorBoundary from '../components/ErrorBoundary'
 import ErrorState from '../components/ErrorState'
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView'
 import LoadingScreen from '../components/LoadingScreen'
 import { theme } from '../theme'
 
 const schema = z.object({
   nombre: z.string().trim().min(1, 'Ingrese el nombre'),
-  correo: z.string().trim().min(1, 'Ingrese el correo').email('Correo inválido'),
-  rolId: z.string().min(1, 'Seleccione un rol'),
-  area: z.string().optional(),
-  puesto: z.string().optional(),
-  empresa: z.string().optional(),
-  departamento: z.string().optional(),
+  rolId: z.string().optional(),
   ubicacion: z.string().optional(),
 })
 
-function extractRolesList(response) {
+function extractList(response, catalogName) {
   const body = response?.data ?? response
+
+  if (body && typeof body === 'object' && body.success === false) {
+    throw new Error(body.message || `No se pudo cargar ${catalogName}`)
+  }
+
   const list = body && typeof body === 'object' && 'data' in body ? body.data : body
-  return Array.isArray(list) ? list : []
+
+  if (!Array.isArray(list)) {
+    throw new Error(`La respuesta de ${catalogName} no contiene un listado válido`)
+  }
+
+  return list
 }
 
 function getRequestError(error, fallback) {
@@ -43,8 +49,10 @@ export default function CreateEditUserScreen() {
   const navigation = useNavigation()
   const editing = route.params?.user || null
   const isEditing = Boolean(editing)
+  const isProtectedSuperAdmin = isEditing && editing.id === 1
 
   const [roles, setRoles] = useState([])
+  const [sedes, setSedes] = useState([])
   const [catalogLoading, setCatalogLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -57,30 +65,34 @@ export default function CreateEditUserScreen() {
     resolver: zodResolver(schema),
     defaultValues: {
       nombre: editing?.nombre || '',
-      correo: editing?.correo || '',
-      rolId: editing?.rolId != null ? String(editing.rolId) : '',
-      area: editing?.area || '',
-      puesto: editing?.puesto || '',
-      empresa: editing?.empresa || '',
-      departamento: editing?.departamento || '',
+      rolId: isProtectedSuperAdmin ? '1' : (editing?.rolId != null ? String(editing.rolId) : ''),
       ubicacion: editing?.ubicacion || '',
     },
   })
 
-  const loadRoles = useCallback(async (silent = false) => {
+  const loadCatalogs = useCallback(async (silent = false) => {
     if (!silent) {
       setCatalogLoading(true)
       setCatalogError('')
     }
+
     try {
-      const response = await api.get('/roles')
-      const list = extractRolesList(response)
-      if (list.length === 0) {
+      const [rolesResponse, sedesResponse] = await Promise.all([
+        api.get('/roles'),
+        api.get('/sedes'),
+      ])
+
+      const rolesList = extractList(rolesResponse, 'roles')
+      const sedesList = extractList(sedesResponse, 'sedes')
+
+      if (rolesList.length === 0) {
         throw new Error('No existen roles registrados')
       }
-      setRoles(list)
+
+      setRoles(rolesList)
+      setSedes(sedesList)
     } catch (error) {
-      if (!silent) setCatalogError(getRequestError(error, 'No se pudieron cargar los roles'))
+      if (!silent) setCatalogError(getRequestError(error, 'No se pudieron cargar los catálogos'))
     } finally {
       if (!silent) setCatalogLoading(false)
     }
@@ -90,20 +102,34 @@ export default function CreateEditUserScreen() {
   useFocusEffect(useCallback(() => {
     if (!loadedRef.current) {
       loadedRef.current = true
-      loadRoles()
+      loadCatalogs()
     } else {
-      loadRoles(true)
+      loadCatalogs(true)
     }
-  }, [loadRoles]))
+  }, [loadCatalogs]))
 
-  const roleOptions = useMemo(
-    () => roles
-      .filter(item => item.estadoActivo !== false && !String(item.nombre || '').toLowerCase().includes('super admin'))
+  const roleOptions = useMemo(() => {
+    const filtered = roles.filter(
+      item => item.estadoActivo !== false && !String(item.nombre || '').toLowerCase().includes('super admin'),
+    ).map(item => ({
+      value: String(item.id),
+      label: item.nombre,
+    }))
+
+    if (isProtectedSuperAdmin) {
+      return [{ value: '1', label: 'Super Admin' }, ...filtered]
+    }
+    return filtered
+  }, [roles, isProtectedSuperAdmin])
+
+  const sedeOptions = useMemo(
+    () => sedes
+      .filter(item => item.estadoActivo !== false)
       .map(item => ({
-        value: String(item.id),
-        label: item.nombre,
+        value: item.nombre,
+        label: item.codigo ? `${item.nombre} (${item.codigo})` : item.nombre,
       })),
-    [roles],
+    [sedes],
   )
 
   const onSubmit = async formData => {
@@ -113,12 +139,7 @@ export default function CreateEditUserScreen() {
     try {
       const payload = {
         nombre: formData.nombre.trim(),
-        correo: formData.correo.trim(),
-        rolId: Number(formData.rolId),
-        area: formData.area?.trim() || null,
-        puesto: formData.puesto?.trim() || null,
-        empresa: formData.empresa?.trim() || null,
-        departamento: formData.departamento?.trim() || null,
+        rolId: isProtectedSuperAdmin ? 1 : (formData.rolId ? Number(formData.rolId) : null),
         ubicacion: formData.ubicacion?.trim() || null,
       }
 
@@ -151,16 +172,16 @@ export default function CreateEditUserScreen() {
   if (catalogError) {
     return (
       <ErrorState
-        title="No se pudieron cargar los roles"
+        title="No se pudieron cargar los catálogos"
         message={catalogError}
-        onRetry={() => loadRoles()}
+        onRetry={() => loadCatalogs()}
       />
     )
   }
 
   return (
     <ErrorBoundary>
-      <ScrollView
+      <KeyboardAwareScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
@@ -183,33 +204,18 @@ export default function CreateEditUserScreen() {
 
           <Controller
             control={control}
-            name="correo"
-            render={({ field: { onBlur, onChange, value } }) => (
-              <AppInput
-                label="Correo"
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                errorMessage={errors.correo?.message}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                style={styles.input}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
             name="rolId"
             render={({ field: { onChange, value } }) => (
               <View style={styles.input}>
                 <AppSelect
                   label="Rol"
+                  placeholder="Seleccione un rol (opcional)"
                   value={value}
                   options={roleOptions}
                   onChange={onChange}
                   error={errors.rolId?.message}
-                  onOpen={() => loadRoles(true)}
+                  disabled={isProtectedSuperAdmin}
+                  onOpen={() => loadCatalogs(true)}
                 />
               </View>
             )}
@@ -217,76 +223,19 @@ export default function CreateEditUserScreen() {
 
           <Controller
             control={control}
-            name="area"
-            render={({ field: { onBlur, onChange, value } }) => (
-              <AppInput
-                label="Área"
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                errorMessage={errors.area?.message}
-                style={styles.input}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="puesto"
-            render={({ field: { onBlur, onChange, value } }) => (
-              <AppInput
-                label="Puesto"
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                errorMessage={errors.puesto?.message}
-                style={styles.input}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="empresa"
-            render={({ field: { onBlur, onChange, value } }) => (
-              <AppInput
-                label="Empresa"
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                errorMessage={errors.empresa?.message}
-                style={styles.input}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="departamento"
-            render={({ field: { onBlur, onChange, value } }) => (
-              <AppInput
-                label="Departamento"
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                errorMessage={errors.departamento?.message}
-                style={styles.input}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
             name="ubicacion"
-            render={({ field: { onBlur, onChange, value } }) => (
-              <AppInput
-                label="Ubicación"
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                errorMessage={errors.ubicacion?.message}
-                style={styles.input}
-              />
+            render={({ field: { onChange, value } }) => (
+              <View style={styles.input}>
+                <AppSelect
+                  label="Ubicación"
+                  placeholder="Seleccione la ubicación (opcional)"
+                  value={value}
+                  options={sedeOptions}
+                  onChange={onChange}
+                  error={errors.ubicacion?.message}
+                  onOpen={() => loadCatalogs(true)}
+                />
+              </View>
             )}
           />
 
@@ -301,7 +250,7 @@ export default function CreateEditUserScreen() {
             {isEditing ? 'Actualizar Usuario' : 'Crear Usuario'}
           </AppButton>
         </AppCard>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </ErrorBoundary>
   )
 }
