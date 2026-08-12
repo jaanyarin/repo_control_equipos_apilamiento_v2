@@ -3,9 +3,11 @@ package com.apilamiento.control.service;
 import com.apilamiento.control.entity.Equipo;
 import com.apilamiento.control.entity.Marca;
 import com.apilamiento.control.entity.TokenPush;
+import com.apilamiento.control.entity.Usuario;
 import com.apilamiento.control.mapper.NotificacionPushMapper;
 import com.apilamiento.control.repository.MarcaRepository;
 import com.apilamiento.control.repository.TokenPushRepository;
+import com.apilamiento.control.repository.UsuarioRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -40,6 +42,7 @@ public class NotificacionPushService {
 
     private final TokenPushRepository tokenPushRepository;
     private final MarcaRepository marcaRepository;
+    private final UsuarioRepository usuarioRepository;
     private final NotificacionPushMapper notificacionPushMapper;
     private final String projectId;
     private final String serviceAccountJson;
@@ -57,20 +60,23 @@ public class NotificacionPushService {
     @Inject
     public NotificacionPushService(TokenPushRepository tokenPushRepository,
             MarcaRepository marcaRepository,
+            UsuarioRepository usuarioRepository,
             NotificacionPushMapper notificacionPushMapper,
             @ConfigProperty(name = "app.fcm.project-id") String projectId,
             @ConfigProperty(name = "app.fcm.service-account") Optional<String> serviceAccountJson) {
-        this(tokenPushRepository, marcaRepository, notificacionPushMapper,
+        this(tokenPushRepository, marcaRepository, usuarioRepository, notificacionPushMapper,
                 projectId, serviceAccountJson.orElse(""), HttpClient.newHttpClient(), new ObjectMapper());
     }
 
     NotificacionPushService(TokenPushRepository tokenPushRepository,
             MarcaRepository marcaRepository,
+            UsuarioRepository usuarioRepository,
             NotificacionPushMapper notificacionPushMapper,
             String projectId, String serviceAccountJson,
             HttpClient httpClient, ObjectMapper objectMapper) {
         this.tokenPushRepository = tokenPushRepository;
         this.marcaRepository = marcaRepository;
+        this.usuarioRepository = usuarioRepository;
         this.notificacionPushMapper = notificacionPushMapper;
         this.projectId = projectId;
         this.serviceAccountJson = serviceAccountJson;
@@ -89,7 +95,9 @@ public class NotificacionPushService {
             return;
         }
         try {
-            List<TokenPush> tokens = tokenPushRepository.listActivosExcepto(usuarioOrigenId);
+            List<TokenPush> tokens = usuarioOrigenId == null
+                    ? tokenPushRepository.listAllActivos()
+                    : tokenPushRepository.listActivosExcepto(usuarioOrigenId);
             if (tokens.isEmpty()) {
                 log.info("Sin tokens FCM para notificar el ingreso del equipo {}", equipo.getCodigo());
                 return;
@@ -100,20 +108,22 @@ public class NotificacionPushService {
             Long equipoId = equipo.getId();
             Marca marca = marcaId == null ? null : marcaRepository.findById(marcaId);
             String marcaNombre = marca == null ? "" : marca.getNombre();
-            executor.submit(() -> emitirIngreso(codigo, modelo, marcaNombre, equipoId, tokens));
+            String usuarioNombre = usuarioOrigenId == null ? "" : resolverUsuarioNombre(usuarioOrigenId);
+            executor.submit(() -> emitirIngreso(codigo, usuarioNombre, modelo, marcaNombre, equipoId, tokens));
         } catch (Exception ex) {
             log.warn("No se pudo encolar la notificacion de ingreso: {}", ex.getMessage());
         }
     }
 
-    void emitirIngreso(String codigo, String modelo, String marcaNombre, Long equipoId, List<TokenPush> tokens) {
+    void emitirIngreso(String codigo, String usuarioNombre, String modelo, String marcaNombre,
+            Long equipoId, List<TokenPush> tokens) {
         try {
             String bearer = obtenerAccessToken();
             int enviados = 0;
             for (TokenPush token : tokens) {
                 try {
                     JsonNode message = notificacionPushMapper.mensajeIngreso(
-                            token.getToken(), codigo, marcaNombre, modelo, equipoId);
+                            token.getToken(), codigo, usuarioNombre, marcaNombre, modelo, equipoId);
                     enviarAToken(token.getToken(), bearer, message);
                     enviados++;
                 } catch (Exception ex) {
@@ -123,6 +133,16 @@ public class NotificacionPushService {
             log.info("Notificaciones de ingreso enviadas: {}/{}", enviados, tokens.size());
         } catch (Exception ex) {
             log.warn("No se pudo enviar las notificaciones de ingreso: {}", ex.getMessage());
+        }
+    }
+
+    private String resolverUsuarioNombre(Long usuarioId) {
+        try {
+            Usuario usuario = usuarioRepository.findById(usuarioId);
+            return usuario != null && usuario.getNombre() != null ? usuario.getNombre() : "";
+        } catch (Exception ex) {
+            log.warn("No se pudo resolver el nombre del usuario {}: {}", usuarioId, ex.getMessage());
+            return "";
         }
     }
 

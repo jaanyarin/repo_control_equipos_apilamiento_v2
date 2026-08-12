@@ -13,7 +13,7 @@ public class NotificacionPushMapper {
         this.objectMapper = new ObjectMapper();
     }
 
-    public com.fasterxml.jackson.databind.JsonNode mensajeIngreso(String token, String codigo,
+    public com.fasterxml.jackson.databind.JsonNode mensajeIngreso(String token, String codigo, String usuario,
             String marca, String modelo, Long equipoId) {
         ObjectNode root = objectMapper.createObjectNode();
         ObjectNode message = root.putObject("message");
@@ -21,7 +21,7 @@ public class NotificacionPushMapper {
 
         String body = "Equipo " + codigo
                 + (marca == null || marca.isBlank() ? "" : " (" + marca + " " + (modelo == null ? "" : modelo) + ")")
-                + " registrado";
+                + " registrado por " + usuario;
 
         ObjectNode notification = message.putObject("notification");
         notification.put("title", "Nuevo ingreso de equipo");
