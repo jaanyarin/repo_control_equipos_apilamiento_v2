@@ -590,6 +590,28 @@ adb -s $serial install -r $apk
 
 ---
 
+### 13.11 Workflow de Desarrollo Mobile (Debug APK + Metro + Hot Reload)
+
+Configuración validada el 2026-08-12. Detalle completo en `documentacion_general/sdd/09_workflow_desarrollo_mobile_debug.md`.
+
+| Aspecto | Valor validado |
+|---|---|
+| APK debug usa Metro (bundle no embebido) | Hot reload inmediato; requiere Metro + túneles o IP LAN |
+| APK release usa bundle embebido | Sin Metro; rebuild ~1.5–4 min por cambio |
+| Metro | `npm run start -- --reset-cache` en `mobile/` — escucha en `0.0.0.0:8081` |
+| Servicios requeridos | Backend Docker `8082`, Metro `8081`, Celulares `adb devices` en `device` |
+| "Unable to load script" | = Metro/túnel 8081 inalcanzable AL abrir (el JS ni arranca; ServerCheck no aplica) |
+| Error 500 `UnableToResolveError` | Caché Metro corrupta → limpiar `.metro-cache` + reiniciar con `--reset-cache` |
+| Conectar por WiFi | `adb pair IP:puerto codigo` (código expira ~2 min) → copiar nombre EXACTO de `adb devices -l` → `adb reverse tcp:8081/8082` |
+| Cel 2 (85ijey5tdax8ob5p) | Usa túnel adb `localhost:8081` para Metro |
+| Cel 1 app original (user 0, qctoduvsa6v4cyhi) | Bundle configurado en IP LAN directa `10.13.18.71:8081` (no depende de túneles) |
+| Cel 1 app dual (user 999 XSpace) | El túnel adb NO le aplica (aislamiento); bundle configurado en IP LAN directa `10.13.18.71:8081` |
+| Regla general | Si cambia la IP LAN del PC, actualizar "Change Bundle Location" en ambas apps del Cel 1 |
+
+Despliegue en la sección siguiente o en `documentacion_general/sdd/07_build_android_eas.md`.
+
+---
+
 ## 14. Referencias
 
 - Perfil de Desarrollo: `documentacion_general/perfiles/perfil_desarrollador.md`

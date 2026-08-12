@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { NavigationContainer, useNavigation } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
@@ -35,6 +35,7 @@ import AuditoriaScreen from '../screens/AuditoriaScreen'
 import LoadingScreen from '../components/LoadingScreen'
 import { theme } from '../theme'
 import { hasPsrAdminRole, isSuperAdmin, isAdminOrSuperAdmin } from '../utils/roles'
+import { onMessage, onMessageOpenedApp, getInitialNotification, registerBackgroundMessageHandler } from '../push'
 
 function SectionHeader({ label }) {
   return (
@@ -238,8 +239,48 @@ function AuthNavigator({ initialRouteName }) {
   )
 }
 
+export const navigationRef = React.createRef()
+
+function navigateFromNotification(remoteMessage) {
+  if (!navigationRef.current || !remoteMessage) return
+  const data = remoteMessage.data || {}
+  if (data.tipo === 'INGRESO_EQUIPO' && data.entidadId) {
+    try {
+      navigationRef.current.navigate('EquipoDetail', { id: Number(data.entidadId) })
+    } catch (_) {
+    }
+  }
+}
+
+registerBackgroundMessageHandler(navigateFromNotification)
+
+function PushHandler() {
+  useEffect(() => {
+    const unsubForeground = onMessage(navigateFromNotification)
+    const unsubOpened = onMessageOpenedApp(navigateFromNotification)
+    return () => {
+      try {
+        unsubForeground && unsubForeground()
+        unsubOpened && unsubOpened()
+      } catch (_) {
+      }
+    }
+  }, [])
+  return null
+}
+
 export default function AppNavigator() {
   const { user, loading } = useAuth()
+  const pendingNotificationRef = useRef(null)
+
+  useEffect(() => {
+    getInitialNotification()
+      .then(message => {
+        if (message) pendingNotificationRef.current = message
+      })
+      .catch(() => {
+      })
+  }, [])
 
   if (loading) {
     return (
@@ -254,7 +295,18 @@ export default function AppNavigator() {
       : `authenticated-${user.sub || 'user'}`
 
   return (
-    <NavigationContainer key={navigationState}>
+    <NavigationContainer
+      key={navigationState}
+      ref={navigationRef}
+      onReady={() => {
+        if (pendingNotificationRef.current) {
+          const message = pendingNotificationRef.current
+          pendingNotificationRef.current = null
+          navigateFromNotification(message)
+        }
+      }}
+    >
+      <PushHandler />
       {user ? (
         user.passwordResetRequired ? (
           <AuthNavigator key={`password-change-${user.sub || 'user'}`} initialRouteName="PasswordChange" />

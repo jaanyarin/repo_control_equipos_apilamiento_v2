@@ -107,12 +107,14 @@ export default function PsrOsrScreen() {
     ])
   }
 
-  const filtered = items.filter(item => {
+const filtered = items
+  .filter(item => {
     if (!search) return true
     const term = search.toLowerCase()
     return (item.numeroPsr || '').toLowerCase().includes(term)
       || (item.osr?.numeroOsr || '').toLowerCase().includes(term)
   })
+  .sort((a, b) => Number(b.id) - Number(a.id))
 
   const renderItem = ({ item }) => {
     const title = item.osr?.numeroOsr

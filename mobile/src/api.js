@@ -122,4 +122,12 @@ function decodeJwtPayload(token) {
   return decodeURIComponent(bytes.join(''))
 }
 
+export async function registrarTokenPush(token, plataforma) {
+  return api.post('/push/token', { token, plataforma })
+}
+
+export async function eliminarTokenPush(token) {
+  return api.delete('/push/token', { params: { token } })
+}
+
 export default api

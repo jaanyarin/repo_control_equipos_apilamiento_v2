@@ -53,10 +53,7 @@ export default function PerfilScreen() {
             <Text variant="bodySmall" style={styles.label}>Nombre</Text>
             <Text variant="bodyMedium" style={styles.value}>{user?.nombre || '-'}</Text>
           </View>
-          <View style={styles.row}>
-            <Text variant="bodySmall" style={styles.label}>Correo</Text>
-            <Text variant="bodyMedium" style={styles.value}>{user?.correo || '-'}</Text>
-          </View>
+
           <View style={styles.row}>
             <Text variant="bodySmall" style={styles.label}>Rol</Text>
             <Text variant="bodyMedium" style={styles.value}>{user?.rol || '-'}</Text>
