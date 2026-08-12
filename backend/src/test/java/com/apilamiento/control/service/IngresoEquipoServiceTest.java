@@ -30,13 +30,15 @@ class IngresoEquipoServiceTest {
     @Mock MarcaRepository marcaRepository;
     @Mock TipoEquipoRepository tipoEquipoRepository;
     @Mock EvidenciaIngresoEquipoRepository evidenciaRepository;
+    @Mock NotificacionPushService notificacionPushService;
     IngresoEquipoService service;
 
     @BeforeEach
     void setUp() {
         service = new IngresoEquipoService(psrRepository, osrRepository, motivoRepository,
                 equipoRepository, proveedorRepository, marcaRepository, tipoEquipoRepository,
-                evidenciaRepository, new EquipoMapper(), new EvidenciaIngresoEquipoMapper());
+                evidenciaRepository, notificacionPushService,
+                new EquipoMapper(), new EvidenciaIngresoEquipoMapper());
     }
 
     @Test
@@ -89,6 +91,7 @@ class IngresoEquipoServiceTest {
 
         assertTrue(equipo.getIngresoCompleto());
         assertEquals(9L, equipo.getUsuarioActualizacion());
+        verify(notificacionPushService).notificarIngresoEquipo(equipo, 9L);
     }
 
     @Test

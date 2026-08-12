@@ -33,6 +33,7 @@ public class IngresoEquipoService {
     private final MarcaRepository marcaRepository;
     private final TipoEquipoRepository tipoEquipoRepository;
     private final EvidenciaIngresoEquipoRepository evidenciaRepository;
+    private final NotificacionPushService notificacionPushService;
     private final EquipoMapper equipoMapper;
     private final EvidenciaIngresoEquipoMapper evidenciaMapper;
 
@@ -41,6 +42,7 @@ public class IngresoEquipoService {
             ProveedorRepository proveedorRepository, MarcaRepository marcaRepository,
             TipoEquipoRepository tipoEquipoRepository,
             EvidenciaIngresoEquipoRepository evidenciaRepository,
+            NotificacionPushService notificacionPushService,
             EquipoMapper equipoMapper, EvidenciaIngresoEquipoMapper evidenciaMapper) {
         this.psrRepository = psrRepository;
         this.osrRepository = osrRepository;
@@ -50,6 +52,7 @@ public class IngresoEquipoService {
         this.marcaRepository = marcaRepository;
         this.tipoEquipoRepository = tipoEquipoRepository;
         this.evidenciaRepository = evidenciaRepository;
+        this.notificacionPushService = notificacionPushService;
         this.equipoMapper = equipoMapper;
         this.evidenciaMapper = evidenciaMapper;
     }
@@ -184,6 +187,7 @@ public class IngresoEquipoService {
         equipo.setIngresoCompleto(true);
         equipo.setUsuarioActualizacion(usuarioId);
         equipo.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+        notificacionPushService.notificarIngresoEquipo(equipo, usuarioId);
         return equipoMapper.toDTO(equipo);
     }
 

@@ -84,7 +84,7 @@ export default function EquiposListScreen() {
           ) : null}
         </View>
         <Searchbar
-          placeholder="Buscar por código, modelo o proveedor"
+          placeholder="Buscar por Código"
           onChangeText={setSearch}
           value={search}
           style={styles.searchbar}
