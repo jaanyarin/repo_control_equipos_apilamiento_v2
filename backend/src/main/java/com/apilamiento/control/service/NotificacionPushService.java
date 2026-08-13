@@ -1,11 +1,11 @@
 package com.apilamiento.control.service;
 
 import com.apilamiento.control.entity.Equipo;
-import com.apilamiento.control.entity.Marca;
+import com.apilamiento.control.entity.Proveedor;
 import com.apilamiento.control.entity.TokenPush;
 import com.apilamiento.control.entity.Usuario;
 import com.apilamiento.control.mapper.NotificacionPushMapper;
-import com.apilamiento.control.repository.MarcaRepository;
+import com.apilamiento.control.repository.ProveedorRepository;
 import com.apilamiento.control.repository.TokenPushRepository;
 import com.apilamiento.control.repository.UsuarioRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -41,7 +41,7 @@ public class NotificacionPushService {
     static final String END_PRIVATE_KEY = "-----END PRIVATE KEY-----";
 
     private final TokenPushRepository tokenPushRepository;
-    private final MarcaRepository marcaRepository;
+    private final ProveedorRepository proveedorRepository;
     private final UsuarioRepository usuarioRepository;
     private final NotificacionPushMapper notificacionPushMapper;
     private final String projectId;
@@ -59,23 +59,23 @@ public class NotificacionPushService {
 
     @Inject
     public NotificacionPushService(TokenPushRepository tokenPushRepository,
-            MarcaRepository marcaRepository,
+            ProveedorRepository proveedorRepository,
             UsuarioRepository usuarioRepository,
             NotificacionPushMapper notificacionPushMapper,
             @ConfigProperty(name = "app.fcm.project-id") String projectId,
             @ConfigProperty(name = "app.fcm.service-account") Optional<String> serviceAccountJson) {
-        this(tokenPushRepository, marcaRepository, usuarioRepository, notificacionPushMapper,
+        this(tokenPushRepository, proveedorRepository, usuarioRepository, notificacionPushMapper,
                 projectId, serviceAccountJson.orElse(""), HttpClient.newHttpClient(), new ObjectMapper());
     }
 
     NotificacionPushService(TokenPushRepository tokenPushRepository,
-            MarcaRepository marcaRepository,
+            ProveedorRepository proveedorRepository,
             UsuarioRepository usuarioRepository,
             NotificacionPushMapper notificacionPushMapper,
             String projectId, String serviceAccountJson,
             HttpClient httpClient, ObjectMapper objectMapper) {
         this.tokenPushRepository = tokenPushRepository;
-        this.marcaRepository = marcaRepository;
+        this.proveedorRepository = proveedorRepository;
         this.usuarioRepository = usuarioRepository;
         this.notificacionPushMapper = notificacionPushMapper;
         this.projectId = projectId;
@@ -90,8 +90,24 @@ public class NotificacionPushService {
     }
 
     public void notificarIngresoEquipo(Equipo equipo, Long usuarioOrigenId) {
+        notificar(equipo, usuarioOrigenId, NotificacionPushMapper.TIPO_INGRESO_EQUIPO);
+    }
+
+    public void notificarAveriaReportada(Equipo equipo, Long usuarioOrigenId) {
+        notificar(equipo, usuarioOrigenId, NotificacionPushMapper.TIPO_AVERIA_REPORTADA);
+    }
+
+    public void notificarAveriaAtendida(Equipo equipo, Long usuarioOrigenId) {
+        notificar(equipo, usuarioOrigenId, NotificacionPushMapper.TIPO_AVERIA_ATENDIDA);
+    }
+
+    public void notificarServicioFinalizado(Equipo equipo, Long usuarioOrigenId) {
+        notificar(equipo, usuarioOrigenId, NotificacionPushMapper.TIPO_SERVICIO_FINALIZADO);
+    }
+
+    private void notificar(Equipo equipo, Long usuarioOrigenId, String tipo) {
         if (!isConfigurado()) {
-            log.warn("FCM no configurado (app.fcm.*): se omite notificacion de ingreso");
+            log.warn("FCM no configurado (app.fcm.*): se omite notificacion {}", tipo);
             return;
         }
         try {
@@ -99,40 +115,59 @@ public class NotificacionPushService {
                     ? tokenPushRepository.listAllActivos()
                     : tokenPushRepository.listActivosExcepto(usuarioOrigenId);
             if (tokens.isEmpty()) {
-                log.info("Sin tokens FCM para notificar el ingreso del equipo {}", equipo.getCodigo());
+                log.info("Sin tokens FCM para notificar {} del equipo {}", tipo, equipo.getCodigo());
                 return;
             }
             String codigo = equipo.getCodigo();
-            String modelo = equipo.getModelo();
-            Long marcaId = equipo.getMarcaId();
-            Long equipoId = equipo.getId();
-            Marca marca = marcaId == null ? null : marcaRepository.findById(marcaId);
-            String marcaNombre = marca == null ? "" : marca.getNombre();
+            String proveedor = resolverProveedorNombre(equipo.getProveedorId());
             String usuarioNombre = usuarioOrigenId == null ? "" : resolverUsuarioNombre(usuarioOrigenId);
-            executor.submit(() -> emitirIngreso(codigo, usuarioNombre, modelo, marcaNombre, equipoId, tokens));
+            executor.submit(() -> emitir(tipo, proveedor, codigo, usuarioNombre, equipo.getId(), tokens));
         } catch (Exception ex) {
-            log.warn("No se pudo encolar la notificacion de ingreso: {}", ex.getMessage());
+            log.warn("No se pudo encolar la notificacion {}: {}", tipo, ex.getMessage());
         }
     }
 
-    void emitirIngreso(String codigo, String usuarioNombre, String modelo, String marcaNombre,
+    void emitir(String tipo, String proveedor, String codigo, String usuarioNombre,
             Long equipoId, List<TokenPush> tokens) {
         try {
             String bearer = obtenerAccessToken();
             int enviados = 0;
             for (TokenPush token : tokens) {
                 try {
-                    JsonNode message = notificacionPushMapper.mensajeIngreso(
-                            token.getToken(), codigo, usuarioNombre, marcaNombre, modelo, equipoId);
+                    JsonNode message = buildMessage(tipo, token.getToken(), proveedor, codigo, usuarioNombre, equipoId);
                     enviarAToken(token.getToken(), bearer, message);
                     enviados++;
                 } catch (Exception ex) {
                     log.warn("FCM fallo para el dispositivo {}: {}", token.getId(), ex.getMessage());
                 }
             }
-            log.info("Notificaciones de ingreso enviadas: {}/{}", enviados, tokens.size());
+            log.info("Notificaciones {} enviadas: {}/{}", tipo, enviados, tokens.size());
         } catch (Exception ex) {
-            log.warn("No se pudo enviar las notificaciones de ingreso: {}", ex.getMessage());
+            log.warn("No se pudo enviar las notificaciones {}: {}", tipo, ex.getMessage());
+        }
+    }
+
+    JsonNode buildMessage(String tipo, String token, String proveedor, String codigo,
+            String usuarioNombre, Long equipoId) {
+        if (NotificacionPushMapper.TIPO_AVERIA_REPORTADA.equals(tipo)) {
+            return notificacionPushMapper.mensajeAveriaReportada(token, proveedor, codigo, usuarioNombre, equipoId);
+        }
+        if (NotificacionPushMapper.TIPO_AVERIA_ATENDIDA.equals(tipo)) {
+            return notificacionPushMapper.mensajeAveriaAtendida(token, proveedor, codigo, usuarioNombre, equipoId);
+        }
+        if (NotificacionPushMapper.TIPO_SERVICIO_FINALIZADO.equals(tipo)) {
+            return notificacionPushMapper.mensajeServicioFinalizado(token, proveedor, codigo, usuarioNombre, equipoId);
+        }
+        return notificacionPushMapper.mensajeIngreso(token, proveedor, codigo, usuarioNombre, equipoId);
+    }
+
+    private String resolverProveedorNombre(Long proveedorId) {
+        try {
+            Proveedor proveedor = proveedorId == null ? null : proveedorRepository.findById(proveedorId);
+            return proveedor != null && proveedor.getRazonSocial() != null ? proveedor.getRazonSocial() : "";
+        } catch (Exception ex) {
+            log.warn("No se pudo resolver el proveedor {}: {}", proveedorId, ex.getMessage());
+            return "";
         }
     }
 
@@ -156,7 +191,7 @@ public class NotificacionPushService {
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() / 100 != 2) {
-            throw new RuntimeException("FCM respondiÃ³ " + response.statusCode() + ": " + response.body());
+            throw new RuntimeException("FCM respondió " + response.statusCode() + ": " + response.body());
         }
     }
 
@@ -176,7 +211,7 @@ public class NotificacionPushService {
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() / 100 != 2) {
-            throw new RuntimeException("OAuth2 Google respondiÃ³ " + response.statusCode() + ": " + response.body());
+            throw new RuntimeException("OAuth2 Google respondió " + response.statusCode() + ": " + response.body());
         }
         JsonNode json = objectMapper.readTree(response.body());
         accessToken = json.get("access_token").asText();

@@ -36,14 +36,17 @@ public class DevolucionEquipoService {
     private final EvidenciaDevolucionEquipoRepository evidenciaRepository;
     private final EquipoMapper equipoMapper;
     private final EvidenciaDevolucionEquipoMapper evidenciaMapper;
+    private final NotificacionPushService notificacionPushService;
 
     public DevolucionEquipoService(EquipoRepository equipoRepository,
             EvidenciaDevolucionEquipoRepository evidenciaRepository,
-            EquipoMapper equipoMapper, EvidenciaDevolucionEquipoMapper evidenciaMapper) {
+            EquipoMapper equipoMapper, EvidenciaDevolucionEquipoMapper evidenciaMapper,
+            NotificacionPushService notificacionPushService) {
         this.equipoRepository = equipoRepository;
         this.evidenciaRepository = evidenciaRepository;
         this.equipoMapper = equipoMapper;
         this.evidenciaMapper = evidenciaMapper;
+        this.notificacionPushService = notificacionPushService;
     }
 
     @Transactional
@@ -123,6 +126,7 @@ public class DevolucionEquipoService {
         equipo.setEstadoOperativo("DEVUELTO");
         equipo.setUsuarioActualizacion(usuarioId);
         equipo.setFechaActualizacion(ahora);
+        notificacionPushService.notificarServicioFinalizado(equipo, usuarioId);
         return equipoMapper.toDTO(equipo);
     }
 

@@ -244,7 +244,8 @@ export const navigationRef = React.createRef()
 function navigateFromNotification(remoteMessage) {
   if (!navigationRef.current || !remoteMessage) return
   const data = remoteMessage.data || {}
-  if (data.tipo === 'INGRESO_EQUIPO' && data.entidadId) {
+  const tiposNavegables = ['INGRESO_EQUIPO', 'AVERIA_REPORTADA', 'AVERIA_ATENDIDA', 'SERVICIO_FINALIZADO']
+  if (tiposNavegables.includes(data.tipo) && data.entidadId) {
     try {
       navigationRef.current.navigate('EquipoDetail', { id: Number(data.entidadId) })
     } catch (_) {

@@ -1298,4 +1298,51 @@ Con un equipo **devuelto** (`DEVUELTO`), su PSR/OSR quedaba históricamente fina
 | `DELETE /usuarios/1` (seed) | `RAISE EXCEPTION` "El usuario Super Admin no puede ser eliminado" |
 | `flyway_schema_history` | versión 29 aplicada con éxito |
 
+---
+
+## 39. Notificaciones push ampliadas — plantilla nueva y 3 eventos operativos (HDT-013, 2026-08-13)
+
+### 39.1 Contexto
+
+Hasta HDT-012 el único push era `INGRESO_EQUIPO` (al finalizar el ingreso de un equipo). Se amplía a los 4 eventos y se rediseña la plantilla del mensaje.
+
+Plantilla (body de la notificación):
+
+```
+Evento: Nuevo ingreso de Equipo
+Proveedor: ACME S.A.C. - Codigo: EQ-001
+Registrado por: JUAN PEREZ
+```
+
+### 39.2 Backend
+
+| Archivo | Cambio |
+|---|---|
+| `mapper/NotificacionPushMapper.java` | Constantes `TIPO_INGRESO_EQUIPO`, `TIPO_AVERIA_REPORTADA`, `TIPO_AVERIA_ATENDIDA`, `TIPO_SERVICIO_FINALIZADO`. 4 métodos públicos sobre un método privado `mensaje(...)` que arma `notification.title/body` y `data.tipo/entidadId`. `data.entidadId` = `equipo.getId()`. |
+| `service/NotificacionPushService.java` | Refactor genérico: `notificar(equipo, usuarioOrigen, tipo)`, `emitir(tipo, proveedor, codigo, usuario, equipoId, tokens)`, `buildMessage(...)`. Reemplaza `MarcaRepository` por `ProveedorRepository` (la plantilla muestra `proveedor.razonSocial`). 4 métodos públicos (`notificarIngresoEquipo`, `notificarAveriaReportada`, `notificarAveriaAtendida`, `notificarServicioFinalizado`). Envío asíncrono en hilo daemon `fcm-notifier`; fallo de un token no afecta al resto. |
+| `service/AveriaService.java` | Inyecta `NotificacionPushService`. `crear()` → `notificarAveriaReportada` (equipo `AVERIADO`). `actualizar()` primera atención → `notificarAveriaAtendida` (equipo `OPERATIVO`, respetando equipos devueltos). |
+| `service/DevolucionEquipoService.java` | Inyecta `NotificacionPushService`. `finalizar()` → `notificarServicioFinalizado` (equipo `DEVUELTO`). |
+
+### 39.3 Mobile
+
+| Archivo | Cambio |
+|---|---|
+| `mobile/src/navigation/AppNavigator.js` | `navigateFromNotification` navega a `EquipoDetail` con `data.entidadId` para los 4 `tipo` (`INGRESO_EQUIPO`, `AVERIA_REPORTADA`, `AVERIA_ATENDIDA`, `SERVICIO_FINALIZADO`). |
+| `mobile/src/push.js` | `require('@react-native-firebase/messaging')` sin `.default` → elimina warnings de API deprecada v22. |
+| `mobile/package.json` | `start` con `--host 10.13.18.71 --port 8081` (Metro accesible desde los cels) + script `reverse` (`adb reverse tcp:8081 tcp:8081`). |
+
+### 39.4 Pruebas
+
+| Suite | Resultado |
+|---|---|
+| Backend unit (excl. `MarcaResourceTest`) | **109/109** ✅ |
+| Mobile Jest | **80/80** ✅ |
+| Mobile ESLint | 0 errores ✅ |
+
+### 39.5 Despliegue y build
+
+- Backend Docker reconstruido (`apilamiento-backend` UP, health `UP`).
+- APK **local Gradle** (sin Expo/EAS): `android:debug` → `app-debug.apk`, `android:release` → `app-release.apk`. Versión `1.10.0`.
+- `AGENTS.md` corregido (secciones 2, 4.4, 6, 7, 12): el proyecto es **React Native CLI puro**, build local Gradle; guía legada `07_build_android_eas.md` marcada obsoleta, nueva guía `07_build_android_gradle.md`.
+
 

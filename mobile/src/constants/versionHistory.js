@@ -1,5 +1,18 @@
 export const VERSION_HISTORY = [
   {
+    version: '1.10.0',
+    fecha: '2026-08-13',
+    titulo: 'HDT-013 — Notificaciones push ampliadas',
+    cambios: [
+      'Plantilla de notificación nueva: Evento / Proveedor - Codigo / Registrado por',
+      'Notificación al registrar una avería',
+      'Notificación al atender una avería',
+      'Notificación al finalizar el servicio (devolución)',
+      'Corrección de warnings FCM deprecados (API v22)',
+      'Navegación al detalle del equipo al tocar la notificación',
+    ],
+  },
+  {
     version: '1.9.0',
     fecha: '2026-08-11',
     titulo: 'HDT-012 — UX operativo, evidencias, contraseña y sync de catálogos',

@@ -26,12 +26,13 @@ import static org.mockito.Mockito.when;
 class DevolucionEquipoServiceTest {
     @Mock EquipoRepository equipoRepository;
     @Mock EvidenciaDevolucionEquipoRepository evidenciaRepository;
+    @Mock NotificacionPushService notificacionPushService;
     DevolucionEquipoService service;
 
     @BeforeEach
     void setUp() {
         service = new DevolucionEquipoService(equipoRepository, evidenciaRepository,
-                new EquipoMapper(), new EvidenciaDevolucionEquipoMapper());
+                new EquipoMapper(), new EvidenciaDevolucionEquipoMapper(), notificacionPushService);
     }
 
     @Test
@@ -113,6 +114,7 @@ class DevolucionEquipoServiceTest {
         assertEquals(9L, equipo.getUsuarioActualizacion());
         assertTrue(evidencias.stream().allMatch(e -> e.getUsuarioActualizacion() != null
                 && e.getFechaActualizacion() != null));
+        verify(notificacionPushService).notificarServicioFinalizado(equipo, 9L);
     }
 
     @Test

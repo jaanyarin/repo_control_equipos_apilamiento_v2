@@ -14,7 +14,7 @@ Eres un **Arquitecto y Desarrollador Full Stack Senior Mobile/Web**. Trabajas ba
 
 | Capa | Tecnología | Versión |
 |---|---|---|
-| Mobile Frontend | Expo React Native SDK | ~54.0.35 |
+| Mobile Frontend | React Native CLI (Android, sin Expo) | 0.81.5 |
 | Frontend Web | React + Vite | 18 / 5 |
 | UI Mobile | react-native-paper (MD3) | ^5.12.0 |
 | UI Web | Material UI (MUI) | 6 |
@@ -28,7 +28,9 @@ Eres un **Arquitecto y Desarrollador Full Stack Senior Mobile/Web**. Trabajas ba
 | CI/CD | GitHub Actions | — |
 
 ### Regla crítica
-No cambiar versiones mayores de Expo SDK, React Native, React, Quarkus, PostgreSQL sin autorización expresa del arquitecto validad por auditoría.
+No cambiar versiones mayores de React Native, React, Quarkus, PostgreSQL sin autorización expresa del arquitecto validada por auditoría.
+
+> **IMPORTANTE:** El APK NO usa **Expo SDK** ni **EAS Cloud**. El proyecto es **React Native CLI puro** (carpeta `android/` gestionada por Gradle). El build se hace **localmente** con Gradle (debug/release). No usar Expo ni EAS para nada en el ciclo mobile (ver sección 6).
 
 ---
 
@@ -56,10 +58,10 @@ No cambiar versiones mayores de Expo SDK, React Native, React, Quarkus, PostgreS
 │       ├── components/   # Componentes reutilizables
 │       ├── theme/        # Design tokens + temas
 │       └── context/      # Contextos globales
-├── mobile/               # Expo React Native
+├── mobile/               # React Native CLI (Android)
 │   ├── App.js            # Entry point
 │   ├── src/              # Código fuente mobile
-│   └── android/          # Gradle Android
+│   └── android/          # Gradle Android (build debug/release local)
 ├── database/             # Scripts SQL auxiliares
 ├── docker-compose.yml    # Orquestación local
 ├── nginx/                # Config reverse proxy
@@ -110,14 +112,14 @@ mapper/EntidadMapper.java          → MapStruct mapper
 - Formularios: MUI TextField + validación manual (o React Hook Form si aplica).
 - NO barrel imports desde `@mui/material` (importar desde submódulos: `@mui/material/Button`).
 
-### 4.4 Mobile — Expo React Native
+### 4.4 Mobile — React Native CLI
 
 - Functional components con hooks.
 - Navegación: React Navigation (NativeStackNavigator + BottomTabNavigator).
 - Estado global: AuthContext para sesión. Context API o Redux Toolkit para datos operativos.
 - Formularios: React Hook Form + Zod (instalar antes de usarlos).
 - UI: react-native-paper (MD3) consistente con tema definido en App.js.
-- Almacenamiento seguro: `expo-secure-store` para tokens. NUNCA AsyncStorage para tokens.
+- Almacenamiento seguro: `react-native-keychain` (SecureStore) para tokens. NUNCA AsyncStorage para tokens.
 - API calls: instancia centralizada en `src/api.js` (Axios).
 - Cada pantalla en su propio archivo dentro de `src/screens/`.
 
@@ -170,22 +172,24 @@ mapper/EntidadMapper.java          → MapStruct mapper
 
 ## 6. Mobile APK — Reglas Específicas
 
+> **IMPORTANTE:** El APK **NO usa Expo SDK ni EAS Cloud**. El proyecto es **React Native CLI puro** (carpeta `android/` gestionada por Gradle). El build se hace **localmente** con Gradle (debug/release). NO usar `eas-cli`, `expo` ni `eas.json` en ningún punto del ciclo mobile.
+
 ### 6.1 Configuración Congelada (NO CAMBIAR)
 
 | Archivo | Clave | Valor | Razón |
 |---|---|---|---|
-| `package.json` | `main` | `"expo/AppEntry"` | Necesario para registerRootComponent |
-| `app.json` | `jsEngine` | `"hermes"` | RN 0.81 con newArch exige Hermes |
-| `app.json` | `platforms` | `["android"]` | Solo Android contemplado |
-| `android/gradle.properties` | `hermesEnabled` | `true` | Debe coincidir con app.json |
+| `package.json` | `main` | `"index.js"` | Entry point React Native CLI (AppRegistry.registerComponent) |
+| `android/gradle.properties` | `hermesEnabled` | `true` | Hermes habilitado (RN 0.81 con newArch) |
 | `android/gradle.properties` | `newArchEnabled` | `true` | Nueva arquitectura React Native |
 
 ### 6.2 Build APK
 
-- Usar **EAS Cloud** para build (no local por bloqueo de Sophos).
-- Perfiles disponibles: `preview` (APK), `production` (AAB).
-- Build local es alternativa si Sophos no bloquea: `npm run build:android:local:debug`.
-- NO modificar `eas.json` ni `app.json` sin validación.
+- Build **local con Gradle** (sin Expo, sin EAS Cloud).
+- Debug: `npm run android:debug` → APK en `android/app/build/outputs/apk/debug/app-debug.apk`.
+- Release: `npm run android:release` → APK en `android/app/build/outputs/apk/release/app-release.apk`.
+- Limpiar build previo si es necesario: `npm run android:clean`.
+- Si Sophos bloquea el build local (rename atómico de Gradle), agregar exclusiones del antivirus para `mobile/`, `.gradle` y el Android SDK; **NO** migrar a EAS/Expo como alternativa.
+- `app.json` solo define `name`/`displayName` (sin `jsEngine` ni `platforms`). NO crear `eas.json` ni `app.config.*`.
 - Para cambiar URL del backend en runtime: `setApiUrl(url)` desde `api.js`.
 
 ### 6.3 Pantallas Mobile — Orden de Implementación
@@ -208,7 +212,7 @@ mapper/EntidadMapper.java          → MapStruct mapper
 
 | # | Prohibición | Razón |
 |---|---|---|
-| 1 | NO cambiar versiones mayores del stack (Expo SDK, React, Quarkus, PostgreSQL) | Validado y congelado |
+| 1 | NO cambiar versiones mayores del stack (React Native, React, Quarkus, PostgreSQL) | Validado y congelado |
 | 2 | NO usar MySQL para nada | Decisión oficial PostgreSQL 18 |
 | 3 | NO hardcodear secrets/tokens/contraseñas en código versionable | Seguridad |
 | 4 | NO almacenar JWT en AsyncStorage (mobile) | Debe ser SecureStore |
@@ -217,8 +221,8 @@ mapper/EntidadMapper.java          → MapStruct mapper
 | 7 | NO integrar con NISIRA, ERP, IoT, IA | Excluido del alcance |
 | 8 | NO modificar migraciones Flyway existentes (V1-V7) sin autorización | Pueden romper consistencia |
 | 9 | NO cambiar `jsEngine` de `hermes` a `jsc` | Rompe el APK |
-| 10 | NO cambiar `main` de `"expo/AppEntry"` a `"App.js"` | Rompe el registro de componentes |
-| 11 | NO modificar `eas.json`, `app.json`, `gradle.properties` (secciones congeladas) | Build validado |
+| 10 | NO usar Expo SDK ni EAS Cloud en el ciclo mobile (build, scripts, dependencias) | El proyecto es React Native CLI puro; el build es local con Gradle |
+| 11 | NO modificar `app.json`, `gradle.properties` (secciones congeladas) | Build validado |
 | 12 | NO crear componentes de clase en React (excepto ErrorBoundary, que React requiere como clase) | Solo functional components; ErrorBoundary es la única excepción documentada por limitación de React |
 | 13 | NO poner lógica de negocio en Controllers (backend) | Violación de Clean Architecture |
 | 14 | NO hacer barrel imports desde `@mui/material` | Impacta rendimiento |
@@ -374,7 +378,7 @@ db: crear migración V8 para tabla de evidencias
 | Migraciones V10 (auditoria_eventos) + V11 (seed) | ✅ |
 | GitHub Actions CI/CD | ✅ |
 | Modo claro/oscuro frontend | ✅ |
-| Rebuild APK EAS Cloud | ⏳ Pendiente |
+| Rebuild APK local Gradle (debug/release) | ⏳ Pendiente |
 | Firebase Crashlytics | ⏳ Pendiente |
 
 ### HDT-004 — Pantallas Mobile Faltantes (CERRADO ✅)
@@ -385,11 +389,11 @@ db: crear migración V8 para tabla de evidencias
 | Roles, Usuarios, Auditoría, Settings screens | ✅ |
 | Tab Catálogos con menú de botones | ✅ |
 
-### HDT-005 — Migración a React Native CLI (CANCELADO ❌)
+### HDT-005 — Migración a React Native CLI (CERRADO ✅)
 
 | Módulo | Estado |
 |---|---|
-| Migración Expo → CLI | ❌ Cancelado (se mantiene Expo, validado) |
+| El proyecto es React Native CLI puro (sin Expo) desde la base; build APK local con Gradle (debug/release) | ✅ |
 
 ### HDT-006 — Gestión móvil PSR/OSR (CERRADO ✅)
 
@@ -608,7 +612,7 @@ Configuración validada el 2026-08-12. Detalle completo en `documentacion_genera
 | Cel 1 app dual (user 999 XSpace) | El túnel adb NO le aplica (aislamiento); bundle configurado en IP LAN directa `10.13.18.71:8081` |
 | Regla general | Si cambia la IP LAN del PC, actualizar "Change Bundle Location" en ambas apps del Cel 1 |
 
-Despliegue en la sección siguiente o en `documentacion_general/sdd/07_build_android_eas.md`.
+Despliegue en la sección siguiente o en `documentacion_general/sdd/07_build_android_gradle.md`.
 
 ---
 
@@ -620,7 +624,7 @@ Despliegue en la sección siguiente o en `documentacion_general/sdd/07_build_and
 - SDD Plan: `documentacion_general/sdd/02_planes.md`
 - SDD Tareas: `documentacion_general/sdd/03_tareas.md`
 - SDD Implementación: `documentacion_general/sdd/04_implementaciones.md`
-- Build Android: `documentacion_general/sdd/07_build_android_eas.md`
+- Build Android (local Gradle, debug/release): `documentacion_general/sdd/07_build_android_gradle.md`
 - Auditoría base: `documentacion_general/sdd/06_auditoria_pre_apk.md`
 - DC: `docker-compose.yml`
 - Config Nginx: `nginx/default.conf`

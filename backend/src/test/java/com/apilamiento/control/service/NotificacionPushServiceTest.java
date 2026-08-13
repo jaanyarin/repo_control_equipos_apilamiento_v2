@@ -1,18 +1,18 @@
 package com.apilamiento.control.service;
 
 import com.apilamiento.control.entity.Equipo;
-import com.apilamiento.control.entity.Marca;
+import com.apilamiento.control.entity.Proveedor;
 import com.apilamiento.control.entity.TokenPush;
 import com.apilamiento.control.entity.Usuario;
 import com.apilamiento.control.mapper.NotificacionPushMapper;
-import com.apilamiento.control.repository.MarcaRepository;
+import com.apilamiento.control.repository.ProveedorRepository;
 import com.apilamiento.control.repository.TokenPushRepository;
 import com.apilamiento.control.repository.UsuarioRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -26,6 +26,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -33,7 +35,7 @@ import static org.mockito.Mockito.*;
 class NotificacionPushServiceTest {
 
     @Mock TokenPushRepository tokenPushRepository;
-    @Mock MarcaRepository marcaRepository;
+    @Mock ProveedorRepository proveedorRepository;
     @Mock UsuarioRepository usuarioRepository;
     ObjectMapper objectMapper = new ObjectMapper();
     NotificacionPushMapper mapper = new NotificacionPushMapper();
@@ -41,66 +43,158 @@ class NotificacionPushServiceTest {
     @Test
     void isConfiguradoRequeremProjectIdYServiceAccount() {
         NotificacionPushService sinConfig = new NotificacionPushService(tokenPushRepository,
-                marcaRepository, usuarioRepository, mapper, "", "", HttpClient.newHttpClient(), objectMapper);
+                proveedorRepository, usuarioRepository, mapper, "", "", HttpClient.newHttpClient(), objectMapper);
         assertFalse(sinConfig.isConfigurado());
 
         NotificacionPushService config = new NotificacionPushService(tokenPushRepository,
-                marcaRepository, usuarioRepository, mapper, "apkequiposapilamiento", "{}", HttpClient.newHttpClient(), objectMapper);
+                proveedorRepository, usuarioRepository, mapper, "apkequiposapilamiento", "{}", HttpClient.newHttpClient(), objectMapper);
         assertTrue(config.isConfigurado());
     }
 
     @Test
-    void emitirIngresoEnviaAAllTokensConPayloadCorrecto() throws Exception {
+    void emitirEnviaAAllTokensConPayloadCorrecto() throws Exception {
         NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
-                marcaRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
         doReturn("bearer-test").when(service).obtenerAccessToken();
         doNothing().when(service).enviarAToken(anyString(), any(), any());
 
         List<TokenPush> tokens = List.of(token("t1"), token("t2"), token("t3"));
 
-        service.emitirIngreso("EQ-001", "JUAN PEREZ", "MODELO X", "TOYOTA", 100L, tokens);
+        service.emitir(NotificacionPushMapper.TIPO_INGRESO_EQUIPO, "ACME S.A.C.", "EQ-001", "JUAN PEREZ", 100L, tokens);
 
         verify(service, times(3)).enviarAToken(anyString(), eq("bearer-test"), any());
-        verifyNoInteractions(marcaRepository);
     }
 
     @Test
-    void emitirIngresoIsolaFalloDeUnToken() throws Exception {
+    void emitirIsolaFalloDeUnToken() throws Exception {
         NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
-                marcaRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
         doReturn("bearer-test").when(service).obtenerAccessToken();
         doThrow(new RuntimeException("FCM 500")).when(service).enviarAToken(eq("t1"), any(), any());
         doNothing().when(service).enviarAToken(eq("t2"), any(), any());
 
-        service.emitirIngreso("EQ-001", "JUAN PEREZ", "MODELO X", "TOYOTA", 100L,
+        service.emitir(NotificacionPushMapper.TIPO_INGRESO_EQUIPO, "ACME S.A.C.", "EQ-001", "JUAN PEREZ", 100L,
                 List.of(token("t1"), token("t2")));
 
         verify(service, times(2)).enviarAToken(anyString(), any(), any());
     }
 
     @Test
-    void notificarIngresoEquipoResuelveMarcaYExcluyeOrigen() throws Exception {
+    void emitirIngresoGeneraPlantillaConFormatoEsperado() throws Exception {
         NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
-                marcaRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+        doReturn("bearer-test").when(service).obtenerAccessToken();
+        doNothing().when(service).enviarAToken(anyString(), any(), any());
+
+        service.emitir(NotificacionPushMapper.TIPO_INGRESO_EQUIPO, "ACME S.A.C.", "EQ-001", "JUAN PEREZ", 100L,
+                List.of(token("t1")));
+
+        ArgumentCaptor<JsonNode> captor = ArgumentCaptor.forClass(JsonNode.class);
+        verify(service).enviarAToken(eq("t1"), eq("bearer-test"), captor.capture());
+        JsonNode message = captor.getValue().path("message");
+        assertEquals("Nuevo ingreso de equipo", message.path("notification").path("title").asText());
+        String body = message.path("notification").path("body").asText();
+        assertTrue(body.contains("Evento: Nuevo ingreso de Equipo"));
+        assertTrue(body.contains("Proveedor: ACME S.A.C. - Codigo: EQ-001"));
+        assertTrue(body.contains("Registrado por: JUAN PEREZ"));
+        assertEquals(NotificacionPushMapper.TIPO_INGRESO_EQUIPO, message.path("data").path("tipo").asText());
+        assertEquals("100", message.path("data").path("entidadId").asText());
+    }
+
+    @Test
+    void notificarIngresoEquipoResuelveProveedorYExcluyeOrigen() throws Exception {
+        NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
+                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
         when(tokenPushRepository.listActivosExcepto(9L)).thenReturn(List.of(token("t1"), token("t2")));
-        Marca marca = new Marca();
-        marca.setNombre("TOYOTA");
-        when(marcaRepository.findById(3L)).thenReturn(marca);
+        Proveedor proveedor = new Proveedor();
+        proveedor.setRazonSocial("ACME S.A.C.");
+        when(proveedorRepository.findById(4L)).thenReturn(proveedor);
         Usuario usuario = new Usuario();
         usuario.setId(9L);
         usuario.setNombre("JUAN PEREZ");
         when(usuarioRepository.findById(9L)).thenReturn(usuario);
-        doNothing().when(service).emitirIngreso(anyString(), anyString(), anyString(), anyString(), any(), any());
+        doNothing().when(service).emitir(anyString(), anyString(), anyString(), anyString(), any(), anyList());
 
         Equipo equipo = new Equipo();
         equipo.setId(100L);
         equipo.setCodigo("EQ-001");
-        equipo.setModelo("MODELO X");
-        equipo.setMarcaId(3L);
+        equipo.setProveedorId(4L);
         service.notificarIngresoEquipo(equipo, 9L);
 
         Thread.sleep(200);
-        verify(service).emitirIngreso(eq("EQ-001"), eq("JUAN PEREZ"), eq("MODELO X"), eq("TOYOTA"), eq(100L), anyList());
+        verify(service).emitir(eq(NotificacionPushMapper.TIPO_INGRESO_EQUIPO), eq("ACME S.A.C."), eq("EQ-001"),
+                eq("JUAN PEREZ"), eq(100L), anyList());
+    }
+
+    @Test
+    void notificarAveriaReportadaResuelveProveedorYExcluyeOrigen() throws Exception {
+        NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
+                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+        when(tokenPushRepository.listActivosExcepto(9L)).thenReturn(List.of(token("t1")));
+        Proveedor proveedor = new Proveedor();
+        proveedor.setRazonSocial("ACME S.A.C.");
+        when(proveedorRepository.findById(4L)).thenReturn(proveedor);
+        Usuario usuario = new Usuario();
+        usuario.setId(9L);
+        usuario.setNombre("JUAN PEREZ");
+        when(usuarioRepository.findById(9L)).thenReturn(usuario);
+        doNothing().when(service).emitir(anyString(), anyString(), anyString(), anyString(), any(), anyList());
+
+        Equipo equipo = new Equipo();
+        equipo.setId(100L);
+        equipo.setCodigo("EQ-001");
+        equipo.setProveedorId(4L);
+        service.notificarAveriaReportada(equipo, 9L);
+
+        Thread.sleep(200);
+        verify(service).emitir(eq(NotificacionPushMapper.TIPO_AVERIA_REPORTADA), eq("ACME S.A.C."), eq("EQ-001"),
+                eq("JUAN PEREZ"), eq(100L), anyList());
+    }
+
+    @Test
+    void notificarAveriaAtendidaEncolaConTipoCorrecto() throws Exception {
+        NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
+                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+        when(tokenPushRepository.listActivosExcepto(9L)).thenReturn(List.of(token("t1")));
+        when(proveedorRepository.findById(4L)).thenReturn(null);
+        Usuario usuario = new Usuario();
+        usuario.setId(9L);
+        usuario.setNombre("JUAN PEREZ");
+        when(usuarioRepository.findById(9L)).thenReturn(usuario);
+        doNothing().when(service).emitir(anyString(), anyString(), anyString(), anyString(), any(), anyList());
+
+        Equipo equipo = new Equipo();
+        equipo.setId(100L);
+        equipo.setCodigo("EQ-001");
+        equipo.setProveedorId(4L);
+        service.notificarAveriaAtendida(equipo, 9L);
+
+        Thread.sleep(200);
+        verify(service).emitir(eq(NotificacionPushMapper.TIPO_AVERIA_ATENDIDA), eq(""), eq("EQ-001"),
+                eq("JUAN PEREZ"), eq(100L), anyList());
+    }
+
+    @Test
+    void notificarServicioFinalizadoEncolaConTipoCorrecto() throws Exception {
+        NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
+                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+        when(tokenPushRepository.listActivosExcepto(9L)).thenReturn(List.of(token("t1")));
+        when(proveedorRepository.findById(4L)).thenReturn(null);
+        Usuario usuario = new Usuario();
+        usuario.setId(9L);
+        usuario.setNombre("JUAN PEREZ");
+        when(usuarioRepository.findById(9L)).thenReturn(usuario);
+        doNothing().when(service).emitir(anyString(), anyString(), anyString(), anyString(), any(), anyList());
+
+        Equipo equipo = new Equipo();
+        equipo.setId(100L);
+        equipo.setCodigo("EQ-001");
+        equipo.setProveedorId(4L);
+        service.notificarServicioFinalizado(equipo, 9L);
+
+        Thread.sleep(200);
+        verify(service).emitir(eq(NotificacionPushMapper.TIPO_SERVICIO_FINALIZADO), eq(""), eq("EQ-001"),
+                eq("JUAN PEREZ"), eq(100L), anyList());
     }
 
     @Test
@@ -122,7 +216,7 @@ class NotificacionPushServiceTest {
         doReturn(success).when(httpClient).send(any(HttpRequest.class), any());
 
         NotificacionPushService service = new NotificacionPushService(tokenPushRepository,
-                marcaRepository, usuarioRepository, mapper, "proj", serviceAccount, httpClient, objectMapper);
+                proveedorRepository, usuarioRepository, mapper, "proj", serviceAccount, httpClient, objectMapper);
 
         String first = service.obtenerAccessToken();
         String second = service.obtenerAccessToken();
@@ -140,9 +234,9 @@ class NotificacionPushServiceTest {
         doReturn(success).when(httpClient).send(any(HttpRequest.class), any());
 
         NotificacionPushService service = new NotificacionPushService(tokenPushRepository,
-                marcaRepository, usuarioRepository, mapper, "apkequiposapilamiento", "{}", httpClient, objectMapper);
+                proveedorRepository, usuarioRepository, mapper, "apkequiposapilamiento", "{}", httpClient, objectMapper);
 
-        JsonNode message = mapper.mensajeIngreso("t1", "EQ-001", "JUAN PEREZ", "TOYOTA", "MODELO X", 100L);
+        JsonNode message = mapper.mensajeIngreso("t1", "ACME S.A.C.", "EQ-001", "JUAN PEREZ", 100L);
         service.enviarAToken("t1", "bearer", message);
 
         var captor = org.mockito.ArgumentCaptor.forClass(HttpRequest.class);
@@ -162,10 +256,24 @@ class NotificacionPushServiceTest {
         doReturn(error).when(httpClient).send(any(HttpRequest.class), any());
 
         NotificacionPushService service = new NotificacionPushService(tokenPushRepository,
-                marcaRepository, usuarioRepository, mapper, "proj", "{}", httpClient, objectMapper);
+                proveedorRepository, usuarioRepository, mapper, "proj", "{}", httpClient, objectMapper);
 
-        JsonNode message = mapper.mensajeIngreso("t1", "EQ-001", "JUAN PEREZ", "", "", 100L);
+        JsonNode message = mapper.mensajeAveriaReportada("t1", "", "EQ-001", "JUAN PEREZ", 100L);
         assertThrows(RuntimeException.class, () -> service.enviarAToken("t1", "bearer", message));
+    }
+
+    @Test
+    void buildMessageSeleccionaMapperSegunTipo() {
+        NotificacionPushService service = new NotificacionPushService(tokenPushRepository,
+                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper);
+
+        JsonNode atendida = service.buildMessage(NotificacionPushMapper.TIPO_AVERIA_ATENDIDA,
+                "t1", "ACME", "EQ-001", "JUAN", 100L);
+        assertEquals("Avería atendida", atendida.path("message").path("notification").path("title").asText());
+
+        JsonNode finalizada = service.buildMessage(NotificacionPushMapper.TIPO_SERVICIO_FINALIZADO,
+                "t1", "ACME", "EQ-001", "JUAN", 100L);
+        assertEquals("Servicio finalizado", finalizada.path("message").path("notification").path("title").asText());
     }
 
     private TokenPush token(String value) {

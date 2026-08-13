@@ -222,6 +222,11 @@ No se usará MySQL en este proyecto.
 | 42 | HDT-012: Contraseña de exactamente 8 dígitos (DNI) en backend y mobile | ✅ Completado |
 | 43 | HDT-012: PSR/OSR finalizado read-only (backend 409 + UI deshabilitada) | ✅ Completado |
 | 44 | HDT-012: Fix trigger Super Admin V29 (permite borrar usuarios, seed sigue protegido) | ✅ Completado |
+| 45 | HDT-013: Plantilla de notificación push nueva (Evento / Proveedor - Codigo / Registrado por) | ✅ Completado |
+| 46 | HDT-013: Notificación push al registrar una avería (AVERIA_REPORTADA) | ✅ Completado |
+| 47 | HDT-013: Notificación push al atender una avería (AVERIA_ATENDIDA) | ✅ Completado |
+| 48 | HDT-013: Notificación push al finalizar el servicio / devolución (SERVICIO_FINALIZADO) | ✅ Completado |
+| 49 | HDT-013: Rebuild backend Docker + APK Gradle local (debug/release); AGENTS.md sin Expo/EAS | ✅ Completado |
 
 ---
 

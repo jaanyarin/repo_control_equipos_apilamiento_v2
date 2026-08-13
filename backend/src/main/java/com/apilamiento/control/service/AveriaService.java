@@ -33,16 +33,19 @@ public class AveriaService {
     private final EquipoRepository equipoRepository;
     private final EvidenciaAveriaRepository evidenciaRepository;
     private final EvidenciaAveriaMapper evidenciaMapper;
+    private final NotificacionPushService notificacionPushService;
 
     public AveriaService(AveriaRepository repository, AveriaMapper mapper,
             EquipoRepository equipoRepository,
             EvidenciaAveriaRepository evidenciaRepository,
-            EvidenciaAveriaMapper evidenciaMapper) {
+            EvidenciaAveriaMapper evidenciaMapper,
+            NotificacionPushService notificacionPushService) {
         this.repository = repository;
         this.mapper = mapper;
         this.equipoRepository = equipoRepository;
         this.evidenciaRepository = evidenciaRepository;
         this.evidenciaMapper = evidenciaMapper;
+        this.notificacionPushService = notificacionPushService;
     }
 
     public List<AveriaDTO> listarTodas() {
@@ -158,6 +161,8 @@ public class AveriaService {
             equipo.setEstadoOperativo("AVERIADO");
             equipo.setUsuarioActualizacion(dto.getUsuarioCreacion() != null ? dto.getUsuarioCreacion() : 1L);
             equipo.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+            notificacionPushService.notificarAveriaReportada(equipo,
+                    dto.getUsuarioCreacion() != null ? dto.getUsuarioCreacion() : 1L);
         }
         return mapper.toDTO(entity);
     }
@@ -194,6 +199,8 @@ public class AveriaService {
                         equipo.setEstadoOperativo("OPERATIVO");
                     }
                     equipo.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+                    notificacionPushService.notificarAveriaAtendida(equipo,
+                            dto.getUsuarioActualizacion() != null ? dto.getUsuarioActualizacion() : 1L);
                 }
             } else if (dto.getHorometroAtencion() != null) {
                 validateHorometroAtencion(entity, dto.getHorometroAtencion());

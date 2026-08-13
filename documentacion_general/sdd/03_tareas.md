@@ -111,6 +111,11 @@ No se usará MySQL en este proyecto.
 | 64 | HDT-012: Contraseña de exactamente 8 dígitos (DNI) backend + mobile | ✅ Completado |
 | 65 | HDT-012: PSR/OSR finalizado read-only (409 backend + UI deshabilitada) | ✅ Completado |
 | 66 | HDT-012: Fix trigger Super Admin (V29) — borrado de usuarios restaurado | ✅ Completado |
+| 67 | HDT-013: Plantilla de notificación push nueva (Evento / Proveedor - Codigo / Registrado por) | ✅ Completado |
+| 68 | HDT-013: Notificación push al registrar una avería (AVERIA_REPORTADA) | ✅ Completado |
+| 69 | HDT-013: Notificación push al atender una avería (AVERIA_ATENDIDA) | ✅ Completado |
+| 70 | HDT-013: Notificación push al finalizar el servicio / devolución (SERVICIO_FINALIZADO) | ✅ Completado |
+| 71 | HDT-013: Rebuild backend Docker + APK Gradle local (debug/release) + AGENTS.md sin Expo/EAS | ✅ Completado |
 
 ---
 
@@ -214,6 +219,11 @@ No se usará MySQL en este proyecto.
 | BE-039 | HDT-012: ChangePasswordRequest @Pattern ^\d{8}$ + LocalAuthService 8 dígitos + passwordResetRequired | Alta | ✅ |
 | BE-040 | HDT-012: PsrDTO.finalizado + PsrService bloquea editar/eliminar PSR/OSR finalizado (409) | Alta | ✅ |
 | BE-041 | HDT-012: V29 fix trigger superadmin delete | Alta | ✅ |
+| BE-042 | HDT-013: NotificacionPushMapper plantilla nueva + 4 eventos (INGRESO/AVERIA_REPORTADA/AVERIA_ATENDIDA/SERVICIO_FINALIZADO) | Alta | ✅ |
+| BE-043 | HDT-013: NotificacionPushService genérico (ProveedorRepository, emitir/buildMessage, 4 notificar*) | Alta | ✅ |
+| BE-044 | HDT-013: AveriaService notifica avería reportada (crear) y atendida (primera atención) | Alta | ✅ |
+| BE-045 | HDT-013: DevolucionEquipoService notifica servicio finalizado | Alta | ✅ |
+| BE-046 | HDT-013: Tests backend NotificacionPushService (12) + AveriaService verify + DevolucionEquipoService verify (109/109) | Alta | ✅ |
 
 ---
 
@@ -293,6 +303,9 @@ No se usará MySQL en este proyecto.
 | AND-037 | HDT-012: DevolucionEquipoScreen evidencias por accesorios del equipo | Alta | ✅ |
 | AND-038 | HDT-012: Contraseña 8 dígitos (PasswordChangeScreen + LoginScreen autofill 00000000) | Alta | ✅ |
 | AND-039 | HDT-012: PsrOsrScreen PSR/OSR finalizado read-only (chips/botones) | Alta | ✅ |
+| AND-040 | HDT-013: AppNavigator navega a EquipoDetail en 4 tipos de notificación | Alta | ✅ |
+| AND-041 | HDT-013: push.js import FCM sin `.default` (warnings v22) + start host LAN + script reverse | Alta | ✅ |
+| AND-042 | HDT-013: Rebuild APK local Gradle debug/release + version bump 1.10.0 | Alta | ✅ |
 
 ---
 

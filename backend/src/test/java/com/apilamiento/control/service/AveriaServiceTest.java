@@ -39,6 +39,9 @@ class AveriaServiceTest {
     @Mock
     EvidenciaAveriaRepository evidenciaRepository;
 
+    @Mock
+    NotificacionPushService notificacionPushService;
+
     AveriaMapper mapper = new AveriaMapper();
     EvidenciaAveriaMapper evidenciaMapper = new EvidenciaAveriaMapper();
 
@@ -46,7 +49,8 @@ class AveriaServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new AveriaService(repository, mapper, equipoRepository, evidenciaRepository, evidenciaMapper);
+        service = new AveriaService(repository, mapper, equipoRepository, evidenciaRepository, evidenciaMapper,
+                notificacionPushService);
     }
 
     @Test
@@ -68,6 +72,7 @@ class AveriaServiceTest {
         assertNotNull(resultado);
         assertEquals(new BigDecimal("1234.5"), resultado.getHorometro());
         verify(repository).persist(any(Averia.class));
+        verify(notificacionPushService).notificarAveriaReportada(equipo, 1L);
     }
 
     @Test
@@ -110,6 +115,7 @@ class AveriaServiceTest {
 
         assertEquals("DEVUELTO", equipo.getEstadoOperativo());
         assertNotNull(equipo.getFechaDevolucion());
+        verify(notificacionPushService).notificarAveriaAtendida(equipo, 1L);
     }
 
     @Test

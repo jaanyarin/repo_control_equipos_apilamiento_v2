@@ -110,6 +110,33 @@ adb -s "<nombre_exacto>" reverse tcp:8082 tcp:8082
 # 3. Reabrir la app (force-stop + start) o pulsar RELOAD en la pantalla roja
 ```
 
+### Causa frecuente (2026-08-13): Metro iniciado con `--host <IP>` (solo escucha una interfaz)
+
+Si Metro se inició con `npx react-native start --host 10.13.18.71` (o similar), SOLO escucha en esa IP:
+
+```
+TCP  10.13.18.71:8081  LISTENING   → loopback (127.0.0.1) NO responde
+```
+
+Consecuencia: los celulares que usan túnel `adb reverse` (apuntan a `localhost:8081` = `127.0.0.1`) NO encuentran Metro y muestran "Unable to load script" (`loadJSBundleFromAssets`), aunque Cel 1 (IP LAN directa) sí funcione.
+
+**Corrección**: iniciar Metro con `--host 0.0.0.0` para que escuche en TODAS las interfaces (loopback + LAN):
+
+```powershell
+# En mobile/
+npx react-native start --host 0.0.0.0 --port 8081
+# o background:
+Start-Process cmd -ArgumentList '/c','npx react-native start --host 0.0.0.0 --port 8081 > metro.log 2>&1' -WorkingDirectory 'C:\repos\repo_control_equipos_apilamiento_v2\mobile' -WindowStyle Hidden
+```
+
+**Verificar** que escucha en todas las interfaces:
+```powershell
+netstat -ano | Select-String ':8081' | Select-String 'LISTEN'
+# Debe mostrar:  TCP  0.0.0.0:8081  LISTENING
+```
+
+> El mensaje de error muestra código del polyfill de console de React Native (setUpGlobals), pero ese código NO es la causa — solo es donde RN presenta el error "Unable to load script" / "Cannot connect to Metro".
+
 ---
 
 ## 6. Error 500 del Metro — `UnableToResolveError`

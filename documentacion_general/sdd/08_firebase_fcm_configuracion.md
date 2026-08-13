@@ -2,20 +2,36 @@
 
 | Campo | Valor |
 |---|---|
-| Fecha | 2026-08-12 |
+| Fecha | 2026-08-13 |
 | Alcance | Proyecto Firebase + app Android + Service Account para notificaciones push FCM |
-| Propósito | Habilitar push reales al celular (app cerrada / pantalla apagada) cuando se finaliza un ingreso de equipo |
-| Estado | ⏳ PENDIENTE — pasos en consola ejecutados por el usuario (cuenta Google) |
+| Propósito | Habilitar push reales al celular cuando ocurren eventos operativos: ingreso de equipo, avería reportada, avería atendida y finalización del servicio |
+| Estado | ✅ CONFIGURADO en `.env` (`FCM_PROJECT_ID` + `FCM_SERVICE_ACCOUNT`) — pasos manuales de consola ya ejecutados |
 | Requiere | Cuenta de Google con acceso a Firebase console |
 
 ---
 
 ## 1. Contexto
 
-El sistema debe enviar notificaciones push (estilo WhatsApp) cuando un usuario finaliza el
-ingreso de un equipo. Según la regla aprobada:
+El sistema envía notificaciones push cuando un usuario ejecuta una de estas acciones:
 
-> **Destinatarios = todos los usuarios con APK instalado y sesión iniciada, EXCEPTO el que registró el equipo.**
+| Evento | `data.tipo` | Título | Ocurre en |
+|---|---|---|---|
+| Finalizar ingreso de un equipo | `INGRESO_EQUIPO` | Nuevo ingreso de equipo | `IngresoEquipoService.finalizar` |
+| Registrar una avería | `AVERIA_REPORTADA` | Nueva avería reportada | `AveriaService.crear` |
+| Atender una avería | `AVERIA_ATENDIDA` | Avería atendida | `AveriaService.actualizar` (primera atención) |
+| Finalizar el servicio (devolución) | `SERVICIO_FINALIZADO` | Servicio finalizado | `DevolucionEquipoService.finalizar` |
+
+Plantilla del mensaje:
+
+```
+Evento: Nuevo ingreso de Equipo
+Proveedor: ACME S.A.C. - Codigo: EQ-001
+Registrado por: JUAN PEREZ
+```
+
+Según la regla aprobada:
+
+> **Destinatarios = todos los usuarios con APK instalado y sesión iniciada, EXCEPTO el que registró la acción.**
 > Ejemplo: con 25 usuarios logueados → la notificación llega a los otros 24.
 
 Esto requiere dos piezas externas que **solo el usuario (cuenta de Google) puede crear**:

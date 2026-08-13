@@ -4,7 +4,7 @@ let messaging = null
 let notificationChannel = null
 
 try {
-  messaging = require('@react-native-firebase/messaging').default
+  messaging = require('@react-native-firebase/messaging')
 } catch (error) {
   // Se permite que la app funcione sin FCM si la lib no está enlazada (modo dev / mocks).
 }
