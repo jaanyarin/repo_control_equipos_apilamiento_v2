@@ -1,10 +1,9 @@
 import { Platform, PermissionsAndroid } from 'react-native'
 
-let messaging = null
-let notificationChannel = null
+let messagingApi = null
 
 try {
-  messaging = require('@react-native-firebase/messaging')
+  messagingApi = require('@react-native-firebase/messaging')
 } catch (error) {
   // Se permite que la app funcione sin FCM si la lib no está enlazada (modo dev / mocks).
 }
@@ -12,6 +11,11 @@ try {
 const DEVICE_PLATFORM = 'ANDROID'
 
 let backgroundHandlerRegistered = false
+let notificationChannel = null
+
+function getMessaging() {
+  return messagingApi ? messagingApi.getMessaging() : null
+}
 
 function ensureChannel() {
   if (Platform.OS !== 'android' || notificationChannel) return notificationChannel
@@ -55,14 +59,15 @@ export async function requestNotificationPermission() {
 }
 
 export async function getFcmToken() {
+  const messaging = getMessaging()
   if (!messaging) return null
   try {
     ensureChannel()
     const permissionGranted =
       Platform.OS === 'android' ? await requestNotificationPermission() : true
     if (!permissionGranted) return null
-    await messaging().requestPermission()
-    const token = await messaging().getToken()
+    await messagingApi.requestPermission(messaging)
+    const token = await messagingApi.getToken(messaging)
     return token || null
   } catch (err) {
     return null
@@ -70,18 +75,20 @@ export async function getFcmToken() {
 }
 
 export async function deleteFcmToken() {
+  const messaging = getMessaging()
   if (!messaging) return
   try {
-    await messaging().deleteToken()
+    await messagingApi.deleteToken(messaging)
   } catch (err) {
     // best-effort
   }
 }
 
 export function registerBackgroundMessageHandler(handler) {
+  const messaging = getMessaging()
   if (!messaging || backgroundHandlerRegistered) return
   try {
-    messaging().setBackgroundMessageHandler(handler)
+    messagingApi.setBackgroundMessageHandler(messaging, handler)
     backgroundHandlerRegistered = true
   } catch (err) {
     // best-effort
@@ -89,27 +96,30 @@ export function registerBackgroundMessageHandler(handler) {
 }
 
 export function onMessage(handler) {
+  const messaging = getMessaging()
   if (!messaging) return () => {}
   try {
-    return messaging().onMessage(handler)
+    return messagingApi.onMessage(messaging, handler)
   } catch (err) {
     return () => {}
   }
 }
 
 export function onMessageOpenedApp(handler) {
+  const messaging = getMessaging()
   if (!messaging) return () => {}
   try {
-    return messaging().onNotificationOpenedApp(handler)
+    return messagingApi.onNotificationOpenedApp(messaging, handler)
   } catch (err) {
     return () => {}
   }
 }
 
 export async function getInitialNotification() {
+  const messaging = getMessaging()
   if (!messaging) return null
   try {
-    const message = await messaging().getInitialNotification()
+    const message = await messagingApi.getInitialNotification(messaging)
     return message || null
   } catch (err) {
     return null
@@ -117,9 +127,10 @@ export async function getInitialNotification() {
 }
 
 export function onTokenRefresh(handler) {
+  const messaging = getMessaging()
   if (!messaging) return () => {}
   try {
-    return messaging().onTokenRefresh(handler)
+    return messagingApi.onTokenRefresh(messaging, handler)
   } catch (err) {
     return () => {}
   }
@@ -130,5 +141,5 @@ export function getDevicePlatform() {
 }
 
 export function isPushAvailable() {
-  return messaging != null
+  return messagingApi != null
 }

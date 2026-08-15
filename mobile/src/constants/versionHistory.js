@@ -1,5 +1,14 @@
 export const VERSION_HISTORY = [
   {
+    version: '1.10.1',
+    fecha: '2026-08-13',
+    titulo: 'HDT-013 — Fix registro de token FCM al abrir la app',
+    cambios: [
+      'Registro del token FCM al iniciar la app con sesión persistente',
+      'Re-registro automático del token cuando FCM lo rota (onTokenRefresh)',
+    ],
+  },
+  {
     version: '1.10.0',
     fecha: '2026-08-13',
     titulo: 'HDT-013 — Notificaciones push ampliadas',

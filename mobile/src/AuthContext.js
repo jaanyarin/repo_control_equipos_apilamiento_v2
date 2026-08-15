@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { parseToken, getToken, removeToken, registrarTokenPush, eliminarTokenPush } from './api'
-import { getFcmToken, deleteFcmToken, getDevicePlatform } from './push'
+import { getFcmToken, deleteFcmToken, getDevicePlatform, onTokenRefresh } from './push'
 
 const AuthContext = createContext(null)
 
@@ -12,12 +12,22 @@ export function AuthProvider({ children }) {
     ;(async () => {
       try {
         const token = await getToken()
-        if (token) setUser(parseToken(token))
+        if (token) {
+          setUser(parseToken(token))
+          await registerPushToken()
+        }
       } finally {
         setLoading(false)
       }
     })()
   }, [])
+
+  useEffect(() => {
+    if (!user) return
+    return onTokenRefresh(() => {
+      void registerPushToken()
+    })
+  }, [user])
 
   const registerPushToken = async () => {
     try {
