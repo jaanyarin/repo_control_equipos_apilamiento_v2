@@ -1,0 +1,94 @@
+@startuml
+' ============================================================================
+' UML - DIAGRAMA DE SECUENCIA
+' Registro y atención de una avería
+' ============================================================================
+
+!theme plain
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam defaultFontName Arial
+
+title Registro y atención de avería - Sistema de Control de Equipos
+
+actor "Usuario / Administrador" as user
+participant "Mobile App\nReact Native" as mobile
+participant "Nginx\nReverse Proxy" as nginx
+participant "REST API\nQuarkus" as api
+participant "JWT / BCrypt\nSecurity" as security
+participant "AveriaService" as service
+participant "PostgreSQL 18" as db
+participant "FCM" as fcm
+
+== Autenticación ==
+
+user -> mobile : Ingresar credenciales
+mobile -> nginx : POST /api/v1/auth/login
+nginx -> api : POST /api/v1/auth/login
+api -> security : Validar usuario / contraseña
+security -> db : Consultar usuario y hash BCrypt
+db --> security : Usuario válido
+security --> api : JWT
+api --> nginx : 200 + JWT
+nginx --> mobile : JWT
+mobile --> user : Acceso autorizado
+
+== Registro de avería ==
+
+user -> mobile : Seleccionar equipo
+mobile -> nginx : GET /api/v1/equipos/{id}
+nginx -> api : GET /api/v1/equipos/{id}
+api -> security : Validar JWT
+security --> api : Token válido
+api -> db : Consultar equipo
+ db --> api : Equipo OPERATIVO
+api --> nginx : Datos del equipo
+nginx --> mobile : Datos del equipo
+
+user -> mobile : Registrar falla + fecha/hora + horómetro + fotos
+mobile -> nginx : POST /api/v1/averias
+nginx -> api : POST /api/v1/averias
+api -> security : Validar JWT y rol
+security --> api : Autorizado
+api -> service : registrarAveria(datos, usuario)
+service -> db : Validar equipo y estado
+ db --> service : Equipo disponible
+service -> db : INSERT avería
+service -> db : UPDATE equipo = AVERIADO
+service -> db : INSERT auditoría
+service -> fcm : Publicar AVERIA_REPORTADA
+fcm --> mobile : Notificación push
+service --> api : Avería registrada
+api --> nginx : 201 Created
+nginx --> mobile : Resultado
+mobile --> user : Avería registrada
+
+== Atención / reparación ==
+
+user -> mobile : Seleccionar avería pendiente
+mobile -> nginx : PUT /api/v1/averias/{id}/atender
+nginx -> api : PUT /api/v1/averias/{id}/atender
+api -> security : Validar JWT y rol
+security --> api : Autorizado
+api -> service : atenderAveria(datos, usuario)
+service -> db : Consultar avería y equipo
+ db --> service : Avería pendiente
+service -> db : UPDATE fecha atención + acción + horómetro
+service -> db : Calcular días de inactividad
+service -> db : UPDATE equipo = OPERATIVO
+service -> db : INSERT auditoría
+service -> fcm : Publicar AVERIA_ATENDIDA
+fcm --> mobile : Notificación push
+service --> api : Avería atendida
+api --> nginx : 200 OK
+nginx --> mobile : Resultado
+mobile --> user : Equipo operativo
+
+note over mobile,db
+Toda operación operacional se persiste en PostgreSQL
+manteniendo trazabilidad de usuario, fechas, estados,
+horómetros y eventos de auditoría.
+end note
+
+@enduml
