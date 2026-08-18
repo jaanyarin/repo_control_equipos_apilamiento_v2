@@ -13,12 +13,12 @@ skinparam defaultFontName Arial
 title Registro y atención de avería - Sistema de Control de Equipos
 
 actor "Usuario / Administrador" as user
-participant "Mobile App\nReact Native" as mobile
+participant "Mobile App\nReact Native CLI" as mobile
 participant "Nginx\nReverse Proxy" as nginx
 participant "REST API\nQuarkus" as api
 participant "JWT / BCrypt\nSecurity" as security
 participant "AveriaService" as service
-participant "PostgreSQL 18" as db
+database "PostgreSQL 18" as db
 participant "FCM" as fcm
 
 == Autenticación ==
@@ -42,7 +42,7 @@ nginx -> api : GET /api/v1/equipos/{id}
 api -> security : Validar JWT
 security --> api : Token válido
 api -> db : Consultar equipo
- db --> api : Equipo OPERATIVO
+db --> api : Equipo OPERATIVO
 api --> nginx : Datos del equipo
 nginx --> mobile : Datos del equipo
 
@@ -53,7 +53,7 @@ api -> security : Validar JWT y rol
 security --> api : Autorizado
 api -> service : registrarAveria(datos, usuario)
 service -> db : Validar equipo y estado
- db --> service : Equipo disponible
+db --> service : Equipo disponible
 service -> db : INSERT avería
 service -> db : UPDATE equipo = AVERIADO
 service -> db : INSERT auditoría
@@ -73,7 +73,7 @@ api -> security : Validar JWT y rol
 security --> api : Autorizado
 api -> service : atenderAveria(datos, usuario)
 service -> db : Consultar avería y equipo
- db --> service : Avería pendiente
+db --> service : Avería pendiente
 service -> db : UPDATE fecha atención + acción + horómetro
 service -> db : Calcular días de inactividad
 service -> db : UPDATE equipo = OPERATIVO
@@ -86,7 +86,7 @@ nginx --> mobile : Resultado
 mobile --> user : Equipo operativo
 
 note over mobile,db
-Toda operación operacional se persiste en PostgreSQL
+Toda operación operacional se persiste en PostgreSQL,
 manteniendo trazabilidad de usuario, fechas, estados,
 horómetros y eventos de auditoría.
 end note
