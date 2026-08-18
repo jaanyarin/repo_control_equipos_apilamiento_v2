@@ -88,6 +88,12 @@ Validar que cada HITO del proyecto **Control de Equipos de Apilamiento** cumpla 
 | G-OBS | Observabilidad | Logs JSON estructurados, health checks, métricas Prometheus, dashboards Grafana | Endpoint sin health check o métrica básica |
 | G-OWASP | OWASP | Rate limiting, CORS configurado, headers HTTP seguros, prevención SQL Injection/XSS/CSRF, secrets en entorno | Vulnerabilidad OWASP Top 10 detectable |
 | G-INFRA | Infraestructura | Docker Compose multi-ambiente, Nginx reverse proxy, HTTPS, variables de entorno seguras, backups | Secreto hardcodeado o entorno no reproducible |
+| G-ANAL | Análisis previo | HITO/Feature inicia con análisis documentado: contrato backend verificado, patrones reutilizables identificados, config de tests revisada, ≥2 alternativas con trade-offs, estimación de build | Cambio implementado sin análisis previo |
+| G-NOTRIAL | Prohibición de trial/error | Flujo plan → analizar → implementar → verificar → documentar cumplido; estado en disco (Ley 2) | Evidencia de prueba-error sin análisis o trabajo no registrado |
+| G-EFF | Eficiencia y reuso | Mínimo diff, reutiliza patrones existentes (DRY), sin endpoints/componentes redundantes | Código duplicado con patrón equivalente existente |
+| G-UX | UI/UX y accesibilidad | Cumple heurísticas de usabilidad (Nielsen) + MD3, estados carga/vacío/error con feedback, teclado no cubre inputs, `accessibilityLabel` | Pantalla sin estados de carga/error o acción sin feedback |
+| G-APK | Build APK CLI (sin Expo) | Build con Gradle local (`assembleDebug`/`assembleRelease`), sin Expo/EAS, `versionName`/`versionCode` coherentes, artefacto verificado | Uso de Expo/EAS en el ciclo o APK con versión desincronizada |
+| G-DOC-SYNC | Trazabilidad de versión (Ley V/R) | Versión coherente en package.json, versionHistory, AGENTS, README, 04_implementaciones y build.gradle; historial visible; artefacto rebuild o pendiente marcado | Diferencia de versión entre fuentes o estado ambiguo versión↔artefacto |
 
 ---
 
@@ -105,8 +111,55 @@ Validar que cada HITO del proyecto **Control de Equipos de Apilamiento** cumpla 
 | Crashlytics sin crashes no resueltos en sesión de pruebas | 0 crashes |
 | Latencia gate review (cierre → entrega) | ≤3 días |
 | Drift documental (docs publicitadas que no existen) | 0 |
+| Apk/versionName/versionCode coherente entre `package.json`, `build.gradle` y top de `versionHistory.js` | 100% |
+| Hitos/features con análisis previo documentado (alternativas + decisión) | 100% |
+| Trabajo repetido por pérdida de estado (Ley 2 — estado en disco) | 0 |
+| Entradas de `versionHistory.js` presentes en cada bump | 100% |
+| Estados ambiguos versión↔artefacto (bump sin APK o APK desincronizado) al cierre | 0 |
+| Fallos pre-existentes detectados y documentados en análisis (no al testear) | 100% detectados |
 
 ---
+
+## Leyes transversales que el auditor verifica
+
+Estas leyes provienen del perfil de desarrollo (`perfil_desarrollador.md`) y se derivan de errores reales cometidos en sesiones anteriores (soft delete de catálogos, sesión `9e6d9d1`). El auditor las comprueba en cada gate-review.
+
+| Ley | Qué verifica el auditor | Evidencia esperada |
+|---|---|---|
+| **Ley 1 — Análisis previo** | No existe trial/error; el plan incluye análisis de contrato backend, patrones reutilizados, config de tests, estimación de build y ≥2 alternativas | Sección de análisis/alternativas en el plan del HITO |
+| **Ley 2 — Estado en disco** | Cada sesión concluye con `git` limpio o estado documentado; el trabajo es retomable desde disco (versionHistory, 05_hito, AGENTS) | Último commit ≠ WIP; nota de retorno o entrada de historial |
+| **Ley 3 — Trazabilidad de versión (Ley V + Ley R)** | Bump + `versionHistory.js` + AGENTS/README/04 en el mismo commit; artefacto rebuild o pendiente marcado; historial visible al usuario (web pendiente) | `npm run version:*` ejecutado; APK timestamp y versión coherentes |
+| **Ley 4 — Eficiencia** | Diff mínimo; reutiliza patrones existentes; sin endpoints/componentes redundantes | Revisión de diff y grep de duplicados |
+| **Ley 5 — Verificación obligatoria** | Cada cambio corrió su comando de verificación documentado; fallos pre-existentes documentados en análisis | Logs de build/test/lint del cambio |
+
+---
+
+## Matriz de lecciones aprendidas → regla → verificación
+
+Lecciones extraídas de los hitos recientes: cada error cometido se convirtió en regla verificable.
+
+| Lección aprendida (error cometido) | Regla devenida | Cómo la verifica el auditor |
+|---|---|---|
+| DELETE de catálogo con dependencias (>FK) devolvía 500 genérico | Validación previa de referencias + respuesta 409 semántica (sugerir desactivar) | `curl`/test con entidad referenciada devuelve 409 con mensaje accionable, no 500 |
+| Cambios hechos por prueba/error sin análisis | Ley 1: plan → analizar → implementar → verificar | El plan del HITO contiene alternativas y decisión justificada |
+| Bump de versión sin artefacto reconstruido (estado ambiguo) | Ley 3: bump + artefacto (o pendiente marcado) en el mismo alcance | `versionName` en APK == `package.json` == top de `versionHistory.js` |
+| Fallo de suite detectado solo al testear (Jest web `setup.js`) | Ley 5: detectar y documentar fallos pre-existentes en el análisis | Sección de análisis menciona el fallo pre-existente y su causa |
+| Asumir config de un test sin leerla (`autoFrom` vs valor directo) | Leer props/config real antes de escribir asserts | Test alineado con los datos reales del componente |
+| Toggle de estado duplicado en 5 páginas web | Ley 4: DRY — extraer patrón/componente reutilizable | Grep confirma reuso en lugar de copia |
+| Build APK cortado por timeout subestimado | Tiempos realistas (release cold ≈ 2-6 min); o estado marcado pendiente | APK con timestamp actual o nota explícita de pendiente |
+
+---
+
+## Fuentes de referencia citadas (para validar best practices)
+
+- NN/g — *10 Usability Heuristics*: https://www.nngroup.com/articles/ten-usability-heuristics/
+- React Native — APK firmado con Gradle (CLI, sin Expo/EAS): https://reactnative.dev/docs/signed-apk-android
+- *The Twelve-Factor App*: https://12factor.net
+- Arquitectura por capas / Clean Architecture (Controller → Service → Repository → DTO → Mapper): dev.to — *Clean Architecture for Mobile Apps* (2025)
+
+---
+
+*Documento adaptado al perfil de desarrollo del proyecto Control de Equipos de Apilamiento. Versión 2.0 — 2026-08-18*
 
 ## Protocolo de comunicación
 

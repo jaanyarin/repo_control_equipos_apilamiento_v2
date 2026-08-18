@@ -456,6 +456,110 @@ Definir:
 
 ---
 
+# Leyes Normativas del Perfil (obligatorias)
+
+> Estas leyes nacen de **errores reales** cometidos durante el desarrollo (ver `documentacion_general/sdd/04_implementaciones.md` §§ 38-41 y AGENTS.md § 8.1). Su objetivo es que **no se repitan**: se aprende de lo ocurrido y se convierte en regla verificable.
+
+## Ley 1 — Análisis previo obligatorio (prohibido el trial/error)
+
+Ningún cambio de código comienza sin análisis. El **trial/error** (probar a ciegas, iterar sobre errores en ejecución) está **prohibido**.
+
+Antes de tocar código, el desarrollador debe realizar y dejar evidencia de:
+
+| Verificación | Qué hacer | Evidencia mínima |
+|---|---|---|
+| Contrato backend | `grep` en services/controllers para confirmar que el endpoint soporta lo planeado (p. ej. `setEstadoActivo` en `actualizar`) | Servicio citado |
+| Patrones existentes | Buscar si el cambio ya existe o hay un patrón equivalente reutilizable (p. ej. `CampanaResource.activar/cerrar`) | Archivo reutilizado |
+| Config de tests | Revisar config (jest/gradle) antes de correr; detectar fallos **pre-existentes** y documentarlos | Config leída |
+| Estimación de build | Estimar tiempo de build/rebuild y definir timeout acorde (release cold ≈ 2-6 min) | Estimación en el plan |
+| Alternativas | ≥2 opciones viables con pros/contras y decisión justificada | Sección de alternativas en el plan |
+
+Flujo estricto: **plan → analizar → implementar → verificar → documentar → commit**. No existe el "probar a ver si funciona".
+
+## Ley 2 — Estado en disco, nunca en memoria
+
+Las sesiones de desarrollo (agentes/openCode) comparten **solo el disco**, no memoria ni contexto. Por lo tanto:
+
+- Todo avance concluye con `commit` explícito y `git` limpio o con el estado documentado.
+- El "dónde quedó el trabajo" debe poder responderse **desde el disco**: AGENTS.md (versión + hitos), `05_hito_NNN.md` (instrucciones de retorno), `versionHistory.js`.
+- Nunca depender de lo que "recuerda" una sesión anterior.
+
+## Ley 3 — Trazabilidad de versión (Ley V) y resumen de retorno (Ley R)
+
+- Cada funcionalidad cerrada = bump (minor/patch según regla) + entrada en `versionHistory.js` + actualización de AGENTS/README/04_implementaciones **en el mismo commit**.
+- El artefacto (APK/web) debe quedar reconstruido o **marcarse explícitamente pendiente** — nunca un estado ambiguo (prohibido: bump de versión sin artefacto, o APK con versión desincronizada).
+- El historial de versiones debe ser **visible al usuario** (mobile: Perfil → botón historial; web: pendiente de implementar) y responder "¿qué versión tengo y qué contiene?".
+- Ninguna tarea se deja "a medias": si un entregable no se completa, se documenta su estado para que la siguiente sesión pueda retomarlo sin repetir ni perder trabajo.
+
+## Ley 4 — Eficiencia
+
+- Mínimo diff posible; **reutilizar patrones existentes** (DRY): no duplicar componentes, handlers ni acciones cuando ya existe un equivalente.
+- No crear endpoints, componentes ni campos redundantes.
+- Cada cambio tiene **un comando de verificación documentado** (build/test/lint) que SIEMPRE se ejecuta.
+- La eficiencia es la palabra clave: resolver con la menor cantidad de cambios correctos y verificados.
+
+## Ley 5 — Verificación obligatoria y fallos pre-existentes
+
+- Todo cambio corre su verificación documentada antes de commitear.
+- Los fallos pre-existentes se detectan y documentan **en el análisis** (no al final); no se atribuyen a otro trabajo, no se ignoran y no se agravan.
+
+---
+
+# Construcción del APK — React Native CLI (Gradle local, SIN Expo)
+
+- El APK se construye **localmente con Gradle**: `npm run android:debug` / `npm run android:release` (NO `eas-cli`, NO `expo`, NO EAS Cloud).
+- Configuración congelada: `main=index.js`, `hermesEnabled=true`, `newArchEnabled=true`, `app.json` solo `name`/`displayName`.
+- Tiempos realistas: release en frío ≈ 2-6 min; usar timeouts acordes y **no cortar un build sin criterio** (si se corta, el estado queda marcado pendiente según Ley 3).
+- Al terminar el build, verificar: timestamp del APK y que `versionName`/`versionCode` en `mobile/android/app/build.gradle` === `mobile/package.json`.
+- Despliegue a dispositivos: verificar `adb devices -l` (seriales conocidos: `qctoduvsa6v4cyhi`, `85ijey5tdax8ob5p`); instalar con `adb -s <serial> install -r app-release.apk`. Si no hay dispositivos conectados, se reporta como **bloqueado**, nunca como realizado.
+
+---
+
+# Criterio UI/UX (alto criterio y buenas prácticas)
+
+- Consistencia con el tema del proyecto (react-native-paper **MD3** en mobile / MUI en web; tokens centralizados en `theme`).
+- Toda pantalla cubre los estados: **carga**, **vacío**, **error (con reintentar)** y **feedback de éxito**.
+- El teclado móvil nunca debe cubrir los inputs (KeyboardAvoidingView + ScrollView).
+- Acciones destructivas/irreversibles confirman; las reversibles (soft delete) son visibles y explicadas.
+- Errores **semánticos**, no técnicos: p. ej. un 409 "tiene equipos asociados" debe ofrecer la alternativa (desactivar).
+- Accesibilidad: `accessibilityLabel` en acciones, contraste suficiente, targets táctiles ≥44px.
+- Fechas/hora en `es-PE` y formato consistente.
+- Estado visual explícito (chips/badges: Activo/Inactivo/Devuelto/Finalizado) para cero ambigüedad.
+- Recuperación ante errores con mensajes que indiquen la acción concreta a tomar.
+
+**Referencias:** Jakob Nielsen, *10 Usability Heuristics* (Nielsen Norman Group, 1994, rev. 2024); Material Design 3 (material.io); consideraciones WCAG 2.1 (contraste, foco, etiquetas).
+
+---
+
+# Exploración de alternativas (no quedarse con la 1ª opción)
+
+Para decisiones no triviales:
+
+- Listar ≥2-3 opciones viables con sus trade-offs (riesgo, esfuerzo, impacto).
+- Elegir la de mejor relación costo-beneficio y **justificar** la decisión (p. ej. el caso DELETE con FK se resolvió evaluando opciones A/B/C/D y eligiendo desactivación lógica en UI).
+- Registrar la decisión y su porqué en el plan del HITO para que la auditoría la pueda evaluar.
+
+---
+
+# Criterios de Documentación
+
+- Secciones SDD numeradas y siempre actualizadas (`04_implementaciones.md`, `05_hito_NNN.md`).
+- `versionHistory.js` es la **fuente de verdad** del historial visible al usuario.
+- Conventional Commits con scope: `feat(web,mobile):`, `fix(backend):`, `db:`, `docs:`, etc.
+- Coherencia entre AGENTS.md, README.md, versión del app y documentación: **drift documental = hallazgo de auditoría**.
+- Cada HITO documenta: contexto, decisión, cambios por capa, tests y verificación end-to-end, artefactos y estado.
+
+---
+
+# Fuentes y buenas prácticas de referencia
+
+- NN/g — *10 Usability Heuristics*: https://www.nngroup.com/articles/ten-usability-heuristics/
+- React Native — generar APK firmado con Gradle (CLI, sin Expo): https://reactnative.dev/docs/signed-apk-android
+- *The Twelve-Factor App* (Heroku): https://12factor.net
+- Arquitectura por capas / Clean Architecture (Controller → Service → Repository → DTO → Mapper; evitar fat controllers): dev.to — *Clean Architecture for Mobile Apps* (2025), y patrones SOLID/DIP aplicados a layers.
+
+---
+
 # Objetivo del Perfil
 
 Desarrollar una solución móvil empresarial moderna, segura, mantenible y escalable para la gestión y control operativo de equipos de apilamiento, utilizando tecnologías modernas mobile/backend, arquitectura desacoplada, infraestructura contenerizada y estándares enterprise de desarrollo.
