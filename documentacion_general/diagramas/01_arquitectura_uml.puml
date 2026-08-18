@@ -1,0 +1,89 @@
+@startuml
+' ============================================================================
+' UML - DIAGRAMA DE ARQUITECTURA / DESPLIEGUE
+' Sistema de Control de Equipos de Apilamiento
+' ============================================================================
+
+!theme plain
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam defaultFontName Arial
+
+actor "Administrador / Usuario" as user
+
+node "Dispositivo Android" as android {
+  component "Mobile App\nReact Native CLI 0.81.5\nReact Navigation + Paper MD3" as mobile
+}
+
+node "Cliente Web" as browser {
+  component "Frontend SPA\nReact 18 + Vite 5\nMaterial UI 6" as web
+}
+
+node "Servidor de Aplicaciones\nDocker Compose" as docker {
+  node "Nginx\nReverse Proxy :80/:443" as nginx {
+    component "Frontend SPA\narchivos estáticos" as spa
+    component "Proxy /api/v1" as proxy
+  }
+
+  node "Backend Container\nQuarkus 3.14.4 / Java 21\n:8082" as backend {
+    component "REST API /api/v1" as api
+    component "Servicios de negocio" as services
+    component "Hibernate ORM Panache" as orm
+    component "JWT + BCrypt" as security
+    component "Flyway" as flyway
+    component "Auditoría" as audit
+  }
+
+  database "PostgreSQL 18\n:5432 interno\n:5433 host" as db
+}
+
+cloud "Firebase Cloud Messaging\nFCM" as fcm
+
+user --> mobile : HTTPS
+user --> web : HTTPS
+
+mobile --> nginx : HTTPS /api/v1
+web --> nginx : HTTPS
+
+nginx --> spa : entrega SPA
+nginx --> proxy : enruta /api/v1
+proxy --> api : HTTP interno
+
+api --> security : autenticación/autorización
+api --> services : operaciones
+services --> orm : persistencia
+orm --> db : SQL / JDBC
+flyway --> db : migraciones
+services --> audit : eventos de auditoría
+audit --> db : registro histórico
+
+services --> fcm : notificaciones push
+fcm --> mobile : push
+
+note right of mobile
+Operación de campo:
+- Equipos
+- PSR / OSR
+- Averías
+- Atención / finalización
+- Evidencias
+- Historial / timeline
+end note
+
+note right of web
+Administración y gestión:
+- Usuarios / roles
+- Sedes / campañas
+- Catálogos
+- Equipos / averías
+- Auditoría
+end note
+
+note bottom of db
+Fuente de persistencia oficial: PostgreSQL 18.
+La comunicación cliente → backend se realiza mediante API REST.
+El backend accede a PostgreSQL dentro de la red Docker.
+end note
+
+@enduml
