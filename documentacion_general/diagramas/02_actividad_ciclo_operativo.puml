@@ -1,0 +1,100 @@
+@startuml
+' ============================================================================
+' UML - DIAGRAMA DE ACTIVIDADES
+' Ciclo operativo de un equipo de apilamiento
+' ============================================================================
+
+!theme plain
+skinparam shadowing false
+skinparam linetype ortho
+skinparam defaultFontName Arial
+
+start
+
+partition "Administrador" {
+  :Iniciar sesión;
+  :Registrar PSR;
+  :Registrar OSR y costo mensual;
+}
+
+partition "Sistema" {
+  :Validar credenciales y permisos;
+  if (¿PSR válido y sin equipo asignado?) then (Sí)
+  else (No)
+    :Mostrar validación / error;
+    stop
+  endif
+}
+
+partition "Administrador / Usuario" {
+  :Registrar ingreso del equipo;
+  :Registrar proveedor, marca, modelo,
+código, serie y accesorios;
+  :Registrar horómetro inicial;
+  :Capturar evidencias de ingreso;
+}
+
+partition "Sistema" {
+  :Guardar equipo;
+  :Estado operativo = OPERATIVO;
+}
+
+partition "Operación" {
+  :Equipo en servicio;
+  if (¿Se presenta avería?) then (Sí)
+    :Registrar falla, fecha/hora,
+horómetro y evidencias;
+  else (No)
+    :Continuar operación;
+  endif
+}
+
+partition "Sistema" {
+  if (¿Avería registrada?) then (Sí)
+    :Estado operativo = AVERIADO;
+    :Calcular tiempo de inactividad;
+  else (No)
+  endif
+}
+
+partition "Administrador / Usuario" {
+  if (¿Avería pendiente de atención?) then (Sí)
+    :Registrar acción de reparación;
+    :Registrar fecha/hora de atención;
+    :Registrar horómetro de atención;
+    :Registrar evidencia de atención;
+  else (No)
+  endif
+}
+
+partition "Sistema" {
+  if (¿Avería atendida?) then (Sí)
+    :Estado operativo = OPERATIVO;
+    :Calcular días de inactividad;
+    :Registrar auditoría;
+  else (No)
+  endif
+}
+
+partition "Administrador / Usuario" {
+  :Consultar detalle / timeline del equipo;
+  if (¿Finalizar servicio?) then (Sí)
+    :Registrar devolución;
+    :Registrar horómetro final;
+    :Capturar evidencias de devolución;
+  else (No)
+    :Continuar servicio;
+  endif
+}
+
+partition "Sistema" {
+  if (¿Servicio finalizado?) then (Sí)
+    :Actualizar fecha de devolución;
+    :Registrar evento de finalización;
+    :Conservar trazabilidad histórica;
+  else (No)
+  endif
+}
+
+stop
+@enduml
