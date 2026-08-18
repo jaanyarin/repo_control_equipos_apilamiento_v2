@@ -2,6 +2,7 @@ package com.apilamiento.control.controller;
 
 import com.apilamiento.control.dto.EquipoDTO;
 import com.apilamiento.control.service.EquipoService;
+import com.apilamiento.control.service.EquipoTimelineService;
 import jakarta.ws.rs.core.SecurityContext;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.Test;
@@ -23,13 +24,16 @@ class EquipoResourceTest {
     EquipoService service;
 
     @Mock
+    EquipoTimelineService timelineService;
+
+    @Mock
     SecurityContext securityContext;
 
     @Mock
     JsonWebToken jwt;
 
     private EquipoResource resource() {
-        return new EquipoResource(service);
+        return new EquipoResource(service, timelineService);
     }
 
     private void simularToken(Long usuarioId) {

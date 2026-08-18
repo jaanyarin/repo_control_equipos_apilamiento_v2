@@ -12,6 +12,7 @@ import ServerCheckScreen from '../screens/ServerCheckScreen'
 import HomeScreen from '../screens/HomeScreen'
 import EquiposListScreen from '../screens/EquiposListScreen'
 import EquipoDetailScreen from '../screens/EquipoDetailScreen'
+import EquipoTimelineScreen from '../screens/EquipoTimelineScreen'
 import RegistrarAveriaScreen from '../screens/RegistrarAveriaScreen'
 import AtenderAveriaScreen from '../screens/AtenderAveriaScreen'
 import PerfilScreen from '../screens/PerfilScreen'
@@ -186,6 +187,7 @@ function MainNavigator() {
     >
       <MainStack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
       <MainStack.Screen name="EquipoDetail" component={EquipoDetailScreen} options={{ title: 'Detalle de Equipo' }} />
+      <MainStack.Screen name="EquipoTimeline" component={EquipoTimelineScreen} options={{ title: 'Historial del Equipo' }} />
       <MainStack.Screen name="SelectPsrEquipment" component={SelectPsrEquipmentScreen} options={{ title: 'Seleccionar PSR / OSR' }} />
       <MainStack.Screen name="EquipmentForm" component={EquipmentFormScreen} options={({ route }) => ({
         title: route.params?.mode === 'edit' ? 'Editar equipo' : 'Ingreso de equipo',

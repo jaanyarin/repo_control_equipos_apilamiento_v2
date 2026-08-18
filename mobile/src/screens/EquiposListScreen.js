@@ -127,12 +127,25 @@ export default function EquiposListScreen() {
                 {isManage && canEdit ? (
                   <View style={styles.actions}>
                     <AppIconButton
+                      icon="history"
+                      accessibilityLabel={`Ver historial de ${item.codigo}`}
+                      onPress={() => navigation.navigate('EquipoTimeline', { id: item.id })}
+                    />
+                    <AppIconButton
                       icon="pencil-outline"
                       accessibilityLabel={`Editar equipo ${item.codigo}`}
                       onPress={() => navigation.navigate('EquipmentForm', { mode: 'edit', equipo: item })}
                     />
                   </View>
-                ) : null}
+                ) : (
+                  <View style={styles.actions}>
+                    <AppIconButton
+                      icon="history"
+                      accessibilityLabel={`Ver historial de ${item.codigo}`}
+                      onPress={() => navigation.navigate('EquipoTimeline', { id: item.id })}
+                    />
+                  </View>
+                )}
               </AppCard>
             )}
           />
@@ -161,5 +174,5 @@ const styles = StyleSheet.create({
   cardTitle: { ...theme.typography.subtitle1, color: theme.colors.text.primary },
   cardModel: { ...theme.typography.body2, color: theme.colors.text.secondary, marginTop: theme.spacing[1] },
   cardMeta: { ...theme.typography.caption, color: theme.colors.text.tertiary },
-  actions: { position: 'absolute', right: theme.spacing[2], bottom: theme.spacing[1] },
+  actions: { position: 'absolute', right: theme.spacing[2], bottom: theme.spacing[1], flexDirection: 'row' },
 })

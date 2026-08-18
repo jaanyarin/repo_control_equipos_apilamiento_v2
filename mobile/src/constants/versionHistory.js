@@ -1,5 +1,16 @@
 export const VERSION_HISTORY = [
   {
+    version: '1.11.0',
+    fecha: '2026-08-17',
+    titulo: 'HDT-014 — Timeline dinámico de detalle de equipo',
+    cambios: [
+      'Nueva pantalla "Historial del Equipo" accesible desde el botón "Ver Historial" en el listado',
+      'Endpoint backend GET /api/v1/equipos/{id}/timeline (consolidación de eventos PSR/OSR/ingreso/averías/reparaciones/finalización)',
+      'Resumen operativo: fecha de ingreso, horómetro inicial/final, cantidad de averías, tiempo de inactividad y fecha de finalización',
+      'Timeline expandible por evento con detalle, estado y evidencias (fotos ampliables)',
+    ],
+  },
+  {
     version: '1.10.1',
     fecha: '2026-08-13',
     titulo: 'HDT-013 — Fix registro de token FCM al abrir la app',

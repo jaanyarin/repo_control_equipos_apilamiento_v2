@@ -2,7 +2,9 @@ package com.apilamiento.control.controller;
 
 import com.apilamiento.control.dto.ApiResponse;
 import com.apilamiento.control.dto.EquipoDTO;
+import com.apilamiento.control.dto.EquipoTimelineDTO;
 import com.apilamiento.control.service.EquipoService;
+import com.apilamiento.control.service.EquipoTimelineService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -19,14 +21,27 @@ import com.apilamiento.control.security.SecurityUtil;
 public class EquipoResource {
 
     private final EquipoService service;
+    private final EquipoTimelineService timelineService;
 
-    public EquipoResource(EquipoService service) {
+    public EquipoResource(EquipoService service, EquipoTimelineService timelineService) {
         this.service = service;
+        this.timelineService = timelineService;
     }
 
     @GET
     public Response listar() {
         return Response.ok(ApiResponse.ok(service.listarTodos())).build();
+    }
+
+    @GET
+    @Path("/{id}/timeline")
+    public Response timeline(@PathParam("id") Long id) {
+        EquipoTimelineDTO dto = timelineService.obtenerTimeline(id);
+        if (dto == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error("Equipo no encontrado", "NOT_FOUND")).build();
+        }
+        return Response.ok(ApiResponse.ok(dto)).build();
     }
 
     @GET
