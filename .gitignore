@@ -72,5 +72,8 @@ mobile_cli_next/
 mobile_expo_backup/
 ApilamientoMobileCli/
 
-# Caché local Maven (builds Docker)
+# Cachï¿½ local Maven (builds Docker)
 backend/.m2-ci/
+
+# Grabaciones de sesiones (opencode, etc.)
+.recordings/
