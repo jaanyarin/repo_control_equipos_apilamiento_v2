@@ -3,9 +3,13 @@ package com.apilamiento.control.service;
 import com.apilamiento.control.dto.SedeDTO;
 import com.apilamiento.control.entity.Sede;
 import com.apilamiento.control.mapper.SedeMapper;
+import com.apilamiento.control.repository.PsrRepository;
 import com.apilamiento.control.repository.SedeRepository;
+import com.apilamiento.control.repository.UsuarioRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -15,10 +19,15 @@ public class SedeService {
 
     private final SedeRepository repository;
     private final SedeMapper mapper;
+    private final PsrRepository psrRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public SedeService(SedeRepository repository, SedeMapper mapper) {
+    public SedeService(SedeRepository repository, SedeMapper mapper,
+                       PsrRepository psrRepository, UsuarioRepository usuarioRepository) {
         this.repository = repository;
         this.mapper = mapper;
+        this.psrRepository = psrRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     public List<SedeDTO> listarTodas() {
@@ -68,6 +77,11 @@ public class SedeService {
     public boolean eliminar(Long id) {
         Sede entity = repository.findById(id);
         if (entity == null) return false;
+        if (!psrRepository.listBySedeId(id).isEmpty() || !usuarioRepository.findBySitioId(id).isEmpty()) {
+            throw new WebApplicationException(
+                    "No se puede eliminar la sede porque tiene PSRs o usuarios asociados",
+                    Response.Status.CONFLICT);
+        }
         repository.delete(entity);
         return true;
     }

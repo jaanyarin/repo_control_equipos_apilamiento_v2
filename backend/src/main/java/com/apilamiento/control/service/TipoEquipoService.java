@@ -3,9 +3,12 @@ package com.apilamiento.control.service;
 import com.apilamiento.control.dto.TipoEquipoDTO;
 import com.apilamiento.control.entity.TipoEquipo;
 import com.apilamiento.control.mapper.TipoEquipoMapper;
+import com.apilamiento.control.repository.EquipoRepository;
 import com.apilamiento.control.repository.TipoEquipoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -15,10 +18,12 @@ public class TipoEquipoService {
 
     private final TipoEquipoRepository repository;
     private final TipoEquipoMapper mapper;
+    private final EquipoRepository equipoRepository;
 
-    public TipoEquipoService(TipoEquipoRepository repository, TipoEquipoMapper mapper) {
+    public TipoEquipoService(TipoEquipoRepository repository, TipoEquipoMapper mapper, EquipoRepository equipoRepository) {
         this.repository = repository;
         this.mapper = mapper;
+        this.equipoRepository = equipoRepository;
     }
 
     public List<TipoEquipoDTO> listarTodos() {
@@ -68,6 +73,11 @@ public class TipoEquipoService {
     public boolean eliminar(Long id) {
         TipoEquipo entity = repository.findById(id);
         if (entity == null) return false;
+        if (!equipoRepository.listByTipoEquipoId(id).isEmpty()) {
+            throw new WebApplicationException(
+                    "No se puede eliminar el tipo de equipo porque tiene equipos asociados",
+                    Response.Status.CONFLICT);
+        }
         repository.delete(entity);
         return true;
     }

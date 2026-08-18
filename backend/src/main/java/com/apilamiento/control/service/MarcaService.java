@@ -3,9 +3,12 @@ package com.apilamiento.control.service;
 import com.apilamiento.control.dto.MarcaDTO;
 import com.apilamiento.control.entity.Marca;
 import com.apilamiento.control.mapper.MarcaMapper;
+import com.apilamiento.control.repository.EquipoRepository;
 import com.apilamiento.control.repository.MarcaRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -15,10 +18,12 @@ public class MarcaService {
 
     private final MarcaRepository repository;
     private final MarcaMapper mapper;
+    private final EquipoRepository equipoRepository;
 
-    public MarcaService(MarcaRepository repository, MarcaMapper mapper) {
+    public MarcaService(MarcaRepository repository, MarcaMapper mapper, EquipoRepository equipoRepository) {
         this.repository = repository;
         this.mapper = mapper;
+        this.equipoRepository = equipoRepository;
     }
 
     public List<MarcaDTO> listarTodas() {
@@ -66,6 +71,11 @@ public class MarcaService {
     public boolean eliminar(Long id) {
         Marca entity = repository.findById(id);
         if (entity == null) return false;
+        if (!equipoRepository.listByMarcaId(id).isEmpty()) {
+            throw new WebApplicationException(
+                    "No se puede eliminar la marca porque tiene equipos asociados",
+                    Response.Status.CONFLICT);
+        }
         repository.delete(entity);
         return true;
     }

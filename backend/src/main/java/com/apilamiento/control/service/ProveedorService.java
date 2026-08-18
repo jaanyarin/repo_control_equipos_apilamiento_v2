@@ -3,9 +3,12 @@ package com.apilamiento.control.service;
 import com.apilamiento.control.dto.ProveedorDTO;
 import com.apilamiento.control.entity.Proveedor;
 import com.apilamiento.control.mapper.ProveedorMapper;
+import com.apilamiento.control.repository.EquipoRepository;
 import com.apilamiento.control.repository.ProveedorRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -15,10 +18,12 @@ public class ProveedorService {
 
     private final ProveedorRepository repository;
     private final ProveedorMapper mapper;
+    private final EquipoRepository equipoRepository;
 
-    public ProveedorService(ProveedorRepository repository, ProveedorMapper mapper) {
+    public ProveedorService(ProveedorRepository repository, ProveedorMapper mapper, EquipoRepository equipoRepository) {
         this.repository = repository;
         this.mapper = mapper;
+        this.equipoRepository = equipoRepository;
     }
 
     public List<ProveedorDTO> listarTodos() {
@@ -68,6 +73,11 @@ public class ProveedorService {
     public boolean eliminar(Long id) {
         Proveedor entity = repository.findById(id);
         if (entity == null) return false;
+        if (!equipoRepository.listByProveedorId(id).isEmpty()) {
+            throw new WebApplicationException(
+                    "No se puede eliminar el proveedor porque tiene equipos asociados",
+                    Response.Status.CONFLICT);
+        }
         repository.delete(entity);
         return true;
     }

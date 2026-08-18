@@ -3,6 +3,7 @@ package com.apilamiento.control.service;
 import com.apilamiento.control.dto.EquipoDTO;
 import com.apilamiento.control.entity.Equipo;
 import com.apilamiento.control.mapper.EquipoMapper;
+import com.apilamiento.control.repository.AveriaRepository;
 import com.apilamiento.control.repository.CampanaRepository;
 import com.apilamiento.control.repository.EquipoRepository;
 import com.apilamiento.control.repository.MarcaRepository;
@@ -11,6 +12,7 @@ import com.apilamiento.control.repository.ProveedorRepository;
 import com.apilamiento.control.repository.PsrRepository;
 import com.apilamiento.control.repository.SedeRepository;
 import com.apilamiento.control.repository.TipoEquipoRepository;
+import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +37,7 @@ class EquipoServiceTest {
     @Mock PsrRepository psrRepository;
     @Mock SedeRepository sedeRepository;
     @Mock CampanaRepository campanaRepository;
+    @Mock AveriaRepository averiaRepository;
 
     EquipoMapper mapper = new EquipoMapper();
 
@@ -43,7 +46,8 @@ class EquipoServiceTest {
     @BeforeEach
     void setUp() {
         service = new EquipoService(repository, mapper, proveedorRepository, marcaRepository,
-                tipoEquipoRepository, osrRepository, psrRepository, sedeRepository, campanaRepository);
+                tipoEquipoRepository, osrRepository, psrRepository, sedeRepository, campanaRepository,
+                averiaRepository);
     }
 
     @Test
@@ -74,5 +78,20 @@ class EquipoServiceTest {
         EquipoDTO resultado = service.buscarPorId(99L);
 
         assertNull(resultado);
+    }
+
+    @Test
+    void eliminar_cuandoTieneAverias_deberiaLanzar409() {
+        Equipo equipo = new Equipo();
+        equipo.setId(1L);
+        when(repository.findById(1L)).thenReturn(equipo);
+        when(averiaRepository.listByEquipoId(1L)).thenReturn(List.of(new com.apilamiento.control.entity.Averia()));
+
+        WebApplicationException exception = assertThrows(
+                WebApplicationException.class,
+                () -> service.eliminar(1L));
+
+        assertEquals(409, exception.getResponse().getStatus());
+        verify(repository, never()).delete(any());
     }
 }

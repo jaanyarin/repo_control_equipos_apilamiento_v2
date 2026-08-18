@@ -16,4 +16,8 @@ public class PsrRepository implements PanacheRepository<Psr> {
     public List<Psr> listBySedeId(Long sedeId) {
         return list("sedeId", sedeId);
     }
+
+    public List<Psr> listByMotivoId(Long motivoId) {
+        return list("motivoId", motivoId);
+    }
 }

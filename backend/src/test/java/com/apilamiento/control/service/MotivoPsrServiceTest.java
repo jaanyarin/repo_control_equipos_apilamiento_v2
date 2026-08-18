@@ -5,7 +5,9 @@ import com.apilamiento.control.entity.MotivoPsr;
 import com.apilamiento.control.entity.TipoEquipo;
 import com.apilamiento.control.mapper.MotivoPsrMapper;
 import com.apilamiento.control.repository.MotivoPsrRepository;
+import com.apilamiento.control.repository.PsrRepository;
 import com.apilamiento.control.repository.TipoEquipoRepository;
+import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,13 +30,16 @@ class MotivoPsrServiceTest {
     @Mock
     TipoEquipoRepository tipoEquipoRepository;
 
+    @Mock
+    PsrRepository psrRepository;
+
     MotivoPsrMapper mapper = new MotivoPsrMapper();
 
     MotivoPsrService service;
 
     @BeforeEach
     void setUp() {
-        service = new MotivoPsrService(repository, mapper, tipoEquipoRepository);
+        service = new MotivoPsrService(repository, mapper, tipoEquipoRepository, psrRepository);
     }
 
     private void simularPersist() {
@@ -157,5 +162,20 @@ class MotivoPsrServiceTest {
         assertEquals("Actualizado", resultado.getNombre());
         assertEquals("Orig", resultado.getNombreCorto());
         verify(repository, never()).persist(any(MotivoPsr.class));
+    }
+
+    @Test
+    void eliminar_cuandoTienePsrs_deberiaLanzar409() {
+        MotivoPsr entity = new MotivoPsr();
+        entity.setId(1L);
+        when(repository.findById(1L)).thenReturn(entity);
+        when(psrRepository.listByMotivoId(1L)).thenReturn(java.util.List.of(new com.apilamiento.control.entity.Psr()));
+
+        WebApplicationException exception = assertThrows(
+                WebApplicationException.class,
+                () -> service.eliminar(1L));
+
+        assertEquals(409, exception.getResponse().getStatus());
+        verify(repository, never()).delete(any(MotivoPsr.class));
     }
 }

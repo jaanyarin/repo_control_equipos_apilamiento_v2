@@ -5,9 +5,12 @@ import com.apilamiento.control.entity.MotivoPsr;
 import com.apilamiento.control.entity.TipoEquipo;
 import com.apilamiento.control.mapper.MotivoPsrMapper;
 import com.apilamiento.control.repository.MotivoPsrRepository;
+import com.apilamiento.control.repository.PsrRepository;
 import com.apilamiento.control.repository.TipoEquipoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -18,11 +21,14 @@ public class MotivoPsrService {
     private final MotivoPsrRepository repository;
     private final MotivoPsrMapper mapper;
     private final TipoEquipoRepository tipoEquipoRepository;
+    private final PsrRepository psrRepository;
 
-    public MotivoPsrService(MotivoPsrRepository repository, MotivoPsrMapper mapper, TipoEquipoRepository tipoEquipoRepository) {
+    public MotivoPsrService(MotivoPsrRepository repository, MotivoPsrMapper mapper,
+                            TipoEquipoRepository tipoEquipoRepository, PsrRepository psrRepository) {
         this.repository = repository;
         this.mapper = mapper;
         this.tipoEquipoRepository = tipoEquipoRepository;
+        this.psrRepository = psrRepository;
     }
 
     public List<MotivoPsrDTO> listarTodas() {
@@ -99,6 +105,11 @@ public class MotivoPsrService {
     public boolean eliminar(Long id) {
         MotivoPsr entity = repository.findById(id);
         if (entity == null) return false;
+        if (!psrRepository.listByMotivoId(id).isEmpty()) {
+            throw new WebApplicationException(
+                    "No se puede eliminar el motivo porque tiene PSRs asociados",
+                    Response.Status.CONFLICT);
+        }
         repository.delete(entity);
         return true;
     }

@@ -4,6 +4,7 @@ import com.apilamiento.control.dto.CampanaDTO;
 import com.apilamiento.control.entity.Campana;
 import com.apilamiento.control.mapper.CampanaMapper;
 import com.apilamiento.control.repository.CampanaRepository;
+import com.apilamiento.control.repository.PsrRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
@@ -17,10 +18,12 @@ public class CampanaService {
 
     private final CampanaRepository repository;
     private final CampanaMapper mapper;
+    private final PsrRepository psrRepository;
 
-    public CampanaService(CampanaRepository repository, CampanaMapper mapper) {
+    public CampanaService(CampanaRepository repository, CampanaMapper mapper, PsrRepository psrRepository) {
         this.repository = repository;
         this.mapper = mapper;
+        this.psrRepository = psrRepository;
     }
 
     public List<CampanaDTO> listarTodas() {
@@ -96,6 +99,11 @@ public class CampanaService {
     public boolean eliminar(Long id) {
         Campana entity = repository.findById(id);
         if (entity == null) return false;
+        if (!psrRepository.listByCampanaId(id).isEmpty()) {
+            throw new WebApplicationException(
+                    "No se puede eliminar la campaña porque tiene PSRs asociados",
+                    Response.Status.CONFLICT);
+        }
         repository.delete(entity);
         return true;
     }

@@ -201,6 +201,11 @@ public class PsrService {
                     "El PSR/OSR está finalizado y no puede eliminarse",
                     Response.Status.CONFLICT);
         }
+        if (osrRepository.findByPsrId(id).isPresent()) {
+            throw new WebApplicationException(
+                    "El PSR tiene una OSR asociada y no puede eliminarse",
+                    Response.Status.CONFLICT);
+        }
         psrRepository.delete(psr);
         return true;
     }

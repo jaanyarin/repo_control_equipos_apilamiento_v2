@@ -1346,3 +1346,41 @@ Registrado por: JUAN PEREZ
 - `AGENTS.md` corregido (secciones 2, 4.4, 6, 7, 12): el proyecto es **React Native CLI puro**, build local Gradle; guía legada `07_build_android_eas.md` marcada obsoleta, nueva guía `07_build_android_gradle.md`.
 
 
+
+
+---
+
+## 40. Fix CRUD catálogos: DELETE con validación de referencias (2026-08-18)
+
+### 40.1 Contexto
+
+Al intentar eliminar una marca/proveedor referenciado por equipos, el backend devolvía **500** (violación de FK PostgreSQL, SQLState 23503) en vez de un error amigable. Se auditó todo el CRUD de catálogos y se blindaron todos los eliminar que podían violar una restricción.
+
+### 40.2 Cambios backend
+
+| Service | Verificación previa al DELETE | Mensaje 409 |
+|---|---|---|
+| MarcaService.eliminar | EquipoRepository.listByMarcaId no vacío | marca tiene equipos asociados |
+| ProveedorService.eliminar | EquipoRepository.listByProveedorId no vacío | proveedor tiene equipos asociados |
+| TipoEquipoService.eliminar | EquipoRepository.listByTipoEquipoId no vacío | tipo de equipo tiene equipos asociados |
+| SedeService.eliminar | PsrRepository.listBySedeId o UsuarioRepository.findBySitioId no vacíos | sede tiene PSRs o usuarios asociados |
+| CampanaService.eliminar | PsrRepository.listByCampanaId no vacío | campaña tiene PSRs asociados |
+| MotivoPsrService.eliminar | PsrRepository.listByMotivoId no vacío | motivo tiene PSRs asociados |
+| RolService.eliminar | UsuarioRepository.findByRolId no vacío | rol tiene usuarios asociados |
+| EquipoService.eliminar | AveriaRepository.listByEquipoId o OsrRepository.findByEquipoId | equipo tiene averías u OSR asociadas |
+| PsrService.eliminar | OsrRepository.findByPsrId presente | PSR tiene una OSR asociada |
+
+- Todos lanzan WebApplicationException(message, Response.Status.CONFLICT) (patrón ya usado en EquipoService.actualizar/PsrService); el ManejadorGlobalExcepciones lo transforma en **409** {success:false, errorCode:"WEB_409"}.
+- Repos nuevos: PsrRepository.listByMotivoId, UsuarioRepository.findBySitioId.
+
+### 40.3 Tests
+
+- Ajustados por constructor: MarcaServiceTest, ProveedorServiceTest, MotivoPsrServiceTest, EquipoServiceTest, RolServiceTest.
+- Nuevos: SedeServiceTest (4), CampanaServiceTest (3), TipoEquipoServiceTest (3) + casos 409 en los existentes.
+- Backend unit (excl. MarcaResourceTest): **130/130** ok. (1 error pre-existente de MarcaResourceTest que exige BD + vars OIDC).
+
+### 40.4 Verificación end-to-end
+
+- DELETE /api/v1/marcas/18 (Bioshack, con 1 equipo) → **409** "No se puede eliminar la marca porque tiene equipos asociados".
+- DELETE /api/v1/marcas/16 (sin equipos) → **200** "Marca eliminada correctamente".
+- Backend Docker reconstruido y levantado (`apilamiento-backend` UP).

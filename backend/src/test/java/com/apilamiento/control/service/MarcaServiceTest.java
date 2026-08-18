@@ -3,7 +3,9 @@ package com.apilamiento.control.service;
 import com.apilamiento.control.dto.MarcaDTO;
 import com.apilamiento.control.entity.Marca;
 import com.apilamiento.control.mapper.MarcaMapper;
+import com.apilamiento.control.repository.EquipoRepository;
 import com.apilamiento.control.repository.MarcaRepository;
+import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,13 +25,16 @@ class MarcaServiceTest {
     @Mock
     MarcaRepository repository;
 
+    @Mock
+    EquipoRepository equipoRepository;
+
     MarcaMapper mapper = new MarcaMapper();
 
     MarcaService service;
 
     @BeforeEach
     void setUp() {
-        service = new MarcaService(repository, mapper);
+        service = new MarcaService(repository, mapper, equipoRepository);
     }
 
     @Test
@@ -86,11 +91,27 @@ class MarcaServiceTest {
         Marca marca = new Marca();
         marca.setId(1L);
         when(repository.findById(1L)).thenReturn(marca);
+        when(equipoRepository.listByMarcaId(1L)).thenReturn(List.of());
 
         boolean resultado = service.eliminar(1L);
 
         assertTrue(resultado);
         verify(repository).delete(marca);
+    }
+
+    @Test
+    void eliminar_cuandoTieneEquipos_deberiaLanzar409() {
+        Marca marca = new Marca();
+        marca.setId(1L);
+        when(repository.findById(1L)).thenReturn(marca);
+        when(equipoRepository.listByMarcaId(1L)).thenReturn(List.of(new com.apilamiento.control.entity.Equipo()));
+
+        WebApplicationException exception = assertThrows(
+                WebApplicationException.class,
+                () -> service.eliminar(1L));
+
+        assertEquals(409, exception.getResponse().getStatus());
+        verify(repository, never()).delete(any());
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.apilamiento.control.service;
 import com.apilamiento.control.dto.ProveedorDTO;
 import com.apilamiento.control.entity.Proveedor;
 import com.apilamiento.control.mapper.ProveedorMapper;
+import com.apilamiento.control.repository.EquipoRepository;
 import com.apilamiento.control.repository.ProveedorRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,13 +21,16 @@ class ProveedorServiceTest {
     @Mock
     ProveedorRepository repository;
 
+    @Mock
+    EquipoRepository equipoRepository;
+
     ProveedorMapper mapper = new ProveedorMapper();
 
     ProveedorService service;
 
     @BeforeEach
     void setUp() {
-        service = new ProveedorService(repository, mapper);
+        service = new ProveedorService(repository, mapper, equipoRepository);
     }
 
     private void simularPersist() {

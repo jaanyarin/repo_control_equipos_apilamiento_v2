@@ -22,6 +22,10 @@ public class UsuarioRepository implements PanacheRepository<Usuario> {
         return list("rolId = ?1 and estadoActivo = true", rolId);
     }
 
+    public List<Usuario> findBySitioId(Long sitioId) {
+        return list("sitioId = ?1 and estadoActivo = true", sitioId);
+    }
+
     public List<Usuario> findAllActivos() {
         return list("estadoActivo", true);
     }

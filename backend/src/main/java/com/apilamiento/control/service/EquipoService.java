@@ -7,6 +7,7 @@ import com.apilamiento.control.entity.Osr;
 import com.apilamiento.control.entity.Psr;
 import com.apilamiento.control.mapper.EquipoMapper;
 import com.apilamiento.control.repository.CampanaRepository;
+import com.apilamiento.control.repository.AveriaRepository;
 import com.apilamiento.control.repository.EquipoRepository;
 import com.apilamiento.control.repository.MarcaRepository;
 import com.apilamiento.control.repository.OsrRepository;
@@ -34,12 +35,13 @@ public class EquipoService {
     private final PsrRepository psrRepository;
     private final SedeRepository sedeRepository;
     private final CampanaRepository campanaRepository;
+    private final AveriaRepository averiaRepository;
 
     public EquipoService(EquipoRepository repository, EquipoMapper mapper,
             ProveedorRepository proveedorRepository, MarcaRepository marcaRepository,
             TipoEquipoRepository tipoEquipoRepository, OsrRepository osrRepository,
             PsrRepository psrRepository, SedeRepository sedeRepository,
-            CampanaRepository campanaRepository) {
+            CampanaRepository campanaRepository, AveriaRepository averiaRepository) {
         this.repository = repository;
         this.mapper = mapper;
         this.proveedorRepository = proveedorRepository;
@@ -49,6 +51,7 @@ public class EquipoService {
         this.psrRepository = psrRepository;
         this.sedeRepository = sedeRepository;
         this.campanaRepository = campanaRepository;
+        this.averiaRepository = averiaRepository;
     }
 
     public List<EquipoDTO> listarTodos() {
@@ -221,6 +224,13 @@ public class EquipoService {
     public boolean eliminar(Long id) {
         Equipo entity = repository.findById(id);
         if (entity == null) return false;
+        boolean tieneAverias = !averiaRepository.listByEquipoId(id).isEmpty();
+        boolean tieneOsr = osrRepository.findByEquipoId(id).isPresent();
+        if (tieneAverias || tieneOsr) {
+            throw new WebApplicationException(
+                    "No se puede eliminar el equipo porque tiene averías u OSR asociadas",
+                    Response.Status.CONFLICT);
+        }
         repository.delete(entity);
         return true;
     }
