@@ -51,7 +51,7 @@ La aplicación mobile utiliza **Semantic Versioning (SemVer) `X.Y.Z`** como fuen
 - **PATCH (`Z`)**: correcciones asociadas a `fix:`.
 - `docs:`, `refactor:`, `test:` y `chore:` no modifican la versión.
 
-La versión actual es **1.11.0**, correspondiente al HDT-014. La versión mostrada en `PerfilScreen` y `SettingsScreen` se obtiene automáticamente desde `mobile/package.json` mediante `mobile/src/constants/appVersion.js`.
+La versión actual es **1.11.1**. La versión mostrada en `PerfilScreen` y `SettingsScreen` se obtiene automáticamente desde `mobile/package.json` mediante `mobile/src/constants/appVersion.js`.
 
 Para incrementar la versión:
 

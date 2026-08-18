@@ -1384,3 +1384,38 @@ Al intentar eliminar una marca/proveedor referenciado por equipos, el backend de
 - DELETE /api/v1/marcas/18 (Bioshack, con 1 equipo) → **409** "No se puede eliminar la marca porque tiene equipos asociados".
 - DELETE /api/v1/marcas/16 (sin equipos) → **200** "Marca eliminada correctamente".
 - Backend Docker reconstruido y levantado (`apilamiento-backend` UP).
+
+---
+
+## 41. Desactivar/Activar catálogos desde UI — soft delete (2026-08-18)
+
+### 41.1 Contexto
+
+Con el fix de la sección 40, los registros referenciados ya no se pueden eliminar (409). Como alternativa al borrado, los catálogos soportan el **soft delete** mediante el campo `estadoActivo` (columna ya existente, default `true`). El backend ya lo soporta: `PUT /api/v1/{recurso}/{id}` con `{"estadoActivo": false|true}` actualiza el estado en todos los servicios de catálogo (`if (dto.getEstadoActivo() != null)`). La tarea fue exponerlo en la UI web y mobile.
+
+### 41.2 Cambios frontend web
+
+En `Marcas.jsx`, `Proveedores.jsx`, `TiposEquipo.jsx`, `Sedes.jsx` y `MotivosPsr.jsx`:
+
+- Nuevo botón toggle en las acciones de cada fila: `ToggleOn` (verde, activo → Desactivar) / `ToggleOff` (gris, inactivo → Activar), patrón consistente con el Activar/Cerrar de Campañas.
+- `handleToggle(item)` envía `PUT /{recurso}/{id}` con los campos mínimos del DTO (nombre/razónSocial/ruc/descripcion/nombreCorto) + `estadoActivo` invertido, recarga la lista.
+- Se mantienen los Chips "Activo/Inactivo" existentes en tabla y card.
+
+### 41.3 Cambios mobile
+
+En `CatalogScreen.js` (afecta Marcas, Proveedores, TiposEquipo, Sedes, Motivos PSR y Roles):
+
+- Nuevo botón toggle (`toggle-switch` / `toggle-switch-off-outline`) al lado de eliminar, visible solo con `canEdit`.
+- `handleToggleEstado(item)` confirma vía Alert y envía `PUT /{endpoint}/{id}` con los campos del config `fields` + `estadoActivo` invertido.
+- Indicador "Inactivo" (color warning) en la card cuando `estadoActivo === false`.
+
+### 41.4 Tests
+
+- `CatalogScreen.test.js`: +2 tests (desactivar con `estadoActivo=false` y reactivar mostrando "Inactivo" con `estadoActivo=true`), mock `put` agregado.
+- Suite mobile: **22 suites / 105 tests** OK + ESLint limpio.
+- Frontend web: `vite build` OK (820 módulos). (El `jest` web falla por una causa pre-existente: `setup.js` bajo `__tests__` se ejecuta como archivo de test y `@testing-library/jest-dom` no encuentra `expect`; no está relacionado con este cambio.)
+
+### 41.5 Despliegue
+
+- Web: rebuild de la imagen `apilamiento-nginx` (multi-stage node:20-alpine → `npm run build` → nginx).
+- Mobile: bump patch → **1.11.1** (versionCode 11101) y rebuild APK release con Gradle local.

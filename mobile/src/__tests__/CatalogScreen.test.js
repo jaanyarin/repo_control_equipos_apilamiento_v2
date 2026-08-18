@@ -1,9 +1,11 @@
 import React from 'react'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
+import { Alert } from 'react-native'
 import CatalogScreen from '../screens/CatalogScreen'
 
 const mockGet = jest.fn()
 const mockPost = jest.fn()
+const mockPut = jest.fn()
 const mockSetOptions = jest.fn()
 
 jest.mock('../api', () => ({
@@ -11,6 +13,7 @@ jest.mock('../api', () => ({
   default: {
     get: (...args) => mockGet(...args),
     post: (...args) => mockPost(...args),
+    put: (...args) => mockPut(...args),
   },
 }))
 
@@ -132,8 +135,9 @@ describe('CatalogScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockPost.mockResolvedValue({ data: { success: true } })
+    mockPut.mockResolvedValue({ data: { success: true } })
     mockGet.mockResolvedValue({
-      data: { success: true, data: [{ id: 1, nombre: 'Toyota', codigo: 'TOY' }] },
+      data: { success: true, data: [{ id: 1, nombre: 'Toyota', codigo: 'TOY', estadoActivo: true }] },
     })
   })
 
@@ -198,5 +202,48 @@ describe('CatalogScreen', () => {
     await waitFor(() => {
       expect(mockPost).toHaveBeenCalledWith('/marcas', { nombre: 'Hyundai', codigo: 'Hyundai' })
     })
+  })
+
+  it('desactiva un catálogo enviando PUT con estadoActivo=false', async () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+    const screen = render(<CatalogScreen {...props} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Toyota')).toBeTruthy()
+    })
+
+    fireEvent.press(screen.getByLabelText('Desactivar Toyota'))
+    expect(alertSpy).toHaveBeenCalled()
+    const buttons = alertSpy.mock.calls[0][2]
+    const confirm = buttons.find(b => b.text === 'Desactivar')
+    await act(async () => { confirm.onPress() })
+
+    await waitFor(() => {
+      expect(mockPut).toHaveBeenCalledWith('/marcas/1', { nombre: 'Toyota', codigo: 'TOY', estadoActivo: false })
+    })
+    alertSpy.mockRestore()
+  })
+
+  it('reactiva un catálogo mostrando "Inactivo" y enviando PUT con estadoActivo=true', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: { success: true, data: [{ id: 1, nombre: 'Toyota', codigo: 'TOY', estadoActivo: false }] },
+    })
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+    const screen = render(<CatalogScreen {...props} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Toyota')).toBeTruthy()
+      expect(screen.getByText('Inactivo')).toBeTruthy()
+    })
+
+    fireEvent.press(screen.getByLabelText('Activar Toyota'))
+    const buttons = alertSpy.mock.calls[0][2]
+    const confirm = buttons.find(b => b.text === 'Activar')
+    await act(async () => { confirm.onPress() })
+
+    await waitFor(() => {
+      expect(mockPut).toHaveBeenCalledWith('/marcas/1', { nombre: 'Toyota', codigo: 'TOY', estadoActivo: true })
+    })
+    alertSpy.mockRestore()
   })
 })

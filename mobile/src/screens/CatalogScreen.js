@@ -136,30 +136,68 @@ export default function CatalogScreen({ title, endpoint, searchPlaceholder, sear
     ])
   }
 
+  const handleToggleEstado = (item) => {
+    const next = !item.estadoActivo
+    const nombre = item[fields[0]?.key] || item.nombre || item.id
+    const texto = next ? 'Activar' : 'Desactivar'
+    Alert.alert('Confirmar', `¿${texto} "${nombre}"?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: texto,
+        onPress: async () => {
+          const payload = {}
+          fields.forEach(f => { payload[f.key] = f.autoFrom ? (item[f.autoFrom] || '') : (item[f.key] || '') })
+          payload.estadoActivo = next
+          try {
+            await api.put(`${endpoint}/${item.id}`, payload)
+            fetchItems()
+          } catch (e) {
+            Alert.alert('Error', e.response?.data?.error || e.message || 'Error al actualizar estado')
+          }
+        },
+      },
+    ])
+  }
+
   const filtered = items.filter(item => {
     if (!search) return true
     const q = search.toLowerCase()
     return searchFields.some(f => (item[f] || '').toLowerCase().includes(q))
   })
 
-  const renderItem = ({ item }) => (
-    <AppCard style={styles.card} onPress={canEdit ? () => openEdit(item) : undefined} accessibilityLabel={canEdit ? `Editar ${title}: ${item[fields[0]?.key] || item.nombre || item.id}` : `${item[fields[0]?.key] || item.nombre || item.id}`}>
-      <View style={styles.cardContent}>
-        <View style={styles.cardRow}>
-          <View style={styles.cardInfo}>
-            {fields.map(f => (
-              <Text key={f.key} variant={f.primary ? 'titleMedium' : 'bodyMedium'} style={f.primary ? styles.primaryText : styles.secondaryText}>
-                {f.prefix || ''}{item[f.key] || '-'}
-              </Text>
-            ))}
+  const renderItem = ({ item }) => {
+    const nombre = item[fields[0]?.key] || item.nombre || item.id
+    return (
+      <AppCard style={styles.card} onPress={canEdit ? () => openEdit(item) : undefined} accessibilityLabel={canEdit ? `Editar ${title}: ${nombre}` : `${nombre}`}>
+        <View style={styles.cardContent}>
+          <View style={styles.cardRow}>
+            <View style={styles.cardInfo}>
+              {fields.map(f => (
+                <Text key={f.key} variant={f.primary ? 'titleMedium' : 'bodyMedium'} style={f.primary ? styles.primaryText : styles.secondaryText}>
+                  {f.prefix || ''}{item[f.key] || '-'}
+                </Text>
+              ))}
+              {item.estadoActivo === false ? (
+                <Text variant="bodySmall" style={styles.inactiveText}>Inactivo</Text>
+              ) : null}
+            </View>
+            {canEdit ? (
+              <>
+                <AppIconButton
+                  icon={item.estadoActivo ? 'toggle-switch' : 'toggle-switch-off-outline'}
+                  iconColor={item.estadoActivo ? theme.colors.status.success : theme.colors.status.warning}
+                  size={20}
+                  accessibilityLabel={`${item.estadoActivo ? 'Desactivar' : 'Activar'} ${nombre}`}
+                  onPress={() => handleToggleEstado(item)}
+                />
+                <AppIconButton icon="delete-outline" iconColor={theme.colors.status.error} size={20} accessibilityLabel={`Eliminar ${nombre}`} onPress={() => handleDelete(item)} />
+              </>
+            ) : null}
           </View>
-          {canEdit ? (
-            <AppIconButton icon="delete-outline" iconColor={theme.colors.status.error} size={20} accessibilityLabel={`Eliminar ${item[fields[0]?.key] || item.nombre || item.id}`} onPress={() => handleDelete(item)} />
-          ) : null}
         </View>
-      </View>
-    </AppCard>
-  )
+      </AppCard>
+    )
+  }
 
   if (loading && items.length === 0) return <LoadingScreen />
 
@@ -256,6 +294,11 @@ const styles = StyleSheet.create({
   secondaryText: {
     ...theme.typography.body,
     color: theme.colors.text.secondary,
+    marginTop: theme.spacing[1],
+  },
+  inactiveText: {
+    ...theme.typography.body,
+    color: theme.colors.status.warning,
     marginTop: theme.spacing[1],
   },
   dialog: {

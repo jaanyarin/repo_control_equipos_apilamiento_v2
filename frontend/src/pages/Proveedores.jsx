@@ -12,6 +12,8 @@ import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
+import ToggleOnIcon from '@mui/icons-material/ToggleOn'
+import ToggleOffIcon from '@mui/icons-material/ToggleOff'
 import AddIcon from '@mui/icons-material/Add'
 import api from '../api'
 import DataTable from '../components/DataTable'
@@ -93,6 +95,16 @@ export default function Proveedores() {
     }
   }
 
+  const handleToggle = async (item) => {
+    const next = !item.estadoActivo
+    try {
+      await api.put(`/proveedores/${item.id}`, { razonSocial: item.razonSocial, ruc: item.ruc || '', estadoActivo: next })
+      loadData()
+    } catch (err) {
+      alert(err.response?.data?.message || err.message)
+    }
+  }
+
   const columns = [
     { field: 'id', label: 'ID' },
     { field: 'razonSocial', label: 'Razón Social' },
@@ -110,6 +122,13 @@ export default function Proveedores() {
   const renderActions = (item) => (
     canEdit ? (
       <>
+        <Tooltip title={item.estadoActivo ? 'Desactivar' : 'Activar'}>
+          <IconButton size="small" onClick={() => handleToggle(item)}>
+            {item.estadoActivo
+              ? <ToggleOnIcon fontSize="small" color="success" />
+              : <ToggleOffIcon fontSize="small" />}
+          </IconButton>
+        </Tooltip>
         <Tooltip title="Editar">
           <IconButton size="small" onClick={() => openEdit(item)}>
             <EditIcon fontSize="small" color="primary" />

@@ -1,5 +1,15 @@
 export const VERSION_HISTORY = [
   {
+    version: '1.11.1',
+    fecha: '2026-08-18',
+    titulo: 'Desactivar/Activar catálogos desde web y mobile (soft delete)',
+    cambios: [
+      'Botón desactivar/activar en catálogos (marcas, proveedores, tipos de equipo, sedes, motivos PSR) en web y mobile',
+      'Los registros referenciados se desactivan en lugar de eliminarse (soft delete)',
+      'Indicador "Inactivo" en la app para registros desactivados',
+    ],
+  },
+  {
     version: '1.11.0',
     fecha: '2026-08-17',
     titulo: 'HDT-014 — Timeline dinámico de detalle de equipo',

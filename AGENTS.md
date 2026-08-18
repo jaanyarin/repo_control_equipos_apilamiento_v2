@@ -285,7 +285,7 @@ La versión de la aplicación se cuantifica con **SemVer `X.Y.Z`** y se muestra 
 
 - `docs:`, `refactor:`, `test:`, `chore:` **NO** cambian versión.
 - El script `mobile/scripts/bump-version.js` actualiza `package.json` y `android/app/build.gradle` (`versionName` + `versionCode` = `MAJOR*10000 + MINOR*100 + PATCH`, monótono).
-- **Versión actual: `1.11.0`** (1.0.0 = HDT-001+002 base; +0.1.0 por cada HDT implementado hasta HDT-014; HDT-005 cancelado no cuenta).
+- **Versión actual: `1.11.1`** (1.0.0 = HDT-001+002 base; +0.1.0 por cada HDT implementado hasta HDT-014; HDT-005 cancelado no cuenta; 1.11.1 = fix soft delete de catálogos en UI).
 - El historial completo vive en `mobile/src/constants/versionHistory.js` y se consulta desde el Perfil (botón de historial).
 
 ---
