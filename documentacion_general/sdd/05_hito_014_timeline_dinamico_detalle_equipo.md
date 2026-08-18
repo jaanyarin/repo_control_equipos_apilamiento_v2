@@ -56,6 +56,8 @@ Nuevo endpoint `GET /api/v1/equipos/{id}/timeline` que consolida los eventos rea
 - `EquipoTimelineServiceTest`: 7/7 PASS en contenedor.
 - `EquipoResourceTest`: 2/2 PASS en contenedor.
 
+> **Orden:** los eventos se entregan en orden **cronológico ascendente** (más antiguo arriba): PSR → OSR → INGRESO → AVERIA → REPARACION → FINALIZACION, con tie-break por tipo cuando la fecha coincide y los eventos pendientes (sin fecha) al final. DTOs y service lo garantizan; el mobile solo renderiza.
+
 ---
 
 ## Hito 2 — Mobile: segunda pantalla de timeline
@@ -81,8 +83,18 @@ Nuevo endpoint `GET /api/v1/equipos/{id}/timeline` que consolida los eventos rea
 ### Validación
 
 - Mobile: `npx eslint .` → EXIT 0 (sin warnings).
-- Mobile: `npx jest` → 22 suites / 102 tests PASS.
-- Rebuild backend Docker: pendiente (opcional en ASUS).
+- Mobile: `npx jest` → 22 suites / 103 tests PASS (incluye test de re-expand tras contraer).
+- Rebuild backend Docker + Rebuild APK release: OK.
+
+---
+
+## Correcciones de UX (feedback en campo)
+
+| Hallazgo | Corrección |
+|---|---|
+| Los eventos se veían en orden **descendente** (el más reciente arriba) | Backend ahora ordena **ascendente** (PSR → OSR → ingreso → averías/reparaciones → finalización), cronológico con tie-break por tipo. |
+| Al expandir → contraer → volver a expandir, el detalle **no volvía a mostrarse** | Bug en `TimelineEvent.js`: el estado `showDetails` nunca volvía a `false` (el callback del collapse exigía `!showDetailsRef.current` que era `false`). Se reemplazó por un estado único `expanded` con animación idempotente en `useEffect`. |
+| El resumen operativo no tenía el orden pedido | Ahora es 2 filas × 3 columnas: `F.ingreso · Nro. averías · F. finalización` / `Horómetro inicio · T. inactividad · Horómetro fin`. |
 
 ---
 

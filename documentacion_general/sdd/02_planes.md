@@ -227,6 +227,12 @@ No se usará MySQL en este proyecto.
 | 47 | HDT-013: Notificación push al atender una avería (AVERIA_ATENDIDA) | ✅ Completado |
 | 48 | HDT-013: Notificación push al finalizar el servicio / devolución (SERVICIO_FINALIZADO) | ✅ Completado |
 | 49 | HDT-013: Rebuild backend Docker + APK Gradle local (debug/release); AGENTS.md sin Expo/EAS | ✅ Completado |
+| 50 | HDT-014: Endpoint backend `GET /api/v1/equipos/{id}/timeline` (EquipoTimelineService + DTOs) | ✅ Completado |
+| 51 | HDT-014: Orden cronológico ascendente de eventos (PSR → OSR → ingreso → avería → reparación → finalización) con tie-break por tipo | ✅ Completado |
+| 52 | HDT-014: Resumen operativo 2×3 (ingreso · nro. averías · finalización / horómetro inicio · t. inactividad · horómetro fin) | ✅ Completado |
+| 53 | HDT-014: Segunda pantalla mobile `EquipoTimelineScreen` + botón "Ver Historial" en el listado | ✅ Completado |
+| 54 | HDT-014: Fix expand/colapsar/re-expandir + visor de fotos (ZoomableImage) + resumen operativo | ✅ Completado |
+| 55 | HDT-014: Tests backend 7/7 y mobile 103/103 + ESLint limpio + rebuild release APK | ✅ Completado |
 
 ---
 

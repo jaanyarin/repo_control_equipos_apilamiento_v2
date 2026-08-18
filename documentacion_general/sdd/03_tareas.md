@@ -224,6 +224,11 @@ No se usará MySQL en este proyecto.
 | BE-044 | HDT-013: AveriaService notifica avería reportada (crear) y atendida (primera atención) | Alta | ✅ |
 | BE-045 | HDT-013: DevolucionEquipoService notifica servicio finalizado | Alta | ✅ |
 | BE-046 | HDT-013: Tests backend NotificacionPushService (12) + AveriaService verify + DevolucionEquipoService verify (109/109) | Alta | ✅ |
+| BE-047 | HDT-014: DTOs timeline (EquipoTimelineDTO, Summary, Event, Metadata, Photo) | Alta | ✅ |
+| BE-048 | HDT-014: EquipoTimelineService consolida PSR/OSR/INGRESO/AVERIA/REPARACION/FINALIZACION + downtime | Alta | ✅ |
+| BE-049 | HDT-014: Endpoint `GET /equipos/{id}/timeline` en EquipoResource (404 si no existe) | Alta | ✅ |
+| BE-050 | HDT-014: Orden cronológico ascendente (comparador + tie-break por tipo; pendientes al final) | Alta | ✅ |
+| BE-051 | HDT-014: Tests EquipoTimelineServiceTest (7) + ajuste EquipoResourceTest constructor | Alta | ✅ |
 
 ---
 
@@ -306,6 +311,12 @@ No se usará MySQL en este proyecto.
 | AND-040 | HDT-013: AppNavigator navega a EquipoDetail en 4 tipos de notificación | Alta | ✅ |
 | AND-041 | HDT-013: push.js import FCM sin `.default` (warnings v22) + start host LAN + script reverse | Alta | ✅ |
 | AND-042 | HDT-013: Rebuild APK local Gradle debug/release + version bump 1.10.0 | Alta | ✅ |
+| AND-043 | HDT-014: Componentes timeline (EquipmentTimeline, TimelineEvent, TimelineConnector, TimelineEventDetails, config, utils) | Alta | ✅ |
+| AND-044 | HDT-014: Segunda pantalla EquipoTimelineScreen (resumen operativo + timeline + visor de fotos) | Alta | ✅ |
+| AND-045 | HDT-014: Registro EquipoTimeline en AppNavigator + botón "Ver Historial" en EquiposListScreen | Alta | ✅ |
+| AND-046 | HDT-014: Orden del resumen operativo 2×3 (ingreso · nro. averías · finalización / horómetro inicio · t. inactividad · horómetro fin) | Alta | ✅ |
+| AND-047 | HDT-014: Fix expand/colapsar/re-expandir (estado único `expanded`) + tests re-expand | Alta | ✅ |
+| AND-048 | HDT-014: Tests timeline 103/103 + ESLint limpio + version bump 1.11.0 + rebuild release APK | Alta | ✅ |
 
 ---
 

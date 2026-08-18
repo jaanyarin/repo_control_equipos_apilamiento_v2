@@ -143,13 +143,13 @@ export default function EquipoTimelineScreen() {
                 <Text variant="titleMedium" style={styles.sectionTitle}>Resumen operativo</Text>
                 <Divider style={styles.divider} />
                 <View style={styles.summaryRow}>
-                  <SummaryCell label="Ingreso" value={formatDate(summary.entryDate)} />
-                  <SummaryCell label="Horómetro" value={inicial} />
-                  <SummaryCell label="Averías" value={String(summary.failureCount || 0)} />
+                  <SummaryCell label="F. ingreso" value={formatDate(summary.entryDate)} />
+                  <SummaryCell label="Nro. averías" value={String(summary.failureCount || 0)} />
+                  <SummaryCell label="F. finalización" value={summary.finalDate ? formatDate(summary.finalDate) : 'Pendiente'} />
                 </View>
                 <View style={styles.summaryRow}>
+                  <SummaryCell label="Horómetro inicio" value={inicial} />
                   <SummaryCell label="T. inactividad" value={downtime} />
-                  <SummaryCell label="Finalización" value={summary.finalDate ? formatDate(summary.finalDate) : 'Pendiente'} />
                   <SummaryCell label="Horómetro fin" value={summary.finalHourMeter != null ? `${formatHourMeter(summary.finalHourMeter)} h` : '-'} />
                 </View>
               </AppCard>

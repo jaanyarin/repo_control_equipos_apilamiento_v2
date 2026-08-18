@@ -25,21 +25,11 @@ export default function TimelineEvent({ event, isLast = false, photosRenderer, t
   const config = TIMELINE_EVENT_CONFIG[event.type] || {}
   const statusStyle = TIMELINE_STATUS_STYLE[event.status] || TIMELINE_STATUS_STYLE.PENDIENTE
   const [expanded, setExpanded] = useState(false)
-  const [showDetails, setShowDetails] = useState(false)
   const anim = useRef(new Animated.Value(0)).current
-  const showDetailsRef = useRef(false)
-  showDetailsRef.current = showDetails
 
   useEffect(() => {
-    if (expanded && !showDetails) {
-      setShowDetails(true)
-      Animated.timing(anim, { toValue: 1, duration: 220, useNativeDriver: true }).start()
-    } else if (!expanded && showDetails) {
-      Animated.timing(anim, { toValue: 0, duration: 160, useNativeDriver: true }).start(() => {
-        if (!showDetailsRef.current) setShowDetails(false)
-      })
-    }
-  }, [expanded, anim, showDetails])
+    Animated.timing(anim, { toValue: expanded ? 1 : 0, duration: 220, useNativeDriver: true }).start()
+  }, [expanded, anim])
 
   const hasDetails = !!event.description || !!(event.metadata && Object.keys(event.metadata).length)
     || (event.photos && event.photos.length > 0)
@@ -104,7 +94,7 @@ export default function TimelineEvent({ event, isLast = false, photosRenderer, t
             {event.description || 'Sin detalles adicionales'}
           </Text>
 
-          {showDetails ? (
+          {expanded ? (
             <Animated.View
               style={{ opacity: anim, transform: [{ translateY: Animated.multiply(anim, -4) }] }}
             >

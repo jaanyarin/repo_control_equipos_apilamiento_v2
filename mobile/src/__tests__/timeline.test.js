@@ -65,6 +65,17 @@ describe('TimelineEvent', () => {
     expect(getByText('Acción realizada')).toBeTruthy()
     expect(getByText('Cambio de bomba')).toBeTruthy()
   })
+
+  it('re-expande el detalle tras contraerlo', () => {
+    const { getByText, queryByText } = render(<TimelineEvent event={events[0]} isLast={false} />)
+    fireEvent.press(getByText('Reparación finalizada'))
+    expect(getByText('Acción realizada')).toBeTruthy()
+    fireEvent.press(getByText('Reparación finalizada'))
+    expect(queryByText('Acción realizada')).toBeNull()
+    fireEvent.press(getByText('Reparación finalizada'))
+    expect(getByText('Acción realizada')).toBeTruthy()
+    expect(getByText('Cambio de bomba')).toBeTruthy()
+  })
 })
 
 describe('EquipmentTimeline', () => {

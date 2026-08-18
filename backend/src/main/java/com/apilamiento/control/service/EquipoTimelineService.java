@@ -301,11 +301,28 @@ public class EquipoTimelineService {
     }
 
     private Comparator<EquipoTimelineEventDTO> comparadorEventos() {
+        Map<String, Integer> ordenTipos = new HashMap<>();
+        ordenTipos.put("PSR", 1);
+        ordenTipos.put("OSR", 2);
+        ordenTipos.put("INGRESO", 3);
+        ordenTipos.put("AVERIA", 4);
+        ordenTipos.put("REPARACION", 5);
+        ordenTipos.put("FINALIZACION", 6);
         return (a, b) -> {
-            if (a.getDateTime() == null && b.getDateTime() == null) return 0;
-            if (a.getDateTime() == null) return 1;
-            if (b.getDateTime() == null) return -1;
-            return b.getDateTime().compareTo(a.getDateTime());
+            OffsetDateTime da = a.getDateTime();
+            OffsetDateTime db = b.getDateTime();
+            if (da == null && db == null) {
+                return orden(ordenTipos, a) - orden(ordenTipos, b);
+            }
+            if (da == null) return 1;
+            if (db == null) return -1;
+            int porFecha = da.compareTo(db);
+            if (porFecha != 0) return porFecha;
+            return orden(ordenTipos, a) - orden(ordenTipos, b);
         };
+    }
+
+    private int orden(Map<String, Integer> ordenTipos, EquipoTimelineEventDTO evento) {
+        return ordenTipos.getOrDefault(evento.getType(), 99);
     }
 }

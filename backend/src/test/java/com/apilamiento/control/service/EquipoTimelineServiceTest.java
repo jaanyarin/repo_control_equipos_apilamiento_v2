@@ -158,16 +158,16 @@ class EquipoTimelineServiceTest {
         assertEquals(42L, dto.getEquipmentId());
         assertEquals("OPERATIVO", dto.getCurrentStatus());
 
-        // PSR + OSR + INGRESO + FINALIZACION PENDIENTE
+        // PSR (25/04) + OSR (28/04) + INGRESO (02/05) + FINALIZACION PENDIENTE (null → último)
         assertEquals(4, dto.getEvents().size());
         List<String> tipos = dto.getEvents().stream().map(EquipoTimelineEventDTO::getType).toList();
-        assertEquals(List.of("INGRESO", "OSR", "PSR", "FINALIZACION"), tipos);
+        assertEquals(List.of("PSR", "OSR", "INGRESO", "FINALIZACION"), tipos);
 
-        EquipoTimelineEventDTO psrEvent = dto.getEvents().get(2);
+        EquipoTimelineEventDTO psrEvent = dto.getEvents().get(0);
         assertEquals("PSR-2026-00231", psrEvent.getMetadata().getDocumentNumber());
         assertEquals("Recepción Packing", psrEvent.getMetadata().getArea());
 
-        EquipoTimelineEventDTO ingresoEvent = dto.getEvents().get(0);
+        EquipoTimelineEventDTO ingresoEvent = dto.getEvents().get(2);
         assertEquals("GR-2026-00125", ingresoEvent.getMetadata().getDocumentNumber());
         assertEquals("DERCO PERÚ SA", ingresoEvent.getMetadata().getProvider());
 
@@ -199,20 +199,20 @@ class EquipoTimelineServiceTest {
 
         EquipoTimelineDTO dto = service.obtenerTimeline(42L);
 
-        // INGRESO + AVERIA + REPARACION + FINALIZACION PENDIENTE
+        // INGRESO (02/05) + AVERIA (15/08) + REPARACION (17/08) + FINALIZACION PENDIENTE (null → último)
         assertEquals(4, dto.getEvents().size());
-        EquipoTimelineEventDTO reparacion = dto.getEvents().get(0);
-        assertEquals("REPARACION", reparacion.getType());
-        assertEquals("reparacion-82", reparacion.getId());
-        assertEquals(82L, reparacion.getRelatedId());
-        // 2 días 3 h 45 min = 3105 minutos
-        assertEquals(3105L, reparacion.getMetadata().getDowntimeMinutes());
-
         EquipoTimelineEventDTO averiaEvent = dto.getEvents().get(1);
         assertEquals("AVERIA", averiaEvent.getType());
         assertEquals(82L, averiaEvent.getRelatedId());
         assertEquals("averia-82", averiaEvent.getId());
         assertEquals("COMPLETADO", averiaEvent.getStatus());
+
+        EquipoTimelineEventDTO reparacion = dto.getEvents().get(2);
+        assertEquals("REPARACION", reparacion.getType());
+        assertEquals("reparacion-82", reparacion.getId());
+        assertEquals(82L, reparacion.getRelatedId());
+        // 2 días 3 h 45 min = 3105 minutos
+        assertEquals(3105L, reparacion.getMetadata().getDowntimeMinutes());
 
         assertEquals(3105L, dto.getSummary().getTotalDowntimeMinutes());
         assertEquals(1, dto.getSummary().getFailureCount());
@@ -236,7 +236,8 @@ class EquipoTimelineServiceTest {
         EquipoTimelineDTO dto = service.obtenerTimeline(42L);
 
         assertEquals(3, dto.getEvents().size());
-        EquipoTimelineEventDTO averiaEvent = dto.getEvents().get(0);
+        EquipoTimelineEventDTO averiaEvent = dto.getEvents().get(1);
+        assertEquals("AVERIA", averiaEvent.getType());
         assertEquals("EN_PROCESO", averiaEvent.getStatus());
         assertTrue(dto.getEvents().stream().noneMatch(e -> "REPARACION".equals(e.getType())));
     }
@@ -259,7 +260,8 @@ class EquipoTimelineServiceTest {
         EquipoTimelineDTO dto = service.obtenerTimeline(42L);
 
         assertEquals(2, dto.getEvents().size());
-        EquipoTimelineEventDTO finalizacion = dto.getEvents().get(0);
+        assertEquals("INGRESO", dto.getEvents().get(0).getType());
+        EquipoTimelineEventDTO finalizacion = dto.getEvents().get(1);
         assertEquals("FINALIZACION", finalizacion.getType());
         assertEquals("COMPLETADO", finalizacion.getStatus());
         assertNotNull(finalizacion.getDateTime());

@@ -285,7 +285,7 @@ La versión de la aplicación se cuantifica con **SemVer `X.Y.Z`** y se muestra 
 
 - `docs:`, `refactor:`, `test:`, `chore:` **NO** cambian versión.
 - El script `mobile/scripts/bump-version.js` actualiza `package.json` y `android/app/build.gradle` (`versionName` + `versionCode` = `MAJOR*10000 + MINOR*100 + PATCH`, monótono).
-- **Versión actual: `1.9.0`** (1.0.0 = HDT-001+002 base; +0.1.0 por cada HDT implementado hasta HDT-012; HDT-005 cancelado no cuenta).
+- **Versión actual: `1.11.0`** (1.0.0 = HDT-001+002 base; +0.1.0 por cada HDT implementado hasta HDT-014; HDT-005 cancelado no cuenta).
 - El historial completo vive en `mobile/src/constants/versionHistory.js` y se consulta desde el Perfil (botón de historial).
 
 ---
@@ -471,6 +471,33 @@ db: crear migración V8 para tabla de evidencias
 | Fix trigger Super Admin (V29): RETURNS OLD en DELETE, el seed sigue protegido | ✅ |
 | Migraciones V26 (5 fotos avería), V27 (evidencias devolución accesorios), V28 (extintor), V29 (fix trigger) | ✅ |
 | Tests: backend 92/92 unit (excl. MarcaResourceTest @QuarkusTest con BD), mobile 77/77 + ESLint limpio | ✅ |
+
+### HDT-013 — Notificaciones Push Ampliadas (IMPLEMENTADO ✅)
+
+| Módulo | Estado |
+|---|---|
+| Plantilla de notificación nueva: `Evento: ... / Proveedor - Codigo / Registrado por` | ✅ |
+| Notificación al registrar una avería (AVERIA_REPORTADA) | ✅ |
+| Notificación al atender una avería (AVERIA_ATENDIDA) | ✅ |
+| Notificación al finalizar el servicio / devolución (SERVICIO_FINALIZADO) | ✅ |
+| Navegación al detalle del equipo al tocar la notificación | ✅ |
+| Rebuild backend Docker + APK Gradle local (debug/release) + AGENTS.md sin Expo/EAS | ✅ |
+
+### HDT-014 — Timeline Dinámico de Detalle de Equipo (IMPLEMENTADO ✅)
+
+| Módulo | Estado |
+|---|---|
+| Endpoint backend `GET /api/v1/equipos/{id}/timeline` (vía `EquipoTimelineService`) | ✅ |
+| Consolidación de eventos reales: PSR, OSR, INGRESO, AVERIA, REPARACION, FINALIZACION | ✅ |
+| Orden cronológico **ascendente** (PSR → OSR → ingreso → avería → reparación → finalización) con tie-break por tipo; pendientes al final | ✅ |
+| Resumen operativo: `F.ingreso · Nro.averías · F.finalización` / `Horómetro inicio · T.inactividad · Horómetro fin` | ✅ |
+| Cálculo de downtime por avería (ChronoUnit.MINUTES) + total en el summary | ✅ |
+| Fotos de evidencias (ingreso, avería, devolución) con URLs relativas auth Bearer | ✅ |
+| Mobile: `EquipoTimelineScreen` (segunda pantalla, no modifica `EquipoDetailScreen`) + botón "Ver Historial" en `EquiposListScreen` | ✅ |
+| Componentes timeline: `EquipmentTimeline`, `TimelineEvent`, `TimelineConnector`, `TimelineEventDetails`, `timeline.config`, `timeline.utils` | ✅ |
+| Fix expand/colapsar/re-expandir (estado único `expanded`, animación idempotente) | ✅ |
+| Visor de fotos full-screen con `ZoomableImage` + StatusBar hidden | ✅ |
+| Tests: backend `EquipoTimelineServiceTest` 7/7 + `EquipoResourceTest` 2/2; mobile 22 suites / 103 tests + ESLint limpio | ✅ |
 
 ---
 

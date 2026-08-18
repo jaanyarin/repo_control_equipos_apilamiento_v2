@@ -36,8 +36,9 @@ Plataforma full-stack para la gestión operativa de equipos de apilamiento alqui
 | HDT-011 — Horómetro en Averías y Trazabilidad de Usuario (Auditoría) | ✅ Implementado |
 | HDT-012 — UX Operativo, Evidencias, Contraseña 8 dígitos, PSR/OSR Finalizado y Sync Motivos→Tipos | ✅ Implementado |
 | HDT-013 — Notificaciones Push Ampliadas (plantilla nueva + avería reportada/atendida + servicio finalizado) | ✅ Implementado |
+| HDT-014 — Timeline Dinámico de Detalle de Equipo (segunda pantalla mobile + endpoint backend) | ✅ Implementado |
 
-**Features adicionales:** Finalización del Servicio (al atender una avería se restaura el estado operativo del equipo) · Devolución de equipos con evidencias por accesorios · Desplegables AppSelect con Portal + ScrollView completo · Catálogos sincronizados en tiempo real entre dispositivos · Card PSR/OSR en detalle de equipo y Marca/Modelo/GRR en PSR/OSR (retroactivo) · Teclado móvil que no cubre los inputs (KeyboardAwareScrollView en pantallas y diálogos) · Creación de usuarios mobile con solo Nombre obligatorio y Ubicación desplegable desde Sedes · Horómetro en registro y atención de averías con cálculo de días de inactividad · Trazabilidad de `usuario_creacion`/`usuario_actualizacion` desde el JWT en todos los CRUD (auditoría real) · Super Admin protegido por trigger de BD · Identificadores operativos en mayúsculas (número PSR, código, modelo, serie, guía) · Layout de averías en detalle con fecha reporte→atención y horómetros · Fecha y hora de atención editable y validada · Sync `motivos_psr → tipos_equipo` (find-or-create solo en crear) · Evidencias de ingreso ampliadas (4 vistas + extintor) y máximo 5 fotos por avería · Contraseña de exactamente 8 dígitos (DNI) · PSR/OSR finalizado read-only (409 backend + UI deshabilitada) · Fix trigger Super Admin que permite eliminar usuarios (el seed sigue protegido) · Notificaciones push FCM con plantilla `Evento/Proveedor/Codigo/Registrado por` en 4 eventos: ingreso de equipo, avería reportada, avería atendida y servicio finalizado (navegación al detalle al tocar).
+**Features adicionales:** Finalización del Servicio (al atender una avería se restaura el estado operativo del equipo) · Devolución de equipos con evidencias por accesorios · Desplegables AppSelect con Portal + ScrollView completo · Catálogos sincronizados en tiempo real entre dispositivos · Card PSR/OSR en detalle de equipo y Marca/Modelo/GRR en PSR/OSR (retroactivo) · Teclado móvil que no cubre los inputs (KeyboardAwareScrollView en pantallas y diálogos) · Creación de usuarios mobile con solo Nombre obligatorio y Ubicación desplegable desde Sedes · Horómetro en registro y atención de averías con cálculo de días de inactividad · Trazabilidad de `usuario_creacion`/`usuario_actualizacion` desde el JWT en todos los CRUD (auditoría real) · Super Admin protegido por trigger de BD · Identificadores operativos en mayúsculas (número PSR, código, modelo, serie, guía) · Layout de averías en detalle con fecha reporte→atención y horómetros · Fecha y hora de atención editable y validada · Sync `motivos_psr → tipos_equipo` (find-or-create solo en crear) · Evidencias de ingreso ampliadas (4 vistas + extintor) y máximo 5 fotos por avería · Contraseña de exactamente 8 dígitos (DNI) · PSR/OSR finalizado read-only (409 backend + UI deshabilitada) · Fix trigger Super Admin que permite eliminar usuarios (el seed sigue protegido) · Notificaciones push FCM con plantilla `Evento/Proveedor/Codigo/Registrado por` en 4 eventos: ingreso de equipo, avería reportada, avería atendida y servicio finalizado (navegación al detalle al tocar) · Timeline dinámica de detalle de equipo como segunda pantalla ("Ver Historial" desde el listado): endpoint `GET /api/v1/equipos/{id}/timeline` que consolida PSR/OSR/ingreso/averías/reparaciones/finalización en orden cronológico ascendente, con resumen operativo (ingreso · nro. averías · finalización / horómetro inicio · t. inactividad · horómetro fin) y eventos expandibles con evidencias.
 
 ---
 
@@ -50,7 +51,7 @@ La aplicación mobile utiliza **Semantic Versioning (SemVer) `X.Y.Z`** como fuen
 - **PATCH (`Z`)**: correcciones asociadas a `fix:`.
 - `docs:`, `refactor:`, `test:` y `chore:` no modifican la versión.
 
-La versión actual es **1.10.0**, correspondiente al HDT-013. La versión mostrada en `PerfilScreen` y `SettingsScreen` se obtiene automáticamente desde `mobile/package.json` mediante `mobile/src/constants/appVersion.js`.
+La versión actual es **1.11.0**, correspondiente al HDT-014. La versión mostrada en `PerfilScreen` y `SettingsScreen` se obtiene automáticamente desde `mobile/package.json` mediante `mobile/src/constants/appVersion.js`.
 
 Para incrementar la versión:
 
@@ -133,6 +134,6 @@ npm run android:release  # → android/app/build/outputs/apk/release/app-release
 - Tareas y roadmap: `documentacion_general/sdd/03_tareas.md`
 - Implementación detallada: `documentacion_general/sdd/04_implementaciones.md`
 - Convenciones del proyecto: `AGENTS.md`
-- Hitos: `documentacion_general/sdd/05_hito_*.md` (001–013)
+- Hitos: `documentacion_general/sdd/05_hito_*.md` (001–014)
 - Build Android (local Gradle): `documentacion_general/sdd/07_build_android_gradle.md`
 - Firebase FCM: `documentacion_general/sdd/08_firebase_fcm_configuracion.md`
