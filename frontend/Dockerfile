@@ -3,7 +3,8 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install
 COPY . .
-RUN npm run build
+ARG VITE_BASE=/
+RUN npm run build -- --base=$VITE_BASE
 
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html

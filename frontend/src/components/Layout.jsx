@@ -51,7 +51,7 @@ export default function Layout() {
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken')
-    window.location.href = '/login?logout=1'
+    window.location.href = import.meta.env.BASE_URL + 'login?logout=1'
   }
 
   return (

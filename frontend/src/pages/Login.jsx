@@ -83,7 +83,7 @@ export default function Login() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundImage: 'url(/images/fondo_login.png)',
+        backgroundImage: `url(${import.meta.env.BASE_URL}images/fondo_login.png)`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
