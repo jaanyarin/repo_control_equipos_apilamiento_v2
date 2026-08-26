@@ -2,7 +2,7 @@ package com.apilamiento.control.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
@@ -24,16 +24,16 @@ public class Psr {
     private String numeroPsr;
 
     @Column(name = "fecha_psr", nullable = false)
-    private LocalDate fechaPsr;
+    private LocalDateTime fechaPsr;
 
     @Column(name = "motivo_id", nullable = false)
     private Long motivoId;
 
     @Column(name = "fecha_inicio_uso", nullable = false)
-    private LocalDate fechaInicioUso;
+    private LocalDateTime fechaInicioUso;
 
     @Column(name = "fecha_fin_uso", nullable = false)
-    private LocalDate fechaFinUso;
+    private LocalDateTime fechaFinUso;
 
     @Column(nullable = false, precision = 5, scale = 2)
     private BigDecimal meses;
@@ -71,17 +71,17 @@ public class Psr {
     public String getNumeroPsr() { return numeroPsr; }
     public void setNumeroPsr(String numeroPsr) { this.numeroPsr = numeroPsr; }
 
-    public LocalDate getFechaPsr() { return fechaPsr; }
-    public void setFechaPsr(LocalDate fechaPsr) { this.fechaPsr = fechaPsr; }
+    public LocalDateTime getFechaPsr() { return fechaPsr; }
+    public void setFechaPsr(LocalDateTime fechaPsr) { this.fechaPsr = fechaPsr; }
 
     public Long getMotivoId() { return motivoId; }
     public void setMotivoId(Long motivoId) { this.motivoId = motivoId; }
 
-    public LocalDate getFechaInicioUso() { return fechaInicioUso; }
-    public void setFechaInicioUso(LocalDate fechaInicioUso) { this.fechaInicioUso = fechaInicioUso; }
+    public LocalDateTime getFechaInicioUso() { return fechaInicioUso; }
+    public void setFechaInicioUso(LocalDateTime fechaInicioUso) { this.fechaInicioUso = fechaInicioUso; }
 
-    public LocalDate getFechaFinUso() { return fechaFinUso; }
-    public void setFechaFinUso(LocalDate fechaFinUso) { this.fechaFinUso = fechaFinUso; }
+    public LocalDateTime getFechaFinUso() { return fechaFinUso; }
+    public void setFechaFinUso(LocalDateTime fechaFinUso) { this.fechaFinUso = fechaFinUso; }
 
     public BigDecimal getMeses() { return meses; }
     public void setMeses(BigDecimal meses) { this.meses = meses; }

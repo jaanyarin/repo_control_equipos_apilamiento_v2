@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.time.LocalDate;
 
 public class EquipoDTO {
@@ -48,7 +49,7 @@ public class EquipoDTO {
     private BigDecimal horometroFin;
     private String estadoOperativo;
     private String observaciones;
-    private LocalDate fechaIngreso;
+    private LocalDateTime fechaIngreso;
     private OffsetDateTime fechaDevolucion;
     private String numeroGuiaRemision;
     private Boolean ingresoCompleto;
@@ -148,8 +149,9 @@ public class EquipoDTO {
 
     public String getObservaciones() { return observaciones; }
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
-    public LocalDate getFechaIngreso() { return fechaIngreso; }
-    public void setFechaIngreso(LocalDate fechaIngreso) { this.fechaIngreso = fechaIngreso; }
+    public LocalDateTime getFechaIngreso() { return fechaIngreso; }
+    public void setFechaIngreso(LocalDateTime fechaIngreso) { this.fechaIngreso = fechaIngreso; }
+    public void setFechaIngreso(LocalDate fechaIngreso) { this.fechaIngreso = fechaIngreso != null ? fechaIngreso.atStartOfDay() : null; }
     public OffsetDateTime getFechaDevolucion() { return fechaDevolucion; }
     public void setFechaDevolucion(OffsetDateTime fechaDevolucion) { this.fechaDevolucion = fechaDevolucion; }
     public String getNumeroGuiaRemision() { return numeroGuiaRemision; }

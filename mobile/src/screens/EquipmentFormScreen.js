@@ -35,7 +35,7 @@ function DateField({ value, onChange, error, disabled }) {
       {visible ? (
         <DateTimePicker
           value={parseApiDate(value)}
-          mode="date"
+          mode="datetime"
           display={Platform.OS === 'android' ? 'default' : 'spinner'}
           maximumDate={new Date()}
           onChange={(event, date) => {

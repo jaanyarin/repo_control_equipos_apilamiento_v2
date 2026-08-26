@@ -1,4 +1,5 @@
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+const ISO_DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
 
 export function extractApiList(response, catalogName) {
   const body = response?.data ?? response
@@ -24,9 +25,21 @@ export function getActiveCampanaId(campanas) {
   return activeCampanaId != null ? String(activeCampanaId) : ''
 }
 
+function toDateOnly(dateStr) {
+  if (ISO_DATETIME_PATTERN.test(dateStr || '')) return dateStr.split('T')[0]
+  return dateStr
+}
+
 export function formatDisplayDate(dateStr) {
-  if (!ISO_DATE_PATTERN.test(dateStr || '')) return ''
-  const [year, month, day] = dateStr.split('-')
+  if (!dateStr) return ''
+  const raw = toDateOnly(dateStr)
+  if (ISO_DATETIME_PATTERN.test(dateStr)) {
+    const [datePart, timePart] = dateStr.split('T')
+    const [, month, day] = datePart.split('-')
+    return `${day}/${month}/${datePart.split('-')[0]} ${timePart}`
+  }
+  if (!ISO_DATE_PATTERN.test(raw)) return ''
+  const [year, month, day] = raw.split('-')
   return `${day}/${month}/${year}`
 }
 
@@ -34,18 +47,40 @@ export function formatApiDate(date) {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
 export function parseApiDate(dateStr) {
-  if (!ISO_DATE_PATTERN.test(dateStr || '')) return new Date()
-  const [year, month, day] = dateStr.split('-').map(Number)
+  if (ISO_DATETIME_PATTERN.test(dateStr || '')) {
+    const [datePart, timePart] = dateStr.split('T')
+    const [year, month, day] = datePart.split('-').map(Number)
+    const [hours, minutes] = timePart.split(':').map(Number)
+    return new Date(year, month - 1, day, hours, minutes)
+  }
+  const raw = toDateOnly(dateStr)
+  if (!ISO_DATE_PATTERN.test(raw || '')) return new Date()
+  const [year, month, day] = raw.split('-').map(Number)
   return new Date(year, month - 1, day)
 }
 
 export function isValidApiDate(dateStr) {
-  if (!ISO_DATE_PATTERN.test(dateStr || '')) return false
-  const [year, month, day] = dateStr.split('-').map(Number)
+  if (!dateStr) return false
+  if (ISO_DATETIME_PATTERN.test(dateStr)) {
+    const [datePart, timePart] = dateStr.split('T')
+    const [year, month, day] = datePart.split('-').map(Number)
+    const [hours, minutes] = timePart.split(':').map(Number)
+    const parsed = new Date(year, month - 1, day, hours, minutes)
+    return parsed.getFullYear() === year
+      && parsed.getMonth() === month - 1
+      && parsed.getDate() === day
+      && parsed.getHours() === hours
+      && parsed.getMinutes() === minutes
+  }
+  const raw = toDateOnly(dateStr)
+  if (!ISO_DATE_PATTERN.test(raw)) return false
+  const [year, month, day] = raw.split('-').map(Number)
   const parsed = new Date(year, month - 1, day)
   return parsed.getFullYear() === year
     && parsed.getMonth() === month - 1
@@ -53,9 +88,11 @@ export function isValidApiDate(dateStr) {
 }
 
 export function calcularMeses(inicio, fin) {
-  if (!isValidApiDate(inicio) || !isValidApiDate(fin)) return ''
-  const [startYear, startMonth, startDay] = inicio.split('-').map(Number)
-  const [endYear, endMonth, endDay] = fin.split('-').map(Number)
+  const inicioDate = toDateOnly(inicio)
+  const finDate = toDateOnly(fin)
+  if (!isValidApiDate(inicioDate) || !isValidApiDate(finDate)) return ''
+  const [startYear, startMonth, startDay] = inicioDate.split('-').map(Number)
+  const [endYear, endMonth, endDay] = finDate.split('-').map(Number)
   const start = new Date(Date.UTC(startYear, startMonth - 1, startDay))
   const endExclusive = new Date(Date.UTC(endYear, endMonth - 1, endDay + 1))
   if (endExclusive <= start) return ''

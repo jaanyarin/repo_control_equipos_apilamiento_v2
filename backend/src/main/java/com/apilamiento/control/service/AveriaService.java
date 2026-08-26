@@ -161,8 +161,6 @@ public class AveriaService {
             equipo.setEstadoOperativo("AVERIADO");
             equipo.setUsuarioActualizacion(dto.getUsuarioCreacion() != null ? dto.getUsuarioCreacion() : 1L);
             equipo.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
-            notificacionPushService.notificarAveriaReportada(equipo,
-                    dto.getUsuarioCreacion() != null ? dto.getUsuarioCreacion() : 1L);
         }
         return mapper.toDTO(entity);
     }
@@ -211,6 +209,18 @@ public class AveriaService {
         }
         entity.setUsuarioActualizacion(dto.getUsuarioActualizacion() != null ? dto.getUsuarioActualizacion() : 1L);
         entity.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+        return mapper.toDTO(entity);
+    }
+
+    @Transactional
+    public AveriaDTO confirmar(Long id) {
+        Averia entity = repository.findById(id);
+        if (entity == null) return null;
+        Equipo equipo = equipoRepository.findById(entity.getEquipoId());
+        if (equipo != null) {
+            notificacionPushService.notificarAveriaReportada(equipo,
+                    entity.getUsuarioCreacion() != null ? entity.getUsuarioCreacion() : 1L);
+        }
         return mapper.toDTO(entity);
     }
 

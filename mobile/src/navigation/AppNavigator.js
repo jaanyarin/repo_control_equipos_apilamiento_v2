@@ -33,6 +33,7 @@ import EquipmentPhotosScreen from '../screens/EquipmentPhotosScreen'
 import DevolucionEquipoScreen from '../screens/DevolucionEquipoScreen'
 import MotivosPsrScreen from '../screens/MotivosPsrScreen'
 import AuditoriaScreen from '../screens/AuditoriaScreen'
+import PermissionsScreen from '../screens/PermissionsScreen'
 import LoadingScreen from '../components/LoadingScreen'
 import { theme } from '../theme'
 import { hasPsrAdminRole, isSuperAdmin, isAdminOrSuperAdmin } from '../utils/roles'
@@ -232,7 +233,12 @@ function AuthNavigator({ initialRouteName }) {
     <AuthStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRouteName}>
       <AuthStack.Screen name="ServerCheck">
         {({ navigation }) => (
-          <ServerCheckScreen onReady={() => navigation.replace('Login')} />
+          <ServerCheckScreen onReady={() => navigation.replace('Permissions')} />
+        )}
+      </AuthStack.Screen>
+      <AuthStack.Screen name="Permissions">
+        {({ navigation }) => (
+          <PermissionsScreen onReady={() => navigation.replace('Login')} />
         )}
       </AuthStack.Screen>
       <AuthStack.Screen name="Login" component={LoginScreen} />
@@ -249,7 +255,7 @@ function navigateFromNotification(remoteMessage) {
   const tiposNavegables = ['INGRESO_EQUIPO', 'AVERIA_REPORTADA', 'AVERIA_ATENDIDA', 'SERVICIO_FINALIZADO']
   if (tiposNavegables.includes(data.tipo) && data.entidadId) {
     try {
-      navigationRef.current.navigate('EquipoDetail', { id: Number(data.entidadId) })
+      navigationRef.current.navigate('EquipoTimeline', { id: Number(data.entidadId) })
     } catch (_) {
     }
   }

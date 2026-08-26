@@ -2,6 +2,7 @@ package com.apilamiento.control.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -96,7 +97,7 @@ public class Equipo {
     private String observaciones;
 
     @Column(name = "fecha_ingreso")
-    private LocalDate fechaIngreso;
+    private LocalDateTime fechaIngreso;
 
     @Column(name = "fecha_devolucion")
     private OffsetDateTime fechaDevolucion;
@@ -208,8 +209,9 @@ public class Equipo {
 
     public String getObservaciones() { return observaciones; }
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
-    public LocalDate getFechaIngreso() { return fechaIngreso; }
-    public void setFechaIngreso(LocalDate fechaIngreso) { this.fechaIngreso = fechaIngreso; }
+    public LocalDateTime getFechaIngreso() { return fechaIngreso; }
+    public void setFechaIngreso(LocalDateTime fechaIngreso) { this.fechaIngreso = fechaIngreso; }
+    public void setFechaIngreso(LocalDate fechaIngreso) { this.fechaIngreso = fechaIngreso != null ? fechaIngreso.atStartOfDay() : null; }
     public OffsetDateTime getFechaDevolucion() { return fechaDevolucion; }
     public void setFechaDevolucion(OffsetDateTime fechaDevolucion) { this.fechaDevolucion = fechaDevolucion; }
     public String getNumeroGuiaRemision() { return numeroGuiaRemision; }

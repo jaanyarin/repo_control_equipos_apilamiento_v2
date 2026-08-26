@@ -22,7 +22,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.Period;
 import java.time.ZoneId;
@@ -112,13 +112,15 @@ public class PsrService {
                 .orElse(false);
     }
 
-    private BigDecimal calcularMeses(LocalDate inicio, LocalDate fin) {
-        if (fin.isBefore(inicio)) {
+    private BigDecimal calcularMeses(LocalDateTime inicio, LocalDateTime fin) {
+        java.time.LocalDate inicioDate = inicio.toLocalDate();
+        java.time.LocalDate finDate = fin.toLocalDate();
+        if (finDate.isBefore(inicioDate)) {
             throw new WebApplicationException(
                     "La fecha de fin debe ser igual o posterior a la fecha de inicio",
                     Response.Status.BAD_REQUEST);
         }
-        Period periodo = Period.between(inicio, fin.plusDays(1));
+        Period periodo = Period.between(inicioDate, finDate.plusDays(1));
         long mesesCompletos = periodo.toTotalMonths();
         BigDecimal fraccionDias = BigDecimal.valueOf(periodo.getDays())
                 .divide(DIAS_POR_MES, 8, RoundingMode.HALF_UP);

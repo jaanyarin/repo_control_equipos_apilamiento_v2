@@ -215,10 +215,10 @@ describe('CreatePsrScreen', () => {
         campanaId: 2,
         sedeId: 10,
         numeroPsr: 'PSR-001',
-        fechaPsr: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        fechaPsr: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
         motivoId: 20,
-        fechaInicioUso: '2026-07-24',
-        fechaFinUso: '2026-07-24',
+        fechaInicioUso: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
+        fechaFinUso: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
         observaciones: null,
       })
       expect(mockPopTo).toHaveBeenCalledWith('PsrOsr')

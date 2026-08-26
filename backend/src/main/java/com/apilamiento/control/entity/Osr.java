@@ -2,7 +2,7 @@ package com.apilamiento.control.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
@@ -24,7 +24,7 @@ public class Osr {
     private String numeroOsr;
 
     @Column(name = "fecha_osr")
-    private LocalDate fechaOsr;
+    private LocalDateTime fechaOsr;
 
     @Column(name = "costo_unitario", precision = 14, scale = 2)
     private BigDecimal costoUnitario;
@@ -65,8 +65,8 @@ public class Osr {
     public String getNumeroOsr() { return numeroOsr; }
     public void setNumeroOsr(String numeroOsr) { this.numeroOsr = numeroOsr; }
 
-    public LocalDate getFechaOsr() { return fechaOsr; }
-    public void setFechaOsr(LocalDate fechaOsr) { this.fechaOsr = fechaOsr; }
+    public LocalDateTime getFechaOsr() { return fechaOsr; }
+    public void setFechaOsr(LocalDateTime fechaOsr) { this.fechaOsr = fechaOsr; }
 
     public BigDecimal getCostoUnitario() { return costoUnitario; }
     public void setCostoUnitario(BigDecimal costoUnitario) { this.costoUnitario = costoUnitario; }

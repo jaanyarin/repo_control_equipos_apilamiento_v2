@@ -195,7 +195,12 @@ export default function RegistrarAveriaScreen() {
               </View>
             ))}
           </View>
-          <AppButton variant="primary" onPress={() => navigation.goBack()} fullWidth style={styles.button} disabled={!allPhotosDone}>
+          <AppButton variant="primary" onPress={async () => {
+            try {
+              await api.put(`/averias/${averiaId}/confirmar`)
+            } catch (_) {}
+            navigation.goBack()
+          }} fullWidth style={styles.button} disabled={!allPhotosDone}>
             {allPhotosDone ? 'Finalizar' : 'Tome la foto del horómetro y la Foto 1 para finalizar'}
           </AppButton>
         </AppCard>

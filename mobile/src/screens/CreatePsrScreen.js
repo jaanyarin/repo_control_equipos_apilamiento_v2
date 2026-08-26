@@ -51,7 +51,7 @@ function DatePickerField({ label, value, onChange, error, readOnly = false }) {
           <AppInput
             label={label}
             value={formatDisplayDate(value)}
-            placeholder="dd/mm/yyyy"
+            placeholder="dd/mm/yyyy hh:mm"
             editable={false}
             errorMessage={error}
           />
@@ -60,7 +60,7 @@ function DatePickerField({ label, value, onChange, error, readOnly = false }) {
       {show ? (
         <DateTimePicker
           value={parseApiDate(value)}
-          mode="date"
+          mode="datetime"
           display={Platform.OS === 'android' ? 'default' : 'spinner'}
           onChange={handleChange}
         />
@@ -71,7 +71,7 @@ function DatePickerField({ label, value, onChange, error, readOnly = false }) {
 
 const requiredDate = message => z.string()
   .min(1, message)
-  .refine(isValidApiDate, 'Seleccione una fecha válida')
+  .refine(isValidApiDate, 'Seleccione una fecha y hora válida')
 
 const schema = z.object({
   campanaId: z.string().min(1, 'Seleccione una campaña'),

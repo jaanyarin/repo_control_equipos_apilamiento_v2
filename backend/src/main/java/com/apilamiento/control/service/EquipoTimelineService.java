@@ -31,7 +31,7 @@ import com.apilamiento.control.repository.SedeRepository;
 import com.apilamiento.control.repository.UsuarioRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -103,7 +103,7 @@ public class EquipoTimelineService {
         // PSR
         if (psr != null) {
             EquipoTimelineEventDTO event = nuevoEvento(equipo, "PSR", "psr-" + psr.getId(),
-                    fechaOInicioDia(psr.getFechaPsr(), psr.getFechaCreacion()));
+                    fechaOOffset(psr.getFechaPsr(), psr.getFechaCreacion()));
             event.setTitle("PSR registrada");
             event.setStatus("COMPLETADO");
             event.setDescription(motivo != null ? motivo.getNombre() : null);
@@ -120,7 +120,7 @@ public class EquipoTimelineService {
         // OSR
         if (osr != null) {
             EquipoTimelineEventDTO event = nuevoEvento(equipo, "OSR", "osr-" + osr.getId(),
-                    fechaOInicioDia(osr.getFechaOsr(), osr.getFechaCreacion()));
+                    fechaOOffset(osr.getFechaOsr(), osr.getFechaCreacion()));
             event.setTitle("OSR registrada");
             event.setStatus("COMPLETADO");
             EquipoTimelineMetadataDTO md = new EquipoTimelineMetadataDTO();
@@ -136,7 +136,7 @@ public class EquipoTimelineService {
         // Ingreso del equipo
         if (equipo.getFechaIngreso() != null || equipo.getFechaCreacion() != null) {
             EquipoTimelineEventDTO event = nuevoEvento(equipo, "INGRESO", "ingreso-" + equipo.getId(),
-                    fechaOInicioDia(equipo.getFechaIngreso(), equipo.getFechaCreacion()));
+                    fechaOOffset(equipo.getFechaIngreso(), equipo.getFechaCreacion()));
             event.setTitle("Equipo ingresado");
             event.setStatus("COMPLETADO");
             event.setDescription(proveedor != null ? proveedor.getRazonSocial() : null);
@@ -217,7 +217,7 @@ public class EquipoTimelineService {
         events.sort(comparadorEventos());
 
         EquipoTimelineSummaryDTO summary = new EquipoTimelineSummaryDTO();
-        summary.setEntryDate(inicioDelDia(equipo.getFechaIngreso()));
+        summary.setEntryDate(fechaOOffset(equipo.getFechaIngreso(), equipo.getFechaCreacion()));
         summary.setInitialHourMeter(equipo.getHorometroInicio());
         summary.setFinalHourMeter(equipo.getHorometroFin());
         summary.setFailureCount(averiaRepository.listByEquipoId(equipoId).size());
@@ -241,12 +241,12 @@ public class EquipoTimelineService {
         return event;
     }
 
-    private OffsetDateTime inicioDelDia(LocalDate date) {
-        return date != null ? date.atStartOfDay(ZONE).toOffsetDateTime() : null;
+    private OffsetDateTime toOffset(LocalDateTime ldt) {
+        return ldt != null ? ldt.atZone(ZONE).toOffsetDateTime() : null;
     }
 
-    private OffsetDateTime fechaOInicioDia(LocalDate date, OffsetDateTime fallback) {
-        OffsetDateTime value = inicioDelDia(date);
+    private OffsetDateTime fechaOOffset(LocalDateTime ldt, OffsetDateTime fallback) {
+        OffsetDateTime value = toOffset(ldt);
         return value != null ? value : fallback;
     }
 

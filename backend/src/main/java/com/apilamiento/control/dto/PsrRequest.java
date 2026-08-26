@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class PsrRequest {
 
@@ -17,16 +18,16 @@ public class PsrRequest {
     private String numeroPsr;
 
     @NotNull(message = "La fecha de PSR es obligatoria")
-    private LocalDate fechaPsr;
+    private LocalDateTime fechaPsr;
 
     @NotNull(message = "El motivo es obligatorio")
     private Long motivoId;
 
     @NotNull(message = "La fecha de inicio de uso es obligatoria")
-    private LocalDate fechaInicioUso;
+    private LocalDateTime fechaInicioUso;
 
     @NotNull(message = "La fecha de fin de uso es obligatoria")
-    private LocalDate fechaFinUso;
+    private LocalDateTime fechaFinUso;
 
     private String observaciones;
 
@@ -44,17 +45,20 @@ public class PsrRequest {
     public String getNumeroPsr() { return numeroPsr; }
     public void setNumeroPsr(String numeroPsr) { this.numeroPsr = numeroPsr; }
 
-    public LocalDate getFechaPsr() { return fechaPsr; }
-    public void setFechaPsr(LocalDate fechaPsr) { this.fechaPsr = fechaPsr; }
+    public LocalDateTime getFechaPsr() { return fechaPsr; }
+    public void setFechaPsr(LocalDateTime fechaPsr) { this.fechaPsr = fechaPsr; }
+    public void setFechaPsr(LocalDate fechaPsr) { this.fechaPsr = fechaPsr != null ? fechaPsr.atStartOfDay() : null; }
 
     public Long getMotivoId() { return motivoId; }
     public void setMotivoId(Long motivoId) { this.motivoId = motivoId; }
 
-    public LocalDate getFechaInicioUso() { return fechaInicioUso; }
-    public void setFechaInicioUso(LocalDate fechaInicioUso) { this.fechaInicioUso = fechaInicioUso; }
+    public LocalDateTime getFechaInicioUso() { return fechaInicioUso; }
+    public void setFechaInicioUso(LocalDateTime fechaInicioUso) { this.fechaInicioUso = fechaInicioUso; }
+    public void setFechaInicioUso(LocalDate fechaInicioUso) { this.fechaInicioUso = fechaInicioUso != null ? fechaInicioUso.atStartOfDay() : null; }
 
-    public LocalDate getFechaFinUso() { return fechaFinUso; }
-    public void setFechaFinUso(LocalDate fechaFinUso) { this.fechaFinUso = fechaFinUso; }
+    public LocalDateTime getFechaFinUso() { return fechaFinUso; }
+    public void setFechaFinUso(LocalDateTime fechaFinUso) { this.fechaFinUso = fechaFinUso; }
+    public void setFechaFinUso(LocalDate fechaFinUso) { this.fechaFinUso = fechaFinUso != null ? fechaFinUso.atStartOfDay() : null; }
 
     public String getObservaciones() { return observaciones; }
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }

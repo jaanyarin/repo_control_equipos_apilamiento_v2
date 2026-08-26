@@ -2,6 +2,7 @@ package com.apilamiento.control.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 public class PsrDTO {
@@ -11,12 +12,12 @@ public class PsrDTO {
     private Long sedeId;
     private String sedeNombre;
     private String numeroPsr;
-    private LocalDate fechaPsr;
+    private LocalDateTime fechaPsr;
     private Long motivoId;
     private String motivoNombre;
     private String motivoNombreCorto;
-    private LocalDate fechaInicioUso;
-    private LocalDate fechaFinUso;
+    private LocalDateTime fechaInicioUso;
+    private LocalDateTime fechaFinUso;
     private BigDecimal meses;
     private String observaciones;
     private Boolean estadoActivo;
@@ -48,8 +49,9 @@ public class PsrDTO {
     public String getNumeroPsr() { return numeroPsr; }
     public void setNumeroPsr(String numeroPsr) { this.numeroPsr = numeroPsr; }
 
-    public LocalDate getFechaPsr() { return fechaPsr; }
-    public void setFechaPsr(LocalDate fechaPsr) { this.fechaPsr = fechaPsr; }
+    public LocalDateTime getFechaPsr() { return fechaPsr; }
+    public void setFechaPsr(LocalDateTime fechaPsr) { this.fechaPsr = fechaPsr; }
+    public void setFechaPsr(LocalDate fechaPsr) { this.fechaPsr = fechaPsr != null ? fechaPsr.atStartOfDay() : null; }
 
     public Long getMotivoId() { return motivoId; }
     public void setMotivoId(Long motivoId) { this.motivoId = motivoId; }
@@ -60,11 +62,13 @@ public class PsrDTO {
     public String getMotivoNombreCorto() { return motivoNombreCorto; }
     public void setMotivoNombreCorto(String motivoNombreCorto) { this.motivoNombreCorto = motivoNombreCorto; }
 
-    public LocalDate getFechaInicioUso() { return fechaInicioUso; }
-    public void setFechaInicioUso(LocalDate fechaInicioUso) { this.fechaInicioUso = fechaInicioUso; }
+    public LocalDateTime getFechaInicioUso() { return fechaInicioUso; }
+    public void setFechaInicioUso(LocalDateTime fechaInicioUso) { this.fechaInicioUso = fechaInicioUso; }
+    public void setFechaInicioUso(LocalDate fechaInicioUso) { this.fechaInicioUso = fechaInicioUso != null ? fechaInicioUso.atStartOfDay() : null; }
 
-    public LocalDate getFechaFinUso() { return fechaFinUso; }
-    public void setFechaFinUso(LocalDate fechaFinUso) { this.fechaFinUso = fechaFinUso; }
+    public LocalDateTime getFechaFinUso() { return fechaFinUso; }
+    public void setFechaFinUso(LocalDateTime fechaFinUso) { this.fechaFinUso = fechaFinUso; }
+    public void setFechaFinUso(LocalDate fechaFinUso) { this.fechaFinUso = fechaFinUso != null ? fechaFinUso.atStartOfDay() : null; }
 
     public BigDecimal getMeses() { return meses; }
     public void setMeses(BigDecimal meses) { this.meses = meses; }

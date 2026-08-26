@@ -77,6 +77,17 @@ public class AveriaResource {
         return Response.ok(ApiResponse.ok("Avería actualizada correctamente", actualizado)).build();
     }
 
+    @PUT
+    @Path("/{id}/confirmar")
+    public Response confirmar(@PathParam("id") Long id) {
+        AveriaDTO confirmada = service.confirmar(id);
+        if (confirmada == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error("Avería no encontrada", "NOT_FOUND")).build();
+        }
+        return Response.ok(ApiResponse.ok("Avería confirmada", confirmada)).build();
+    }
+
     @DELETE
     @Path("/{id}")
     public Response eliminar(@PathParam("id") Long id) {
