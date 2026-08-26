@@ -1,6 +1,7 @@
 import { Platform, PermissionsAndroid } from 'react-native'
 
 let messagingApi = null
+let notifeeApi = null
 
 try {
   messagingApi = require('@react-native-firebase/messaging')
@@ -8,36 +9,39 @@ try {
   // Se permite que la app funcione sin FCM si la lib no está enlazada (modo dev / mocks).
 }
 
+try {
+  notifeeApi = require('@notifee/react-native')
+} catch (error) {
+  // Se permite que la app funcione sin notifee en modo dev / tests.
+}
+
 const DEVICE_PLATFORM = 'ANDROID'
+const CHANNEL_ID = 'apilamiento-alertas'
 
 let backgroundHandlerRegistered = false
-let notificationChannel = null
+let notificationChannelCreated = false
 
 function getMessaging() {
   return messagingApi ? messagingApi.getMessaging() : null
 }
 
-function ensureChannel() {
-  if (Platform.OS !== 'android' || notificationChannel) return notificationChannel
+async function ensureChannel() {
+  if (Platform.OS !== 'android' || notificationChannelCreated) return
   try {
-    const { Notifications } = require('react-native')
-    if (Notifications && typeof Notifications.createChannel === 'function') {
-      notificationChannel = 'ingreso-equipos'
-      try {
-        Notifications.createChannel(notificationChannel, {
-          name: 'Ingresos de equipo',
-          description: 'Notificaciones de nuevos ingresos de equipo',
-          importance: 4,
-          vibrate: true,
-        })
-      } catch (e) {
-        // Si no hay módulo nativo de notificaciones (p.ej. tests), se ignora silenciosamente.
-      }
+    if (notifeeApi) {
+      const { default: notifeeInstance, AndroidImportance: Importance } = notifeeApi
+      await notifeeInstance.createChannel({
+        id: CHANNEL_ID,
+        name: 'Alertas operativas',
+        importance: Importance.HIGH,
+        vibration: true,
+        sound: 'default',
+      })
+      notificationChannelCreated = true
     }
-  } catch (e) {
-    // Sin react-native-push-notification ni equivalente; el canal lo gestiona FCM por defecto.
+  } catch (_e) {
+    // Tests / entorno sin módulo nativo
   }
-  return notificationChannel
 }
 
 export async function requestNotificationPermission() {
@@ -62,7 +66,7 @@ export async function getFcmToken() {
   const messaging = getMessaging()
   if (!messaging) return null
   try {
-    ensureChannel()
+    await ensureChannel()
     const permissionGranted =
       Platform.OS === 'android' ? await requestNotificationPermission() : true
     if (!permissionGranted) return null
@@ -71,6 +75,27 @@ export async function getFcmToken() {
     return token || null
   } catch (err) {
     return null
+  }
+}
+
+export async function displayLocalNotification(remoteMessage) {
+  if (!notifeeApi || !remoteMessage) return
+  try {
+    const { default: notifeeInstance } = notifeeApi
+    const notification = remoteMessage.notification || {}
+    const title = notification.title || 'Notificación'
+    const body = notification.body || ''
+    await notifeeInstance.displayNotification({
+      title,
+      body,
+      android: {
+        channelId: CHANNEL_ID,
+        sound: 'default',
+        pressAction: { id: 'default' },
+      },
+    })
+  } catch (_e) {
+    // best-effort
   }
 }
 

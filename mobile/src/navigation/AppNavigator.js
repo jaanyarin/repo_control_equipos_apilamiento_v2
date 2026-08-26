@@ -36,7 +36,7 @@ import AuditoriaScreen from '../screens/AuditoriaScreen'
 import LoadingScreen from '../components/LoadingScreen'
 import { theme } from '../theme'
 import { hasPsrAdminRole, isSuperAdmin, isAdminOrSuperAdmin } from '../utils/roles'
-import { onMessage, onMessageOpenedApp, getInitialNotification, registerBackgroundMessageHandler } from '../push'
+import { onMessage, onMessageOpenedApp, getInitialNotification, registerBackgroundMessageHandler, displayLocalNotification } from '../push'
 
 function SectionHeader({ label }) {
   return (
@@ -259,12 +259,30 @@ registerBackgroundMessageHandler(navigateFromNotification)
 
 function PushHandler() {
   useEffect(() => {
-    const unsubForeground = onMessage(navigateFromNotification)
-    const unsubOpened = onMessageOpenedApp(navigateFromNotification)
+    let unsubForeground = onMessage(async (remoteMessage) => {
+      await displayLocalNotification(remoteMessage)
+      navigateFromNotification(remoteMessage)
+    })
+    let unsubOpened = onMessageOpenedApp(navigateFromNotification)
+
+    let unsubNotifee = null
+    try {
+      const notifeeModule = require('@notifee/react-native')
+      const notifee = notifeeModule.default
+      unsubNotifee = notifee.onForegroundEvent(({ type, detail }) => {
+        if (type === notifeeModule.EventType.PRESS && detail.notification?.data) {
+          navigateFromNotification({ data: detail.notification.data })
+        }
+      })
+    } catch (_) {
+      // notifee no disponible (tests / dev)
+    }
+
     return () => {
       try {
         unsubForeground && unsubForeground()
         unsubOpened && unsubOpened()
+        unsubNotifee && unsubNotifee()
       } catch (_) {
       }
     }

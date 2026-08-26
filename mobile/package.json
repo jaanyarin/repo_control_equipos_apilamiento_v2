@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
+    "@notifee/react-native": "^9.1.8",
     "@react-native-community/datetimepicker": "^7.6.1",
     "@react-native-firebase/app": "23.5.0",
     "@react-native-firebase/messaging": "23.5.0",

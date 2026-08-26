@@ -60,6 +60,9 @@ public class NotificacionPushMapper {
 
         ObjectNode android = message.putObject("android");
         android.put("priority", "HIGH");
+        ObjectNode androidNotification = android.putObject("notification");
+        androidNotification.put("channel_id", "apilamiento-alertas");
+        androidNotification.put("sound", "default");
         return root;
     }
 }
