@@ -23,6 +23,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -44,6 +45,7 @@ public class NotificacionPushService {
     private final ProveedorRepository proveedorRepository;
     private final UsuarioRepository usuarioRepository;
     private final NotificacionPushMapper notificacionPushMapper;
+    private final TokenPushService tokenPushService;
     private final String projectId;
     private final String serviceAccountJson;
     private final HttpClient httpClient;
@@ -62,22 +64,26 @@ public class NotificacionPushService {
             ProveedorRepository proveedorRepository,
             UsuarioRepository usuarioRepository,
             NotificacionPushMapper notificacionPushMapper,
+            TokenPushService tokenPushService,
             @ConfigProperty(name = "app.fcm.project-id") String projectId,
             @ConfigProperty(name = "app.fcm.service-account") Optional<String> serviceAccountJson) {
         this(tokenPushRepository, proveedorRepository, usuarioRepository, notificacionPushMapper,
-                projectId, serviceAccountJson.orElse(""), HttpClient.newHttpClient(), new ObjectMapper());
+                tokenPushService, projectId, serviceAccountJson.orElse(""),
+                HttpClient.newHttpClient(), new ObjectMapper());
     }
 
     NotificacionPushService(TokenPushRepository tokenPushRepository,
             ProveedorRepository proveedorRepository,
             UsuarioRepository usuarioRepository,
             NotificacionPushMapper notificacionPushMapper,
+            TokenPushService tokenPushService,
             String projectId, String serviceAccountJson,
             HttpClient httpClient, ObjectMapper objectMapper) {
         this.tokenPushRepository = tokenPushRepository;
         this.proveedorRepository = proveedorRepository;
         this.usuarioRepository = usuarioRepository;
         this.notificacionPushMapper = notificacionPushMapper;
+        this.tokenPushService = tokenPushService;
         this.projectId = projectId;
         this.serviceAccountJson = serviceAccountJson;
         this.httpClient = httpClient;
@@ -137,6 +143,8 @@ public class NotificacionPushService {
                     JsonNode message = buildMessage(tipo, token.getToken(), proveedor, codigo, usuarioNombre, equipoId);
                     enviarAToken(token.getToken(), bearer, message);
                     enviados++;
+                } catch (TokenFcmNoRegistradoException ex) {
+                    darDeBajaTokenNoRegistrado(token);
                 } catch (Exception ex) {
                     log.warn("FCM fallo para el dispositivo {}: {}", token.getId(), ex.getMessage());
                 }
@@ -144,6 +152,15 @@ public class NotificacionPushService {
             log.info("Notificaciones {} enviadas: {}/{}", tipo, enviados, tokens.size());
         } catch (Exception ex) {
             log.warn("No se pudo enviar las notificaciones {}: {}", tipo, ex.getMessage());
+        }
+    }
+
+    private void darDeBajaTokenNoRegistrado(TokenPush token) {
+        try {
+            tokenPushService.desactivarToken(token.getId());
+            log.info("Token FCM {} dado de baja automatica (UNREGISTERED)", token.getId());
+        } catch (Exception ex) {
+            log.warn("No se pudo dar de baja el token FCM {}: {}", token.getId(), ex.getMessage());
         }
     }
 
@@ -190,9 +207,21 @@ public class NotificacionPushService {
                 .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(message)))
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() / 100 != 2) {
-            throw new RuntimeException("FCM respondió " + response.statusCode() + ": " + response.body());
+        int status = response.statusCode();
+        if (status == 404 && esRespuestaTokenNoRegistrado(response.body())) {
+            throw new TokenFcmNoRegistradoException("FCM respondió " + status + ": " + response.body());
         }
+        if (status / 100 != 2) {
+            throw new RuntimeException("FCM respondió " + status + ": " + response.body());
+        }
+    }
+
+    static boolean esRespuestaTokenNoRegistrado(String body) {
+        if (body == null || body.isBlank()) return false;
+        String lower = body.toLowerCase(Locale.ROOT);
+        return lower.contains("unregistered")
+                || lower.contains("not registered")
+                || lower.contains("notregistered");
     }
 
     String obtenerAccessToken() throws Exception {
@@ -264,5 +293,11 @@ public class NotificacionPushService {
 
     private String urlEncode(String value) {
         return java.net.URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    static class TokenFcmNoRegistradoException extends RuntimeException {
+        TokenFcmNoRegistradoException(String message) {
+            super(message);
+        }
     }
 }

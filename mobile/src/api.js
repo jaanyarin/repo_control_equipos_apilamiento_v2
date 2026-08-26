@@ -8,7 +8,7 @@ import * as Keychain from 'react-native-keychain'
 
 const TOKEN_KEY = 'accessToken'
 const API_URL_KEY = 'apiUrl'
-const LAN_API_URL = 'http://10.13.18.168:8082/api/v1'
+const LAN_API_URL = 'http://10.13.10.24:82/control_equipos/api/v1'
 const DEBUG_API_URL = 'http://127.0.0.1:8082/api/v1'
 const IS_DEVELOPMENT = typeof __DEV__ !== 'undefined' && __DEV__
 const FALLBACK_API_URL = IS_DEVELOPMENT ? DEBUG_API_URL : LAN_API_URL

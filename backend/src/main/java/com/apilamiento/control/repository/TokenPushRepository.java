@@ -21,4 +21,8 @@ public class TokenPushRepository implements PanacheRepository<TokenPush> {
     public List<TokenPush> listActivosExcepto(Long usuarioId) {
         return list("activo = ?1 and usuarioId <> ?2", true, usuarioId);
     }
+
+    public List<TokenPush> listActivosDeUsuarioExcluyendo(Long usuarioId, String token) {
+        return list("activo = ?1 and usuarioId = ?2 and token <> ?3", true, usuarioId, token);
+    }
 }

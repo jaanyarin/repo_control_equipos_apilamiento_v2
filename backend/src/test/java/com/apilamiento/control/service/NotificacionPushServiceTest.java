@@ -37,24 +37,25 @@ class NotificacionPushServiceTest {
     @Mock TokenPushRepository tokenPushRepository;
     @Mock ProveedorRepository proveedorRepository;
     @Mock UsuarioRepository usuarioRepository;
+    @Mock TokenPushService tokenPushService;
     ObjectMapper objectMapper = new ObjectMapper();
     NotificacionPushMapper mapper = new NotificacionPushMapper();
 
     @Test
     void isConfiguradoRequeremProjectIdYServiceAccount() {
         NotificacionPushService sinConfig = new NotificacionPushService(tokenPushRepository,
-                proveedorRepository, usuarioRepository, mapper, "", "", HttpClient.newHttpClient(), objectMapper);
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "", "", HttpClient.newHttpClient(), objectMapper);
         assertFalse(sinConfig.isConfigurado());
 
         NotificacionPushService config = new NotificacionPushService(tokenPushRepository,
-                proveedorRepository, usuarioRepository, mapper, "apkequiposapilamiento", "{}", HttpClient.newHttpClient(), objectMapper);
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "apkequiposapilamiento", "{}", HttpClient.newHttpClient(), objectMapper);
         assertTrue(config.isConfigurado());
     }
 
     @Test
     void emitirEnviaAAllTokensConPayloadCorrecto() throws Exception {
         NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
-                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
         doReturn("bearer-test").when(service).obtenerAccessToken();
         doNothing().when(service).enviarAToken(anyString(), any(), any());
 
@@ -68,7 +69,7 @@ class NotificacionPushServiceTest {
     @Test
     void emitirIsolaFalloDeUnToken() throws Exception {
         NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
-                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
         doReturn("bearer-test").when(service).obtenerAccessToken();
         doThrow(new RuntimeException("FCM 500")).when(service).enviarAToken(eq("t1"), any(), any());
         doNothing().when(service).enviarAToken(eq("t2"), any(), any());
@@ -82,7 +83,7 @@ class NotificacionPushServiceTest {
     @Test
     void emitirIngresoGeneraPlantillaConFormatoEsperado() throws Exception {
         NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
-                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
         doReturn("bearer-test").when(service).obtenerAccessToken();
         doNothing().when(service).enviarAToken(anyString(), any(), any());
 
@@ -104,7 +105,7 @@ class NotificacionPushServiceTest {
     @Test
     void notificarIngresoEquipoResuelveProveedorYExcluyeOrigen() throws Exception {
         NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
-                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
         when(tokenPushRepository.listActivosExcepto(9L)).thenReturn(List.of(token("t1"), token("t2")));
         Proveedor proveedor = new Proveedor();
         proveedor.setRazonSocial("ACME S.A.C.");
@@ -129,7 +130,7 @@ class NotificacionPushServiceTest {
     @Test
     void notificarAveriaReportadaResuelveProveedorYExcluyeOrigen() throws Exception {
         NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
-                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
         when(tokenPushRepository.listActivosExcepto(9L)).thenReturn(List.of(token("t1")));
         Proveedor proveedor = new Proveedor();
         proveedor.setRazonSocial("ACME S.A.C.");
@@ -154,7 +155,7 @@ class NotificacionPushServiceTest {
     @Test
     void notificarAveriaAtendidaEncolaConTipoCorrecto() throws Exception {
         NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
-                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
         when(tokenPushRepository.listActivosExcepto(9L)).thenReturn(List.of(token("t1")));
         when(proveedorRepository.findById(4L)).thenReturn(null);
         Usuario usuario = new Usuario();
@@ -177,7 +178,7 @@ class NotificacionPushServiceTest {
     @Test
     void notificarServicioFinalizadoEncolaConTipoCorrecto() throws Exception {
         NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
-                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "proj", "{}", HttpClient.newHttpClient(), objectMapper));
         when(tokenPushRepository.listActivosExcepto(9L)).thenReturn(List.of(token("t1")));
         when(proveedorRepository.findById(4L)).thenReturn(null);
         Usuario usuario = new Usuario();
@@ -216,7 +217,7 @@ class NotificacionPushServiceTest {
         doReturn(success).when(httpClient).send(any(HttpRequest.class), any());
 
         NotificacionPushService service = new NotificacionPushService(tokenPushRepository,
-                proveedorRepository, usuarioRepository, mapper, "proj", serviceAccount, httpClient, objectMapper);
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "proj", serviceAccount, httpClient, objectMapper);
 
         String first = service.obtenerAccessToken();
         String second = service.obtenerAccessToken();
@@ -234,7 +235,7 @@ class NotificacionPushServiceTest {
         doReturn(success).when(httpClient).send(any(HttpRequest.class), any());
 
         NotificacionPushService service = new NotificacionPushService(tokenPushRepository,
-                proveedorRepository, usuarioRepository, mapper, "apkequiposapilamiento", "{}", httpClient, objectMapper);
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "apkequiposapilamiento", "{}", httpClient, objectMapper);
 
         JsonNode message = mapper.mensajeIngreso("t1", "ACME S.A.C.", "EQ-001", "JUAN PEREZ", 100L);
         service.enviarAToken("t1", "bearer", message);
@@ -256,16 +257,54 @@ class NotificacionPushServiceTest {
         doReturn(error).when(httpClient).send(any(HttpRequest.class), any());
 
         NotificacionPushService service = new NotificacionPushService(tokenPushRepository,
-                proveedorRepository, usuarioRepository, mapper, "proj", "{}", httpClient, objectMapper);
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "proj", "{}", httpClient, objectMapper);
 
         JsonNode message = mapper.mensajeAveriaReportada("t1", "", "EQ-001", "JUAN PEREZ", 100L);
-        assertThrows(RuntimeException.class, () -> service.enviarAToken("t1", "bearer", message));
+        assertThrows(NotificacionPushService.TokenFcmNoRegistradoException.class,
+                () -> service.enviarAToken("t1", "bearer", message));
+    }
+
+    @Test
+    void enviarATokenLanzaErrorGenericoEnOtrosFallos() throws Exception {
+        HttpClient httpClient = mock(HttpClient.class);
+        @SuppressWarnings("unchecked")
+        HttpResponse<String> error = mock(HttpResponse.class);
+        when(error.statusCode()).thenReturn(500);
+        when(error.body()).thenReturn("{\"error\":\"InternalServerError\"}");
+        doReturn(error).when(httpClient).send(any(HttpRequest.class), any());
+
+        NotificacionPushService service = new NotificacionPushService(tokenPushRepository,
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "proj", "{}", httpClient, objectMapper);
+
+        JsonNode message = mapper.mensajeAveriaReportada("t1", "", "EQ-001", "JUAN PEREZ", 100L);
+        Exception ex = assertThrows(RuntimeException.class,
+                () -> service.enviarAToken("t1", "bearer", message));
+        assertFalse(ex instanceof NotificacionPushService.TokenFcmNoRegistradoException);
+    }
+
+    @Test
+    void emitirDaDeBajaTokenCuandoFcmRespondeUnregistered() throws Exception {
+        NotificacionPushService service = spy(new NotificacionPushService(tokenPushRepository,
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "proj", "{}",
+                HttpClient.newHttpClient(), objectMapper));
+        doReturn("bearer-test").when(service).obtenerAccessToken();
+        TokenPush muerto = token("t-muerto");
+        TokenPush vivo = token("t-vivo");
+        doThrow(new NotificacionPushService.TokenFcmNoRegistradoException("UNREGISTERED"))
+                .when(service).enviarAToken(eq("t-muerto"), any(), any());
+        doNothing().when(service).enviarAToken(eq("t-vivo"), any(), any());
+
+        service.emitir(NotificacionPushMapper.TIPO_AVERIA_REPORTADA, "ACME S.A.C.", "EQ-001", "JUAN PEREZ", 100L,
+                List.of(muerto, vivo));
+
+        verify(tokenPushService).desactivarToken(muerto.getId());
+        verify(tokenPushService, never()).desactivarToken(vivo.getId());
     }
 
     @Test
     void buildMessageSeleccionaMapperSegunTipo() {
         NotificacionPushService service = new NotificacionPushService(tokenPushRepository,
-                proveedorRepository, usuarioRepository, mapper, "proj", "{}", HttpClient.newHttpClient(), objectMapper);
+                proveedorRepository, usuarioRepository, mapper, tokenPushService, "proj", "{}", HttpClient.newHttpClient(), objectMapper);
 
         JsonNode atendida = service.buildMessage(NotificacionPushMapper.TIPO_AVERIA_ATENDIDA,
                 "t1", "ACME", "EQ-001", "JUAN", 100L);

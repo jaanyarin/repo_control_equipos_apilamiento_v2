@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.Response;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Locale;
 
 @ApplicationScoped
@@ -54,6 +55,25 @@ public class TokenPushService {
             existing.setPlataforma(platform);
             existing.setUsuarioActualizacion(usuarioId);
             existing.setFechaActualizacion(now);
+        }
+        desactivarOtrosTokensDelUsuario(usuarioId, normalized, now);
+    }
+
+    @Transactional
+    public void desactivarToken(Long id) {
+        if (id == null) return;
+        TokenPush push = tokenPushRepository.findById(id);
+        if (push != null && Boolean.TRUE.equals(push.getActivo())) {
+            push.setActivo(false);
+            push.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
+        }
+    }
+
+    private void desactivarOtrosTokensDelUsuario(Long usuarioId, String tokenConservar, OffsetDateTime now) {
+        List<TokenPush> otros = tokenPushRepository.listActivosDeUsuarioExcluyendo(usuarioId, tokenConservar);
+        for (TokenPush otro : otros) {
+            otro.setActivo(false);
+            otro.setFechaActualizacion(now);
         }
     }
 

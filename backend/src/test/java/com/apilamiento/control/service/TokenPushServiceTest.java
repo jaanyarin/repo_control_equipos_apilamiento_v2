@@ -10,6 +10,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -85,5 +86,47 @@ class TokenPushServiceTest {
 
         assertFalse(existing.getActivo());
         assertNotNull(existing.getFechaActualizacion());
+    }
+
+    @Test
+    void registrarTokenDesactivaOtrosTokensDelMismoUsuario() {
+        when(tokenPushRepository.findByToken("nuevo-token")).thenReturn(Optional.empty());
+        doAnswer(invocation -> invocation.getArgument(0)).when(tokenPushRepository).persist(any(TokenPush.class));
+        TokenPush viejo = new TokenPush();
+        viejo.setId(3L);
+        viejo.setToken("viejo-token");
+        viejo.setActivo(true);
+        when(tokenPushRepository.listActivosDeUsuarioExcluyendo(7L, "nuevo-token")).thenReturn(List.of(viejo));
+
+        service.registrarToken(7L, "nuevo-token", "ANDROID");
+
+        assertFalse(viejo.getActivo());
+        assertNotNull(viejo.getFechaActualizacion());
+    }
+
+    @Test
+    void desactivarTokenPorIdDaDeBajaSoloSiActivo() {
+        TokenPush activo = new TokenPush();
+        activo.setId(8L);
+        activo.setActivo(true);
+        when(tokenPushRepository.findById(8L)).thenReturn(activo);
+
+        service.desactivarToken(8L);
+
+        assertFalse(activo.getActivo());
+        assertNotNull(activo.getFechaActualizacion());
+    }
+
+    @Test
+    void desactivarTokenPorIdNoHaceNadaSiYaInactivo() {
+        TokenPush inactivo = new TokenPush();
+        inactivo.setId(9L);
+        inactivo.setActivo(false);
+        when(tokenPushRepository.findById(9L)).thenReturn(inactivo);
+
+        service.desactivarToken(9L);
+
+        assertFalse(inactivo.getActivo());
+        assertNull(inactivo.getFechaActualizacion());
     }
 }
