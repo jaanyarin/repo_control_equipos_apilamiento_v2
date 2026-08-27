@@ -3,6 +3,7 @@ package com.apilamiento.control.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
@@ -67,6 +68,7 @@ public class Osr {
 
     public LocalDateTime getFechaOsr() { return fechaOsr; }
     public void setFechaOsr(LocalDateTime fechaOsr) { this.fechaOsr = fechaOsr; }
+    public void setFechaOsr(LocalDate fechaOsr) { this.fechaOsr = fechaOsr != null ? fechaOsr.atStartOfDay() : null; }
 
     public BigDecimal getCostoUnitario() { return costoUnitario; }
     public void setCostoUnitario(BigDecimal costoUnitario) { this.costoUnitario = costoUnitario; }
