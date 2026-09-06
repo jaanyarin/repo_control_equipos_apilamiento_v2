@@ -77,6 +77,8 @@ goto fail
 
 set CLASSPATH=
 
+@rem Workaround Gradle 8.14 FileAlreadyExistsException en problems-report.html
+if exist "%APP_HOME%\build\reports\problems" rmdir /s /q "%APP_HOME%\build\reports\problems"
 
 @rem Execute Gradle
 "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" -jar "%APP_HOME%\gradle\wrapper\gradle-wrapper.jar" %*
