@@ -20,3 +20,15 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+// Workaround Gradle 8.14 FileAlreadyExistsException en problems-report.html
+// https://github.com/gradle/gradle/issues/30762
+task cleanProblemsReport(type: Delete) {
+    delete "$buildDir/reports/problems"
+}
+
+afterEvaluate {
+    tasks.matching { it.name.startsWith('assemble') }.configureEach {
+        dependsOn cleanProblemsReport
+    }
+}
