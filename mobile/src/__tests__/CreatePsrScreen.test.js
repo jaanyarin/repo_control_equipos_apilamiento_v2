@@ -244,7 +244,7 @@ describe('CreatePsrScreen', () => {
     const screen = render(<CreatePsrScreen />)
 
     await waitFor(() => {
-      expect(screen.getByText('Datos del PSR')).toBeTruthy()
+      expect(screen.getByText('Datos de la OSR')).toBeTruthy()
     })
 
     expect(screen.getByTestId('input-Número PSR').props.editable).toBe(false)

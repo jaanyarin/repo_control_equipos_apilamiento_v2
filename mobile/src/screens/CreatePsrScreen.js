@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Alert, Platform, StyleSheet, View } from 'react-native'
+import { Alert, Keyboard, Platform, StyleSheet, View } from 'react-native'
 import { Divider, HelperText, SegmentedButtons, Text, TouchableRipple } from 'react-native-paper'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
@@ -39,10 +39,15 @@ function DatePickerField({ label, value, onChange, error, readOnly = false }) {
     }
   }, [onChange])
 
+  const handleOpen = useCallback(() => {
+    Keyboard.dismiss()
+    setShow(true)
+  }, [])
+
   return (
     <View>
       <TouchableRipple
-        onPress={readOnly ? undefined : () => setShow(true)}
+        onPress={readOnly ? undefined : handleOpen}
         disabled={readOnly}
         accessibilityRole="button"
         accessibilityLabel={`Seleccionar ${label}`}
@@ -166,7 +171,11 @@ export default function CreatePsrScreen() {
       fechaInicioUso: editing?.fechaInicioUso || '',
       fechaFinUso: editing?.fechaFinUso || '',
       observaciones: editing?.observaciones || '',
-      numeroOsr: (isEditOsrMode ? editingOsr?.numeroOsr : editing?.osr?.numeroOsr || editing?.osrs?.[0]?.numeroOsr) || '',
+      numeroOsr: isEditOsrMode
+        ? editingOsr?.numeroOsr || ''
+        : isOsrMode
+          ? ''
+          : editing?.osr?.numeroOsr || editing?.osrs?.[0]?.numeroOsr || '',
       costoUnitario: (isEditOsrMode ? editingOsr?.costoUnitario : editing?.osr?.costoUnitario ?? editing?.osrs?.[0]?.costoUnitario) != null
         ? String(isEditOsrMode ? editingOsr?.costoUnitario : editing?.osr?.costoUnitario ?? editing?.osrs?.[0]?.costoUnitario)
         : '',
