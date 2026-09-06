@@ -46,7 +46,7 @@ export default function SelectPsrEquipmentScreen() {
     }, [load]),
   );
 
-  const selected = items.find((item) => String(item.psrId) === selectedId);
+  const selected = items.find((item) => String(item.osrId) === selectedId);
   const continueFlow = () => {
     if (!selected) return;
     if (selected.borradorEquipoId) {
@@ -73,7 +73,7 @@ export default function SelectPsrEquipmentScreen() {
       ) : (
         <FlatList
           data={items}
-          keyExtractor={(item) => String(item.psrId)}
+          keyExtractor={(item) => String(item.osrId)}
           contentContainerStyle={[
             styles.list,
             { paddingBottom: 100 + insets.bottom },
@@ -98,7 +98,7 @@ export default function SelectPsrEquipmentScreen() {
             />
           }
           renderItem={({ item }) => {
-            const value = String(item.psrId);
+            const value = String(item.osrId);
             return (
               <TouchableRipple
                 onPress={() => setSelectedId(value)}

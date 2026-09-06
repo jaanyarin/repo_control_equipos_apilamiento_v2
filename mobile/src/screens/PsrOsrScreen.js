@@ -6,7 +6,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native'
-import { Searchbar, Text } from 'react-native-paper'
+import { Divider, Searchbar, Text } from 'react-native-paper'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import api from '../api'
 import { useAuth } from '../AuthContext'
@@ -35,6 +35,18 @@ function formatCost(osr) {
 function formatMonths(months) {
   if (months == null || Number.isNaN(Number(months))) return '-'
   return Number(months).toFixed(2)
+}
+
+function getOsrs(item) {
+  if (Array.isArray(item.osrs) && item.osrs.length > 0) return item.osrs
+  if (item.osr) return [item.osr]
+  return []
+}
+
+function getPsrStatus(item) {
+  if (item.estadoPsr) return item.estadoPsr
+  if (item.finalizado) return 'FINALIZADO'
+  return item.estadoActivo ? 'ACTIVO' : 'INACTIVO'
 }
 
 export default function PsrOsrScreen() {
@@ -74,17 +86,46 @@ export default function PsrOsrScreen() {
   )
 
   const handleEdit = item => {
-    if (item.finalizado) return
+    if (item.finalizado || item.estadoPsr === 'FINALIZADO') return
     navigation.navigate('CreatePsr', { psr: item })
   }
 
   const handleAddOsr = item => {
-    if (item.finalizado) return
+    if (item.finalizado || item.estadoPsr === 'FINALIZADO') return
     navigation.navigate('CreatePsr', { psr: item, mode: 'osr' })
   }
 
+  const handleEditOsr = (psr, osr) => {
+    if (osr.finalizado) return
+    navigation.navigate('CreatePsr', { psr, osr, mode: 'editOsr' })
+  }
+
+  const handleDeleteOsr = (psr, osr) => {
+    if (osr.finalizado || osr.equipoId) return
+    Alert.alert('Eliminar OSR', `¿Eliminar OSR "${osr.numeroOsr}"?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Eliminar',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await api.delete(`/osr/${osr.id}`)
+            fetch()
+          } catch (requestError) {
+            Alert.alert(
+              'Error',
+              requestError.response?.data?.message
+              || requestError.response?.data?.error
+              || requestError.message,
+            )
+          }
+        },
+      },
+    ])
+  }
+
   const handleDelete = item => {
-    if (item.finalizado) return
+    if (item.finalizado || item.estadoPsr === 'FINALIZADO') return
     Alert.alert('Eliminar', `¿Eliminar PSR "${item.numeroPsr}"?`, [
       { text: 'Cancelar', style: 'cancel' },
       {
@@ -107,20 +148,24 @@ export default function PsrOsrScreen() {
     ])
   }
 
-const filtered = items
-  .filter(item => {
-    if (!search) return true
-    const term = search.toLowerCase()
-    return (item.numeroPsr || '').toLowerCase().includes(term)
-      || (item.osr?.numeroOsr || '').toLowerCase().includes(term)
-  })
-  .sort((a, b) => Number(b.id) - Number(a.id))
+  const filtered = items
+    .filter(item => {
+      if (!search) return true
+      const term = search.toLowerCase()
+      const osrs = getOsrs(item)
+      return (item.numeroPsr || '').toLowerCase().includes(term)
+        || osrs.some(o => (o.numeroOsr || '').toLowerCase().includes(term))
+    })
+    .sort((a, b) => Number(b.id) - Number(a.id))
 
   const renderItem = ({ item }) => {
-    const title = item.osr?.numeroOsr
-      ? `${item.numeroPsr} - ${item.osr.numeroOsr}`
-      : item.numeroPsr || 'Sin PSR'
-    const finalizado = Boolean(item.finalizado)
+    const osrs = getOsrs(item)
+    const status = getPsrStatus(item)
+    const isFinalizado = status === 'FINALIZADO'
+    const isParcial = status === 'PARCIAL'
+    const title = item.numeroPsr || 'Sin PSR'
+    const osrsTotal = item.osrsTotal ?? osrs.length
+    const osrsFinalizadas = item.osrsFinalizadas ?? osrs.filter(o => o.finalizado).length
 
     return (
       <AppCard
@@ -139,8 +184,8 @@ const filtered = items
             ) : null}
           </View>
           <StatusChip
-            status={finalizado ? 'cancelled' : item.estadoActivo ? 'active' : 'cancelled'}
-            label={finalizado ? 'FINALIZADO' : item.estadoActivo ? 'ACTIVO' : 'INACTIVO'}
+            status={isFinalizado ? 'cancelled' : isParcial ? 'pending' : item.estadoActivo ? 'active' : 'cancelled'}
+            label={isFinalizado ? 'FINALIZADO' : isParcial ? `${osrsFinalizadas}/${osrsTotal} FINALIZADAS` : item.estadoActivo ? 'ACTIVO' : 'INACTIVO'}
           />
         </View>
 
@@ -159,17 +204,71 @@ const filtered = items
               Marca: {item.marca || '-'} | Modelo: {item.modelo || '-'} | GRR: {item.grr || '-'}
             </Text>
           ) : null}
-          {item.osr ? (
-            <View style={styles.osrInfo}>
-              <Text variant="bodySmall" style={styles.osrText}>
-                OSR: {item.osr.numeroOsr}
-              </Text>
-              <Text variant="bodySmall" style={styles.osrText}>
-                Costo Unitario: {formatCost(item.osr)}
-              </Text>
-            </View>
-          ) : null}
         </View>
+
+        {osrs.length > 0 ? (
+          <View style={styles.osrList}>
+            <Text variant="labelSmall" style={styles.osrListTitle}>
+              OSRs ({osrs.length}){osrsTotal > 0 ? ` · ${osrsFinalizadas} finalizadas` : ''}
+            </Text>
+            {osrs.map(osr => {
+              const osrFinalizado = Boolean(osr.finalizado)
+              const tieneEquipo = Boolean(osr.equipoId)
+              return (
+                <View key={String(osr.id)} style={[styles.osrCard, osrFinalizado && styles.osrCardFinalizado]}>
+                  <View style={styles.osrHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text variant="bodySmall" style={styles.osrNumero}>
+                        {osr.numeroOsr}
+                      </Text>
+                      <Text variant="bodySmall" style={styles.osrCost}>
+                        Costo: {formatCost(osr)}
+                      </Text>
+                      {osr.marca || osr.modelo || osr.grr ? (
+                        <Text variant="bodySmall" style={styles.osrMeta}>
+                          {osr.marca || '-'} | {osr.modelo || '-'} | GRR: {osr.grr || '-'}
+                        </Text>
+                      ) : null}
+                      {tieneEquipo ? (
+                        <Text variant="bodySmall" style={styles.osrEquipo}>
+                          Equipo: {osr.estadoEquipo || 'asignado'}{osrFinalizado ? ' · DEVUELTO' : ''}
+                        </Text>
+                      ) : null}
+                    </View>
+                    <StatusChip
+                      status={osrFinalizado ? 'cancelled' : tieneEquipo ? 'pending' : 'active'}
+                      label={osrFinalizado ? 'DEVUELTO' : tieneEquipo ? 'CON EQUIPO' : 'DISPONIBLE'}
+                    />
+                  </View>
+                  {canManage ? (
+                    <View style={styles.osrActions}>
+                      <AppIconButton
+                        icon="pencil-outline"
+                        iconColor={osrFinalizado ? theme.colors.text.disabled : theme.colors.action.primary}
+                        size={18}
+                        disabled={osrFinalizado}
+                        accessibilityLabel={`Editar OSR ${osr.numeroOsr}`}
+                        onPress={() => handleEditOsr(item, osr)}
+                      />
+                      <AppIconButton
+                        icon="delete-outline"
+                        iconColor={osrFinalizado || tieneEquipo ? theme.colors.text.disabled : theme.colors.status.error}
+                        size={18}
+                        disabled={osrFinalizado || tieneEquipo}
+                        accessibilityLabel={`Eliminar OSR ${osr.numeroOsr}`}
+                        onPress={() => handleDeleteOsr(item, osr)}
+                      />
+                    </View>
+                  ) : null}
+                </View>
+              )
+            })}
+          </View>
+        ) : (
+          <Text variant="bodySmall" style={styles.noOsrText}>
+            Sin OSRs — use “Agregar OSR” para crear la primera.
+          </Text>
+        )}
 
         {item.observaciones ? (
           <Text variant="bodySmall" style={styles.obsText}>
@@ -179,7 +278,7 @@ const filtered = items
 
         {canManage ? (
           <View style={styles.actions}>
-            {!finalizado && !item.osr ? (
+            {!isFinalizado ? (
               <AppButton
                 tone="secondary"
                 icon="file-plus-outline"
@@ -192,17 +291,17 @@ const filtered = items
             ) : null}
             <AppIconButton
               icon="pencil-outline"
-              iconColor={finalizado ? theme.colors.text.disabled : theme.colors.action.primary}
+              iconColor={isFinalizado ? theme.colors.text.disabled : theme.colors.action.primary}
               size={20}
-              disabled={finalizado}
+              disabled={isFinalizado}
               accessibilityLabel={`Editar PSR ${item.numeroPsr || ''}`}
               onPress={() => handleEdit(item)}
             />
             <AppIconButton
               icon="delete-outline"
-              iconColor={finalizado ? theme.colors.text.disabled : theme.colors.status.error}
+              iconColor={isFinalizado ? theme.colors.text.disabled : theme.colors.status.error}
               size={20}
-              disabled={finalizado}
+              disabled={isFinalizado}
               accessibilityLabel={`Eliminar PSR ${item.numeroPsr || ''}`}
               onPress={() => handleDelete(item)}
             />
@@ -302,6 +401,63 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     color: theme.colors.text.secondary,
     marginBottom: theme.spacing[1],
+  },
+  osrList: {
+    marginTop: theme.spacing[2],
+  },
+  osrListTitle: {
+    ...theme.typography.caption,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing[2],
+    fontWeight: '600',
+  },
+  osrCard: {
+    marginBottom: theme.spacing[2],
+    padding: theme.spacing[3],
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.status.infoBackground,
+    borderWidth: 1,
+    borderColor: theme.colors.border.subtle,
+  },
+  osrCardFinalizado: {
+    opacity: 0.7,
+  },
+  osrHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  osrNumero: {
+    ...theme.typography.caption,
+    color: theme.colors.text.primary,
+    fontWeight: '700',
+  },
+  osrCost: {
+    ...theme.typography.caption,
+    color: theme.colors.text.primary,
+    marginTop: 2,
+  },
+  osrMeta: {
+    ...theme.typography.caption,
+    color: theme.colors.text.tertiary,
+    marginTop: 2,
+  },
+  osrEquipo: {
+    ...theme.typography.caption,
+    color: theme.colors.text.secondary,
+    marginTop: 2,
+  },
+  osrActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: theme.spacing[1],
+    marginTop: theme.spacing[1],
+  },
+  noOsrText: {
+    ...theme.typography.caption,
+    color: theme.colors.text.tertiary,
+    fontStyle: 'italic',
+    marginTop: theme.spacing[2],
   },
   osrInfo: {
     marginTop: theme.spacing[2],

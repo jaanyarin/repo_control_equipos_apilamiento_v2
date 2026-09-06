@@ -17,6 +17,7 @@ public class OsrMapper {
         dto.setTipoMoneda(entity.getTipoMoneda());
         dto.setEstadoActivo(entity.getEstadoActivo());
         dto.setFechaCreacion(entity.getFechaCreacion());
+        dto.setEquipoId(entity.getEquipoId());
         return dto;
     }
 }

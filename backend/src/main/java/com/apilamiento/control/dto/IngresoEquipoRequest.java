@@ -7,12 +7,18 @@ public class IngresoEquipoRequest {
     @NotNull(message = "El PSR es obligatorio")
     private Long psrId;
 
+    private Long osrId;
+
     @Valid
     @NotNull(message = "Los datos del equipo son obligatorios")
     private EquipoDTO equipo;
 
     public Long getPsrId() { return psrId; }
     public void setPsrId(Long psrId) { this.psrId = psrId; }
+
+    public Long getOsrId() { return osrId; }
+    public void setOsrId(Long osrId) { this.osrId = osrId; }
+
     public EquipoDTO getEquipo() { return equipo; }
     public void setEquipo(EquipoDTO equipo) { this.equipo = equipo; }
 }

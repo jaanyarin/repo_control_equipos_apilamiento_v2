@@ -41,7 +41,6 @@ class OsrServiceTest {
         Psr psr = new Psr();
         psr.setId(10L);
         when(psrRepository.findById(10L)).thenReturn(psr);
-        when(osrRepository.findByPsrId(10L)).thenReturn(Optional.empty());
         when(osrRepository.findByNumeroOsr("OSR001")).thenReturn(Optional.empty());
 
         OsrRequest request = requestValido();
@@ -55,9 +54,25 @@ class OsrServiceTest {
     }
 
     @Test
-    void crear_cuandoPsrYaTieneOsr_deberiaRetornarConflicto() {
+    void crear_permiteMultiplesOsrPorPsr() {
+        Psr psr = new Psr();
+        psr.setId(10L);
+        when(psrRepository.findById(10L)).thenReturn(psr);
+        Osr existente = new Osr();
+        existente.setNumeroOsr("OSR000");
+        when(osrRepository.findByNumeroOsr("OSR001")).thenReturn(Optional.empty());
+
+        OsrRequest request = requestValido();
+        OsrDTO result = service.crear(request);
+
+        assertEquals(10L, result.getPsrId());
+        verify(osrRepository).persist(any(Osr.class));
+    }
+
+    @Test
+    void crear_cuandoNumeroOsrDuplicado_deberiaRetornarConflicto() {
         when(psrRepository.findById(10L)).thenReturn(new Psr());
-        when(osrRepository.findByPsrId(10L)).thenReturn(Optional.of(new Osr()));
+        when(osrRepository.findByNumeroOsr("OSR001")).thenReturn(Optional.of(new Osr()));
 
         WebApplicationException exception = assertThrows(
                 WebApplicationException.class,

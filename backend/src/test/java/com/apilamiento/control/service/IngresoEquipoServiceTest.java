@@ -53,13 +53,32 @@ class IngresoEquipoServiceTest {
         osr.setNumeroOsr("OSR20");
         osr.setEstadoActivo(true);
         when(psrRepository.list("estadoActivo", true)).thenReturn(List.of(psr));
-        when(osrRepository.findByPsrId(10L)).thenReturn(Optional.of(osr));
+        when(osrRepository.listByPsrId(10L)).thenReturn(List.of(osr));
 
         List<PsrPendienteEquipoDTO> result = service.listarPsrPendientes();
 
         assertEquals(1, result.size());
         assertEquals("OSR20", result.getFirst().getNumeroOsr());
         assertNull(result.getFirst().getBorradorEquipoId());
+    }
+
+    @Test
+    void pendientesIncluyeMultiplesOsrPorPsr() {
+        Psr psr = new Psr();
+        psr.setId(10L);
+        psr.setNumeroPsr("PSR10");
+        psr.setEstadoActivo(true);
+        psr.setMotivoId(5L);
+        Osr osr1 = new Osr(); osr1.setId(20L); osr1.setNumeroOsr("OSR20"); osr1.setEstadoActivo(true);
+        Osr osr2 = new Osr(); osr2.setId(21L); osr2.setNumeroOsr("OSR21"); osr2.setEstadoActivo(true);
+        when(psrRepository.list("estadoActivo", true)).thenReturn(List.of(psr));
+        when(osrRepository.listByPsrId(10L)).thenReturn(List.of(osr1, osr2));
+
+        List<PsrPendienteEquipoDTO> result = service.listarPsrPendientes();
+
+        assertEquals(2, result.size());
+        assertEquals("OSR20", result.get(0).getNumeroOsr());
+        assertEquals("OSR21", result.get(1).getNumeroOsr());
     }
 
     @Test
@@ -144,7 +163,7 @@ class IngresoEquipoServiceTest {
         osr.setEstadoActivo(true);
         osr.setNumeroOsr("OSR20");
         when(psrRepository.findById(10L)).thenReturn(psr);
-        when(osrRepository.findByPsrIdForUpdate(10L)).thenReturn(Optional.of(osr));
+        when(osrRepository.listByPsrIdForUpdate(10L)).thenReturn(List.of(osr));
         when(proveedorRepository.findById(1L)).thenReturn(proveedorActivo());
         when(marcaRepository.findById(2L)).thenReturn(marcaActiva());
         when(tipoEquipoRepository.findById(3L)).thenReturn(tipoActivo());

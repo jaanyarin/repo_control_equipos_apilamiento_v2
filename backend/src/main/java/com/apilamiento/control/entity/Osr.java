@@ -15,7 +15,7 @@ public class Osr {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "psr_id", nullable = false, unique = true)
+    @Column(name = "psr_id", nullable = false)
     private Long psrId;
 
     @Column(name = "equipo_id")

@@ -125,6 +125,7 @@ export default function EquipmentFormScreen() {
       } else {
         const response = await api.post('/ingresos-equipo/borradores', {
           psrId: psr.psrId,
+          osrId: psr.osrId || null,
           equipo: payload,
         })
         const created = response.data?.data || response.data

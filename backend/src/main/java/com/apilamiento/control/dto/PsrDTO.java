@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PsrDTO {
     private Long id;
@@ -22,11 +24,15 @@ public class PsrDTO {
     private String observaciones;
     private Boolean estadoActivo;
     private Boolean finalizado;
+    private String estadoPsr;
+    private Integer osrsTotal;
+    private Integer osrsFinalizadas;
     private Long usuarioCreacion;
     private Long usuarioActualizacion;
     private OffsetDateTime fechaCreacion;
     private OffsetDateTime fechaActualizacion;
     private OsrDTO osr;
+    private List<OsrDTO> osrs = new ArrayList<>();
     private String marca;
     private String modelo;
     private String grr;
@@ -95,7 +101,28 @@ public class PsrDTO {
     public void setFechaActualizacion(OffsetDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
 
     public OsrDTO getOsr() { return osr; }
-    public void setOsr(OsrDTO osr) { this.osr = osr; }
+    public void setOsr(OsrDTO osr) {
+        this.osr = osr;
+        if (osr != null && (osrs == null || osrs.isEmpty())) {
+            if (osrs == null) osrs = new ArrayList<>();
+            osrs.add(osr);
+        }
+    }
+
+    public List<OsrDTO> getOsrs() { return osrs; }
+    public void setOsrs(List<OsrDTO> osrs) {
+        this.osrs = osrs != null ? osrs : new ArrayList<>();
+        this.osr = (this.osrs != null && !this.osrs.isEmpty()) ? this.osrs.get(0) : null;
+    }
+
+    public String getEstadoPsr() { return estadoPsr; }
+    public void setEstadoPsr(String estadoPsr) { this.estadoPsr = estadoPsr; }
+
+    public Integer getOsrsTotal() { return osrsTotal; }
+    public void setOsrsTotal(Integer osrsTotal) { this.osrsTotal = osrsTotal; }
+
+    public Integer getOsrsFinalizadas() { return osrsFinalizadas; }
+    public void setOsrsFinalizadas(Integer osrsFinalizadas) { this.osrsFinalizadas = osrsFinalizadas; }
 
     public String getMarca() { return marca; }
     public void setMarca(String marca) { this.marca = marca; }

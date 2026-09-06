@@ -167,6 +167,9 @@ mapper/EntidadMapper.java          → MapStruct mapper
 | V27__devolucion_evidencias_accesorios.sql | Evidencias de devolución por accesorios |
 | V28__evidencia_extintor.sql | Tipo de evidencia extintor |
 | V29__fix_trigger_superadmin_delete.sql | Fix trigger Super Admin: permite borrado de usuarios, el seed sigue protegido |
+| V30__fac_tokens_push.sql | Tokens push FCM (fac_tokens_push) |
+| V31__fecha_date_a_timestamp.sql | Tipos DATE → TIMESTAMP (fecha_psr, uso, fecha_osr, fecha_ingreso) |
+| V32__psr_multiples_osr.sql | PSR 1:N OSR: DROP UNIQUE psr_id en fac_osr + índice compuesto |
 
 ---
 
@@ -285,7 +288,7 @@ La versión de la aplicación se cuantifica con **SemVer `X.Y.Z`** y se muestra 
 
 - `docs:`, `refactor:`, `test:`, `chore:` **NO** cambian versión.
 - El script `mobile/scripts/bump-version.js` actualiza `package.json` y `android/app/build.gradle` (`versionName` + `versionCode` = `MAJOR*10000 + MINOR*100 + PATCH`, monótono).
-- **Versión actual: `1.11.1`** (1.0.0 = HDT-001+002 base; +0.1.0 por cada HDT implementado hasta HDT-014; HDT-005 cancelado no cuenta; 1.11.1 = fix soft delete de catálogos en UI).
+- **Versión actual: `1.12.0`** (1.0.0 = HDT-001+002 base; +0.1.0 por cada HDT implementado hasta HDT-015; HDT-005 cancelado no cuenta).
 - El historial completo vive en `mobile/src/constants/versionHistory.js` y se consulta desde el Perfil (botón de historial).
 
 ---
@@ -498,6 +501,22 @@ db: crear migración V8 para tabla de evidencias
 | Fix expand/colapsar/re-expandir (estado único `expanded`, animación idempotente) | ✅ |
 | Visor de fotos full-screen con `ZoomableImage` + StatusBar hidden | ✅ |
 | Tests: backend `EquipoTimelineServiceTest` 7/7 + `EquipoResourceTest` 2/2; mobile 22 suites / 103 tests + ESLint limpio | ✅ |
+
+### HDT-015 — PSR 1:N OSR (IMPLEMENTADO ✅)
+
+| Módulo | Estado |
+|---|---|
+| Migración V32: `DROP UNIQUE psr_id` en `fac_osr` + índice `psr_numero` | ✅ |
+| Backend: `Osr.psrId` sin unique, `OsrRepository.listByPsrId` + `listByPsrIdForUpdate` | ✅ |
+| DTO: `PsrDTO.osrs: List<OsrDTO>` + `estadoPsr` ACTIVO/PARCIAL/FINALIZADO + `osrsTotal/Finalizadas` + `OsrDTO` con equipo | ✅ |
+| Service: `PsrService` finalizado = todas DEVUELTAS, parcial = `x/N`, toDTO con `osrs[]` | ✅ |
+| Service: `OsrService` múltiples OSR por PSR (sin 409), `PUT /osr/{id}` + `DELETE /osr/{id}` | ✅ |
+| Controller: `OsrResource` CRUD completo + `GET /por-psr` lista | ✅ |
+| Ingreso: `IngresoEquipoService` lista OSRs pendientes (1 fila por OSR), `crearBorrador` con `osrId` | ✅ |
+| Mobile: `PsrOsrScreen` lista OSRs con chips `1/3 Finalizadas`, acciones por OSR | ✅ |
+| Mobile: `CreatePsrScreen` modo `editOsr` + agregar ilimitado | ✅ |
+| Mobile: `SelectPsrEquipmentScreen` key por `osrId` + `EquipmentForm` con `osrId` | ✅ |
+| Tests: `PsrServiceTest` 7/7 + `OsrServiceTest` 3/3 + `IngresoEquipoServiceTest` 8/8 | ✅ |
 
 ---
 

@@ -60,29 +60,29 @@ public class IngresoEquipoService {
     public List<PsrPendienteEquipoDTO> listarPsrPendientes() {
         List<PsrPendienteEquipoDTO> result = new ArrayList<>();
         for (Psr psr : psrRepository.list("estadoActivo", true)) {
-            Optional<Osr> osrOpt = osrRepository.findByPsrId(psr.getId());
-            if (osrOpt.isEmpty()) continue;
-            Osr osr = osrOpt.get();
-            if (!Boolean.TRUE.equals(osr.getEstadoActivo()) || osr.getNumeroOsr() == null) continue;
-
-            Long draftId = null;
-            if (osr.getEquipoId() != null) {
-                Equipo assigned = equipoRepository.findById(osr.getEquipoId());
-                if (assigned == null || Boolean.TRUE.equals(assigned.getIngresoCompleto())) continue;
-                draftId = assigned.getId();
-            }
-
+            List<Osr> osrs = osrRepository.listByPsrId(psr.getId());
+            if (osrs.isEmpty()) continue;
             MotivoPsr motivo = motivoRepository.findById(psr.getMotivoId());
-            PsrPendienteEquipoDTO dto = new PsrPendienteEquipoDTO();
-            dto.setPsrId(psr.getId());
-            dto.setNumeroPsr(psr.getNumeroPsr());
-            dto.setMotivo(motivo == null ? null
-                    : (motivo.getNombreCorto() == null ? motivo.getNombre() : motivo.getNombreCorto()));
-            dto.setMeses(psr.getMeses());
-            dto.setOsrId(osr.getId());
-            dto.setNumeroOsr(osr.getNumeroOsr());
-            dto.setBorradorEquipoId(draftId);
-            result.add(dto);
+            String motivoTxt = motivo == null ? null
+                    : (motivo.getNombreCorto() == null ? motivo.getNombre() : motivo.getNombreCorto());
+            for (Osr osr : osrs) {
+                if (!Boolean.TRUE.equals(osr.getEstadoActivo()) || osr.getNumeroOsr() == null) continue;
+                Long draftId = null;
+                if (osr.getEquipoId() != null) {
+                    Equipo assigned = equipoRepository.findById(osr.getEquipoId());
+                    if (assigned == null || Boolean.TRUE.equals(assigned.getIngresoCompleto())) continue;
+                    draftId = assigned.getId();
+                }
+                PsrPendienteEquipoDTO dto = new PsrPendienteEquipoDTO();
+                dto.setPsrId(psr.getId());
+                dto.setNumeroPsr(psr.getNumeroPsr());
+                dto.setMotivo(motivoTxt);
+                dto.setMeses(psr.getMeses());
+                dto.setOsrId(osr.getId());
+                dto.setNumeroOsr(osr.getNumeroOsr());
+                dto.setBorradorEquipoId(draftId);
+                result.add(dto);
+            }
         }
         return result;
     }
@@ -93,9 +93,27 @@ public class IngresoEquipoService {
         if (psr == null || !Boolean.TRUE.equals(psr.getEstadoActivo())) {
             throw error("PSR no encontrado o inactivo", Response.Status.NOT_FOUND);
         }
-        Osr osr = osrRepository.findByPsrIdForUpdate(psr.getId())
-                .orElseThrow(() -> error("El PSR debe tener una OSR antes de asignar un equipo",
-                        Response.Status.BAD_REQUEST));
+        Osr osr;
+        if (request.getOsrId() != null) {
+            osr = osrRepository.findById(request.getOsrId());
+            if (osr == null || !Objects.equals(osr.getPsrId(), psr.getId())) {
+                throw error("La OSR no pertenece al PSR indicado", Response.Status.BAD_REQUEST);
+            }
+        } else {
+            List<Osr> disponibles = osrRepository.listByPsrIdForUpdate(psr.getId()).stream()
+                    .filter(o -> Boolean.TRUE.equals(o.getEstadoActivo()) && o.getNumeroOsr() != null && o.getEquipoId() == null)
+                    .toList();
+            if (disponibles.isEmpty()) {
+                // Fallback legacy: intentar primera OSR con lock
+                osr = osrRepository.findByPsrIdForUpdate(psr.getId())
+                        .orElseThrow(() -> error("El PSR debe tener una OSR antes de asignar un equipo",
+                                Response.Status.BAD_REQUEST));
+            } else if (disponibles.size() == 1) {
+                osr = disponibles.get(0);
+            } else {
+                throw error("Debe especificar la OSR (el PSR tiene múltiples OSRs disponibles)", Response.Status.BAD_REQUEST);
+            }
+        }
         if (!Boolean.TRUE.equals(osr.getEstadoActivo()) || osr.getNumeroOsr() == null) {
             throw error("La OSR no está disponible", Response.Status.BAD_REQUEST);
         }

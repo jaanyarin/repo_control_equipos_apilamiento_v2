@@ -1419,3 +1419,65 @@ En `CatalogScreen.js` (afecta Marcas, Proveedores, TiposEquipo, Sedes, Motivos P
 
 - Web: rebuild de la imagen `apilamiento-nginx` (multi-stage node:20-alpine → `npm run build` → nginx).
 - Mobile: bump patch → **1.11.1** (versionCode 11101) y rebuild APK release con Gradle local.
+
+## 42. PSR 1:N OSR — múltiples OSR por PSR (HDT-015, 2026-08-26)
+
+### 42.1 Contexto
+Una PSR (Pedido de Servicio) solo podía tener 1 OSR (Orden de Servicio). El área solicita PSRs con N OSRs (ilimitado: 1..15+), cada OSR con su propio número, costo/moneda y equipo. El PSR se considera **FINALIZADO** solo cuando **todas** sus OSRs están con equipo `DEVUELTO`; con x/N devueltas queda **PARCIAL**.
+
+### 42.2 Backend
+
+| Archivo | Cambio |
+|---|---|
+| `db/migration/V32__psr_multiples_osr.sql` | `DROP CONSTRAINT fac_osr_psr_id_key` (UNIQUE) + índice `psr_numero`. `numero_osr` sigue `UNIQUE` global. |
+| `entity/Osr.java` | `@Column(psr_id) unique=true` → sin unique. |
+| `repository/OsrRepository.java` | `listByPsrId`, `listByPsrIdForUpdate`, `countByPsrId`. Mantiene `findByPsrId` para compat. |
+| `dto/PsrDTO.java` | `List<OsrDTO> osrs` + `estadoPsr` (ACTIVO/PARCIAL/FINALIZADO) + `osrsTotal/osrsFinalizadas`. `osr` deprecated alias al primero. |
+| `dto/OsrDTO.java` | Campos equipo: `equipoId`, `estadoEquipo`, `marca`, `modelo`, `grr`, `finalizado`. |
+| `dto/IngresoEquipoRequest.java` | Nuevo campo `osrId` (opcional, para seleccionar OSR específica). |
+| `mapper/OsrMapper.java` | Mapea `equipoId`. |
+| `service/PsrService.java` | `toDTO` lista `osrs` y enriquece cada una con equipo (marca/modelo/grr/finalizado), calcula `estadoPsr`/`finalizado` por `allMatch`. `estaFinalizado`=todas DEVUELTO. `tieneOsrConEquipo` para `eliminar` (bloquea solo si alguna OSR tiene equipo; vacías se borran en cascada). `actualizar` edita primera OSR por compat. |
+| `service/OsrService.java` | Permite N OSR por PSR (elimina `409 ya tiene OSR`). `listarPorPsrId`, `buscarPorId`, `actualizar(PUT /osr/{id})`, `eliminar(DELETE /osr/{id})` con guard `equipoId!=null →409`. |
+| `controller/OsrResource.java` | `GET /osr/{id}`, `GET /osr/por-psr/{id}` (lista), `GET /por-psr/{id}/unica` (compat), `POST /osr`, `PUT /osr/{id}`, `DELETE /osr/{id}`. |
+| `service/IngresoEquipoService.java` | `listarPsrPendientes` itera `psr × osrs` (1 fila por OSR disponible). `crearBorrador` recibe `osrId`; si no viene y hay >1 disponible exige especificar OSR. |
+
+### 42.3 Mobile
+
+| Pantalla | Cambio |
+|---|---|
+| `PsrOsrScreen.js` | Card PSR con `StatusChip 1/3 Finalizadas`, lista de OSRs con costo/equipo/estado y acciones por OSR (editar/eliminar). `Agregar OSR` siempre visible si no FINALIZADO. Filtro busca en `numeroPsr` + todos `osr.numeroOsr`. |
+| `CreatePsrScreen.js` | Modos `osr` (crear) + `editOsr` (PUT /osr/{id} costo/moneda). `numeroOsr` upperCase, editable solo al crear. PSR edit mantiene inline de primera OSR. |
+| `SelectPsrEquipmentScreen.js` | `keyExtractor` por `osrId`, selección por OSR, `continueFlow` navega con `osrId`. |
+| `EquipmentFormScreen.js` | `POST /ingresos-equipo/borradores` envía `osrId` además de `psrId`. |
+
+### 42.4 Validación
+
+| Área | Resultado |
+|---|---|
+| Backend | `PsrServiceTest` 7 tests (nuevo parcial), `OsrServiceTest` 3 tests, `IngresoEquipoServiceTest` 8 tests (incluye múltiples OSR por PSR) |
+| Mobile | `npm run lint` sin errores (PsrOsrScreen, CreatePsrScreen, SelectPsrEquipmentScreen, EquipmentFormScreen) |
+| Compatibilidad | PSRs históricos con 1 OSR siguen mostrando `osr` singular; `GET /psr` retorna `osrs[]` + `osr` alias. |
+
+### 42.5 Archivos Modificados/Creados
+| Archivo | Acción |
+|---|---|
+| `backend/.../db/migration/V32__psr_multiples_osr.sql` | Nuevo |
+| `backend/.../entity/Osr.java` | Modificado |
+| `backend/.../repository/OsrRepository.java` | Modificado |
+| `backend/.../dto/PsrDTO.java` | Modificado |
+| `backend/.../dto/OsrDTO.java` | Modificado |
+| `backend/.../dto/IngresoEquipoRequest.java` | Modificado |
+| `backend/.../mapper/OsrMapper.java` | Modificado |
+| `backend/.../service/PsrService.java` | Modificado |
+| `backend/.../service/OsrService.java` | Modificado |
+| `backend/.../service/IngresoEquipoService.java` | Modificado |
+| `backend/.../controller/OsrResource.java` | Modificado |
+| `backend/.../test/service/PsrServiceTest.java` | Modificado |
+| `backend/.../test/service/OsrServiceTest.java` | Modificado |
+| `backend/.../test/service/IngresoEquipoServiceTest.java` | Modificado |
+| `mobile/src/screens/PsrOsrScreen.js` | Modificado (lista 1:N) |
+| `mobile/src/screens/CreatePsrScreen.js` | Modificado (editOsr) |
+| `mobile/src/screens/SelectPsrEquipmentScreen.js` | Modificado (osrId) |
+| `mobile/src/screens/EquipmentFormScreen.js` | Modificado (osrId) |
+| `mobile/src/constants/versionHistory.js` | Modificado (1.12.0) |
+| `mobile/package.json` / `android/app/build.gradle` | Bump minor 1.12.0 (11200) |

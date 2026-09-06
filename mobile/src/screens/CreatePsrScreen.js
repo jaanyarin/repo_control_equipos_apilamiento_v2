@@ -127,12 +127,14 @@ export default function CreatePsrScreen() {
   const navigation = useNavigation()
   const { user } = useAuth()
   const editing = route.params?.psr || null
+  const editingOsr = route.params?.osr || null
   const isOsrMode = route.params?.mode === 'osr'
+  const isEditOsrMode = route.params?.mode === 'editOsr'
   const isEditing = Boolean(editing)
-  const hasExistingOsr = isEditing && Boolean(editing?.osr)
-  const showOsrFields = isOsrMode || hasExistingOsr
+  const hasExistingOsr = isEditing && Boolean(editing?.osr || (Array.isArray(editing?.osrs) && editing.osrs.length > 0))
+  const showOsrFields = isOsrMode || isEditOsrMode || hasExistingOsr
   const canManage = hasPsrAdminRole(user)
-  const formSchema = isOsrMode
+  const formSchema = isOsrMode || isEditOsrMode
     ? osrSchema
     : hasExistingOsr
       ? schema.and(osrSchema)
@@ -164,11 +166,11 @@ export default function CreatePsrScreen() {
       fechaInicioUso: editing?.fechaInicioUso || '',
       fechaFinUso: editing?.fechaFinUso || '',
       observaciones: editing?.observaciones || '',
-      numeroOsr: editing?.osr?.numeroOsr || '',
-      costoUnitario: editing?.osr?.costoUnitario != null
-        ? String(editing.osr.costoUnitario)
+      numeroOsr: (isEditOsrMode ? editingOsr?.numeroOsr : editing?.osr?.numeroOsr || editing?.osrs?.[0]?.numeroOsr) || '',
+      costoUnitario: (isEditOsrMode ? editingOsr?.costoUnitario : editing?.osr?.costoUnitario ?? editing?.osrs?.[0]?.costoUnitario) != null
+        ? String(isEditOsrMode ? editingOsr?.costoUnitario : editing?.osr?.costoUnitario ?? editing?.osrs?.[0]?.costoUnitario)
         : '',
-      tipoMoneda: editing?.osr?.tipoMoneda || 'PEN',
+      tipoMoneda: (isEditOsrMode ? editingOsr?.tipoMoneda : editing?.osr?.tipoMoneda || editing?.osrs?.[0]?.tipoMoneda) || 'PEN',
     },
   })
 
@@ -262,10 +264,23 @@ export default function CreatePsrScreen() {
     setSubmitting(true)
 
     try {
+      if (isEditOsrMode) {
+        await api.put(`/osr/${editingOsr.id}`, {
+          costoUnitario: Number(formData.costoUnitario.replace(',', '.')),
+          tipoMoneda: formData.tipoMoneda,
+        })
+        if (typeof navigation.popTo === 'function') {
+          navigation.popTo('PsrOsr')
+        } else {
+          navigation.navigate('PsrOsr')
+        }
+        Alert.alert('Éxito', 'OSR actualizada correctamente')
+        return
+      }
       if (isOsrMode) {
         await api.post('/osr', {
           psrId: editing.id,
-          numeroOsr: formData.numeroOsr.trim(),
+          numeroOsr: formData.numeroOsr.trim().toUpperCase(),
           costoUnitario: Number(formData.costoUnitario.replace(',', '.')),
           tipoMoneda: formData.tipoMoneda,
         })
@@ -323,7 +338,7 @@ export default function CreatePsrScreen() {
     return <LoadingScreen message="Cargando catálogos..." />
   }
 
-  if ((isEditing || isOsrMode) && !canManage) {
+  if ((isEditing || isOsrMode || isEditOsrMode) && !canManage) {
     return (
       <ErrorState
         title="Acceso restringido"
@@ -332,7 +347,7 @@ export default function CreatePsrScreen() {
     )
   }
 
-  if (isOsrMode && !editing) {
+  if ((isOsrMode || isEditOsrMode) && !editing) {
     return (
       <ErrorState
         title="PSR no disponible"
@@ -360,7 +375,7 @@ export default function CreatePsrScreen() {
       >
         <AppCard style={styles.formCard}>
           <Text variant="titleMedium" style={styles.title}>
-            {isOsrMode ? 'Datos del PSR' : isEditing ? 'Editar PSR' : 'Nuevo PSR'}
+            {isEditOsrMode ? 'Editar OSR' : isOsrMode ? 'Nueva OSR' : isEditing ? 'Editar PSR' : 'Nuevo PSR'}
           </Text>
 
           <Controller
@@ -374,7 +389,7 @@ export default function CreatePsrScreen() {
                   options={campanaOptions}
                   onChange={onChange}
                   error={errors.campanaId?.message}
-                  disabled={isOsrMode}
+                  disabled={isOsrMode || isEditOsrMode}
                   onOpen={() => loadCatalogs(true)}
                 />
               </View>
@@ -392,7 +407,7 @@ export default function CreatePsrScreen() {
                   options={sedeOptions}
                   onChange={onChange}
                   error={errors.sedeId?.message}
-                  disabled={isOsrMode}
+                  disabled={isOsrMode || isEditOsrMode}
                   onOpen={() => loadCatalogs(true)}
                 />
               </View>
@@ -409,7 +424,7 @@ export default function CreatePsrScreen() {
                 onBlur={onBlur}
                 onChangeText={text => onChange(text.toUpperCase())}
                 errorMessage={errors.numeroPsr?.message}
-                editable={!isEditing && !isOsrMode}
+                editable={!isEditing && !isOsrMode && !isEditOsrMode}
                 autoCapitalize="characters"
                 style={styles.input}
               />
@@ -426,7 +441,7 @@ export default function CreatePsrScreen() {
                   value={value}
                   onChange={onChange}
                   error={errors.fechaPsr?.message}
-                  readOnly={isOsrMode}
+                  readOnly={isOsrMode || isEditOsrMode}
                 />
               </View>
             )}
@@ -443,7 +458,7 @@ export default function CreatePsrScreen() {
                   options={motivoOptions}
                   onChange={onChange}
                   error={errors.motivoId?.message}
-                  disabled={isOsrMode}
+                  disabled={isOsrMode || isEditOsrMode}
                   onOpen={() => loadCatalogs(true)}
                 />
               </View>
@@ -460,7 +475,7 @@ export default function CreatePsrScreen() {
                   value={value}
                   onChange={onChange}
                   error={errors.fechaInicioUso?.message}
-                  readOnly={isOsrMode}
+                  readOnly={isOsrMode || isEditOsrMode}
                 />
               </View>
             )}
@@ -476,7 +491,7 @@ export default function CreatePsrScreen() {
                   value={value}
                   onChange={onChange}
                   error={errors.fechaFinUso?.message}
-                  readOnly={isOsrMode}
+                  readOnly={isOsrMode || isEditOsrMode}
                 />
               </View>
             )}
@@ -500,7 +515,7 @@ export default function CreatePsrScreen() {
                 onBlur={onBlur}
                 onChangeText={onChange}
                 errorMessage={errors.observaciones?.message}
-                editable={!isOsrMode}
+                editable={!isOsrMode && !isEditOsrMode}
                 style={styles.input}
               />
             )}
@@ -580,7 +595,7 @@ export default function CreatePsrScreen() {
             style={styles.button}
             fullWidth
           >
-            {isOsrMode ? 'Guardar OSR' : isEditing ? 'Actualizar PSR' : 'Crear PSR'}
+            {isEditOsrMode ? 'Actualizar OSR' : isOsrMode ? 'Guardar OSR' : isEditing ? 'Actualizar PSR' : 'Crear PSR'}
           </AppButton>
         </AppCard>
       </KeyboardAwareScrollView>

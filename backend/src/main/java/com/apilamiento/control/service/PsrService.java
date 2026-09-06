@@ -1,5 +1,6 @@
 package com.apilamiento.control.service;
 
+import com.apilamiento.control.dto.OsrDTO;
 import com.apilamiento.control.dto.PsrDTO;
 import com.apilamiento.control.dto.PsrRequest;
 import com.apilamiento.control.entity.Campana;
@@ -29,7 +30,6 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
@@ -84,18 +84,55 @@ public class PsrService {
         Sede sede = sedeRepository.findByIdOptional(psr.getSedeId()).orElse(null);
         if (campana != null) dto.setCampanaNombre(campana.getNombre());
         if (sede != null) dto.setSedeNombre(sede.getNombre());
-        osrRepository.findByPsrId(psr.getId())
-                .ifPresent(osr -> {
-                    dto.setOsr(osrMapper.toDTO(osr));
-                    resolverEquipoAsociado(dto, osr);
-                });
+        List<Osr> osrs = osrRepository.listByPsrId(psr.getId());
+        List<OsrDTO> osrDTOs = new ArrayList<>();
+        int finalizadas = 0;
+        for (Osr osr : osrs) {
+            OsrDTO osrDTO = osrMapper.toDTO(osr);
+            enriquecerOsrConEquipo(osrDTO, osr);
+            osrDTOs.add(osrDTO);
+            if (Boolean.TRUE.equals(osrDTO.getFinalizado())) finalizadas++;
+        }
+        dto.setOsrs(osrDTOs);
+        dto.setOsrsTotal(osrDTOs.size());
+        dto.setOsrsFinalizadas(finalizadas);
+        if (osrDTOs.isEmpty()) {
+            dto.setFinalizado(false);
+            dto.setEstadoPsr("ACTIVO");
+        } else if (finalizadas == osrDTOs.size()) {
+            dto.setFinalizado(true);
+            dto.setEstadoPsr("FINALIZADO");
+        } else if (finalizadas > 0) {
+            dto.setFinalizado(false);
+            dto.setEstadoPsr("PARCIAL");
+        } else {
+            dto.setFinalizado(false);
+            dto.setEstadoPsr("ACTIVO");
+        }
+        // Backward compat: marca/modelo/grr del primer equipo con equipo
+        for (OsrDTO osrDTO : osrDTOs) {
+            if (osrDTO.getMarca() != null || osrDTO.getModelo() != null || osrDTO.getGrr() != null) {
+                dto.setMarca(osrDTO.getMarca());
+                dto.setModelo(osrDTO.getModelo());
+                dto.setGrr(osrDTO.getGrr());
+                break;
+            }
+        }
         return dto;
     }
 
-    private void resolverEquipoAsociado(PsrDTO dto, Osr osr) {
-        if (osr.getEquipoId() == null) return;
+    private void enriquecerOsrConEquipo(OsrDTO dto, Osr osr) {
+        if (osr.getEquipoId() == null) {
+            dto.setFinalizado(false);
+            return;
+        }
         Equipo equipo = equipoRepository.findByIdOptional(osr.getEquipoId()).orElse(null);
-        if (equipo == null) return;
+        if (equipo == null) {
+            dto.setFinalizado(false);
+            return;
+        }
+        dto.setEquipoId(equipo.getId());
+        dto.setEstadoEquipo(equipo.getEstadoOperativo());
         dto.setModelo(equipo.getModelo());
         dto.setGrr(equipo.getNumeroGuiaRemision());
         dto.setFinalizado("DEVUELTO".equals(equipo.getEstadoOperativo()));
@@ -105,11 +142,21 @@ public class PsrService {
     }
 
     private boolean estaFinalizado(Psr psr) {
-        return osrRepository.findByPsrId(psr.getId())
-                .flatMap(osr -> Optional.ofNullable(osr.getEquipoId()))
-                .map(equipoId -> equipoRepository.findByIdOptional(equipoId).orElse(null))
-                .map(equipo -> "DEVUELTO".equals(equipo.getEstadoOperativo()))
-                .orElse(false);
+        List<Osr> osrs = osrRepository.listByPsrId(psr.getId());
+        if (osrs.isEmpty()) return false;
+        for (Osr osr : osrs) {
+            if (osr.getEquipoId() == null) return false;
+            Equipo equipo = equipoRepository.findByIdOptional(osr.getEquipoId()).orElse(null);
+            if (equipo == null || !"DEVUELTO".equals(equipo.getEstadoOperativo())) return false;
+        }
+        return true;
+    }
+
+    private boolean tieneOsrConEquipo(Psr psr) {
+        for (Osr osr : osrRepository.listByPsrId(psr.getId())) {
+            if (osr.getEquipoId() != null) return true;
+        }
+        return false;
     }
 
     private BigDecimal calcularMeses(LocalDateTime inicio, LocalDateTime fin) {
@@ -180,10 +227,22 @@ public class PsrService {
         psr.setFechaActualizacion(OffsetDateTime.now(ZoneId.of("America/Lima")));
 
         if (request.getOsr() != null) {
-            Osr osr = osrRepository.findByPsrId(id)
-                    .orElseThrow(() -> new WebApplicationException(
-                            "La OSR relacionada no existe",
-                            Response.Status.BAD_REQUEST));
+            List<Osr> osrs = osrRepository.listByPsrId(id);
+            if (osrs.isEmpty()) {
+                throw new WebApplicationException(
+                        "La OSR relacionada no existe",
+                        Response.Status.BAD_REQUEST);
+            }
+            // Actualiza la primera OSR por compatibilidad (mobile envia costo/moneda inline)
+            Osr osr = osrs.get(0);
+            if (osr.getEquipoId() != null) {
+                Equipo equipo = equipoRepository.findByIdOptional(osr.getEquipoId()).orElse(null);
+                if (equipo != null && "DEVUELTO".equals(equipo.getEstadoOperativo())) {
+                    throw new WebApplicationException(
+                            "La OSR está finalizada y no puede editarse",
+                            Response.Status.CONFLICT);
+                }
+            }
             osr.setCostoUnitario(request.getOsr().getCostoUnitario());
             osr.setTipoMoneda(request.getOsr().getTipoMoneda());
             osr.setUsuarioActualizacion(
@@ -203,10 +262,14 @@ public class PsrService {
                     "El PSR/OSR está finalizado y no puede eliminarse",
                     Response.Status.CONFLICT);
         }
-        if (osrRepository.findByPsrId(id).isPresent()) {
+        if (tieneOsrConEquipo(psr)) {
             throw new WebApplicationException(
-                    "El PSR tiene una OSR asociada y no puede eliminarse",
+                    "El PSR tiene OSRs con equipo asociado y no puede eliminarse",
                     Response.Status.CONFLICT);
+        }
+        // Elimina OSRs huérfanas sin equipo (ilimitadas) antes de borrar PSR
+        for (Osr osr : osrRepository.listByPsrId(id)) {
+            osrRepository.delete(osr);
         }
         psrRepository.delete(psr);
         return true;

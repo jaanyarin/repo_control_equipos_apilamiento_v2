@@ -1,5 +1,19 @@
 export const VERSION_HISTORY = [
   {
+    version: '1.12.0',
+    fecha: '2026-08-26',
+    titulo: 'HDT-015 — PSR 1:N OSR (múltiples OSR por PSR)',
+    cambios: [
+      'Una PSR puede contener múltiples OSR (ilimitado), antes era 1:1',
+      'PSR con estados ACTIVO / PARCIAL (x/N finalizadas) / FINALIZADO (todas devueltas)',
+      'Card PSR muestra lista de OSRs con costo, equipo, estado y acciones por OSR',
+      'Agregar OSR ilimitado y eliminar OSR individual (solo si no tiene equipo)',
+      'Editar OSR (costo/moneda) vía PUT /osr/{id}',
+      'Ingreso de equipo por OSR específica (SelectPsrEquipment lista OSRs pendientes)',
+      'Datos históricos compatibles: PSRs existentes pueden agregar más OSRs',
+    ],
+  },
+  {
     version: '1.11.1',
     fecha: '2026-08-18',
     titulo: 'Desactivar/Activar catálogos desde web y mobile (soft delete)',
