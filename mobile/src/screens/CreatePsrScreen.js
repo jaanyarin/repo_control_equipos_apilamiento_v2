@@ -40,7 +40,9 @@ function DatePickerField({ label, value, onChange, error, readOnly = false }) {
   }, [onChange])
 
   const handleOpen = useCallback(() => {
-    Keyboard.dismiss()
+    if (Keyboard?.dismiss) {
+      try { Keyboard.dismiss() } catch (_) {}
+    }
     setShow(true)
   }, [])
 
@@ -253,8 +255,8 @@ export default function CreatePsrScreen() {
   const sedeOptions = useMemo(
     () => mapToSelectOptions(
       sedes,
-      item => `${item.nombre}${item.codigo ? ` (${item.codigo})` : ''}${item.estadoActivo === false ? ' - Inactiva' : ''}`,
-      false,
+      item => `${item.nombre}${item.codigo ? ` (${item.codigo})` : ''}`,
+      true,
     ),
     [sedes],
   )

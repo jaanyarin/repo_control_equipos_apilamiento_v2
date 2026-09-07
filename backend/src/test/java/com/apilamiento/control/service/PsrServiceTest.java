@@ -25,7 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -114,8 +114,8 @@ class PsrServiceTest {
 
         PsrRequest request = new PsrRequest();
         request.setNumeroPsr("PSR001");
-        request.setFechaInicioUso(LocalDate.of(2026, 8, 1));
-        request.setFechaFinUso(LocalDate.of(2026, 10, 31));
+        request.setFechaInicioUso(LocalDateTime.of(2026, 8, 1, 0, 0));
+        request.setFechaFinUso(LocalDateTime.of(2026, 10, 31, 0, 0));
         OsrUpdateRequest osrUpdate = new OsrUpdateRequest();
         osrUpdate.setCostoUnitario(new BigDecimal("825.40"));
         osrUpdate.setTipoMoneda("USD");

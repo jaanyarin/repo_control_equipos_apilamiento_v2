@@ -1,7 +1,6 @@
 package com.apilamiento.control.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -57,7 +56,6 @@ public class PsrDTO {
 
     public LocalDateTime getFechaPsr() { return fechaPsr; }
     public void setFechaPsr(LocalDateTime fechaPsr) { this.fechaPsr = fechaPsr; }
-    public void setFechaPsr(LocalDate fechaPsr) { this.fechaPsr = fechaPsr != null ? fechaPsr.atStartOfDay() : null; }
 
     public Long getMotivoId() { return motivoId; }
     public void setMotivoId(Long motivoId) { this.motivoId = motivoId; }
@@ -70,11 +68,9 @@ public class PsrDTO {
 
     public LocalDateTime getFechaInicioUso() { return fechaInicioUso; }
     public void setFechaInicioUso(LocalDateTime fechaInicioUso) { this.fechaInicioUso = fechaInicioUso; }
-    public void setFechaInicioUso(LocalDate fechaInicioUso) { this.fechaInicioUso = fechaInicioUso != null ? fechaInicioUso.atStartOfDay() : null; }
 
     public LocalDateTime getFechaFinUso() { return fechaFinUso; }
     public void setFechaFinUso(LocalDateTime fechaFinUso) { this.fechaFinUso = fechaFinUso; }
-    public void setFechaFinUso(LocalDate fechaFinUso) { this.fechaFinUso = fechaFinUso != null ? fechaFinUso.atStartOfDay() : null; }
 
     public BigDecimal getMeses() { return meses; }
     public void setMeses(BigDecimal meses) { this.meses = meses; }
