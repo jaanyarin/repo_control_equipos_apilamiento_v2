@@ -28,11 +28,18 @@ Corregir el formulario mobile de creación y edición de OSR para conservar la i
   - Almacén de Materiales
   - Frío
   - Cámara de Producto Terminado
+- Migración `V35__fac_equipos_area.sql` agrega `fac_equipos.area_id` FK → `dim_areas` + backfill + índice compuesto.
+- Migración `V36__usuarios_area_fk.sql` agrega `dim_usuarios.area_id` FK → `dim_areas` + backfill desde texto `area`.
 - Se añadieron las capas `Area`, `AreaDTO`, `AreaRepository`, `AreaService`, `AreaMapper` y `AreaResource`.
 - Endpoints bajo `/api/v1/areas`:
   - `GET /areas` y `GET /areas/{id}` para consulta.
   - `POST /areas`, `PUT /areas/{id}` y `DELETE /areas/{id}` para Admin/Super Admin.
-- `Usuario.area` conserva compatibilidad con datos existentes y recibe el valor seleccionado del catálogo.
+- `DELETE /areas/{id}` verifica integridad referencial: 409 si tiene equipos o usuarios asignados.
+- `UsuarioService`: resolveAreaId() auto-resuelve FK desde nombre de área.
+- `AreaService.areaIdDelUsuario()`: usa FK directo con fallback a texto.
+- `Usuario.entity` + `UsuarioDTO` + `UsuarioMapper`: mapeo bidireccional `areaId`.
+- `EquipoService`: filtra por `areaId` (Super Admin ve todos, usuarios ven solo su área).
+- `IngresoEquipoService`: auto-asigna `area_id` del JWT al ingresar equipo.
 
 ### Web
 
@@ -48,19 +55,27 @@ Corregir el formulario mobile de creación y edición de OSR para conservar la i
 
 ## Validación
 
-- Migración Flyway aplicada en PostgreSQL: versión `34`, cuatro áreas activas.
+- Migración Flyway aplicada en PostgreSQL: versiones `V34`, `V35`, `V36`.
 - Backend Docker construido y arrancado con JDK 21.
-- Tests mobile enfocados: `CreatePsrScreen.test.js` y `CreateEditUserScreen.test.js`, 8/8.
+- Tests backend: `AreaServiceTest` 14, `EquipoServiceTest` 4, `IngresoEquipoServiceTest` 8, `UsuarioServiceTest` 10 — 36/36 pasan.
+- Tests mobile: 8/8.
 - ESLint mobile: correcto.
 - Build frontend web: correcto.
-- APK release Gradle: `BUILD SUCCESSFUL`.
 
 ## Archivos principales
 
 | Archivo | Cambio |
 |---|---|
 | `backend/src/main/resources/db/migration/V34__dim_areas.sql` | Nueva tabla y semillas |
+| `backend/src/main/resources/db/migration/V35__fac_equipos_area.sql` | FK area_id en fac_equipos |
+| `backend/src/main/resources/db/migration/V36__usuarios_area_fk.sql` | FK area_id en dim_usuarios |
 | `backend/src/main/java/com/apilamiento/control/controller/AreaResource.java` | API CRUD de áreas |
+| `backend/src/main/java/com/apilamiento/control/service/AreaService.java` | Integridad referencial + areaIdDelUsuario centralizado |
+| `backend/src/main/java/com/apilamiento/control/entity/Usuario.java` | Campo areaId (FK) |
+| `backend/src/main/java/com/apilamiento/control/dto/UsuarioDTO.java` | Mapeo areaId |
+| `backend/src/main/java/com/apilamiento/control/service/UsuarioService.java` | ResolveAreaId auto |
+| `backend/src/test/java/com/apilamiento/control/service/AreaServiceTest.java` | 14 tests |
+| `backend/src/test/java/com/apilamiento/control/service/UsuarioServiceTest.java` | 10 tests |
 | `mobile/src/screens/CreatePsrScreen.js` | Corrección del formulario OSR |
 | `mobile/src/screens/CreateEditUserScreen.js` | Selector de área |
 | `mobile/src/screens/AreasScreen.js` | CRUD mobile de áreas |

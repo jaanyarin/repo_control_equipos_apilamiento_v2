@@ -174,6 +174,7 @@ mapper/EntidadMapper.java          → MapStruct mapper
 | V33__reparar_osr_psr_1n.sql | Repara instalaciones con unicidad residual en fac_osr.psr_id |
 | V34__dim_areas.sql | Catálogo de áreas y datos semilla para usuarios |
 | V35__fac_equipos_area.sql | Relación persistente de equipos con áreas y backfill histórico |
+| V36__usuarios_area_fk.sql | FK area_id en dim_usuarios con backfill desde texto area |
 
 ---
 
