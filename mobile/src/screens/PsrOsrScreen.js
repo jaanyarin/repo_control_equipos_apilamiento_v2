@@ -194,7 +194,10 @@ export default function PsrOsrScreen() {
             Fecha PSR: {formatDate(item.fechaPsr)}
           </Text>
           <Text variant="bodySmall" style={styles.detailText}>
-            Inicio uso: {formatDate(item.fechaInicioUso)} - Fin: {formatDate(item.fechaFinUso)}
+            Inicio uso: {formatDate(item.fechaInicioUso)}
+          </Text>
+          <Text variant="bodySmall" style={styles.detailText}>
+             Fin: {formatDate(item.fechaFinUso)}
           </Text>
           <Text variant="bodySmall" style={styles.detailText}>
             Meses: {formatMonths(item.meses)} | Campaña: {item.campanaNombre || '-'} | Sede: {item.sedeNombre || '-'}

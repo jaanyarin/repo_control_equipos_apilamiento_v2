@@ -90,7 +90,7 @@ export default function UsuariosScreen() {
         <View style={styles.cardRow}>
           <View style={styles.cardInfo}>
             <Text variant="titleMedium" style={styles.nameText}>{item.nombre || 'Sin nombre'}</Text>
-            <Text variant="bodySmall" style={styles.emailText}>{item.correo || '-'}</Text>
+            <Text variant="bodySmall" style={styles.emailText}>{item.area || '-'}</Text>
             <Chip mode="flat" textStyle={{ color: theme.colors.text.inverse, fontSize: 11, fontWeight: 600 }}
               style={{ backgroundColor: rolColor(item.rolNombre || item.rol), marginTop: 6, alignSelf: 'flex-start' }}
             >
@@ -113,7 +113,7 @@ export default function UsuariosScreen() {
   return (
     <ErrorBoundary>
       <View style={styles.container}>
-        <Searchbar placeholder="Buscar por nombre o correo" onChangeText={setSearch} value={search} style={styles.searchbar} />
+        <Searchbar placeholder="Buscar por nombre de Usuario" onChangeText={setSearch} value={search} style={styles.searchbar} />
         {error ? (
           <EmptyState icon="alert" title="Error" subtitle={error} />
         ) : (

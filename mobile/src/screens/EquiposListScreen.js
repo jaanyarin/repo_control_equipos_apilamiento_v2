@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react'
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native'
+import { Alert, FlatList, RefreshControl, StyleSheet, View } from 'react-native'
 import { Searchbar, Text, TouchableRipple } from 'react-native-paper'
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -16,6 +16,7 @@ import StatusChip from '../components/StatusChip'
 import { theme } from '../theme'
 import { isAdminOrSuperAdmin } from '../utils/roles'
 import { filterEquiposByMode } from '../utils/equipmentForm'
+import { generateEquipmentReport } from '../utils/equipmentReport'
 
 export default function EquiposListScreen() {
   const navigation = useNavigation()
@@ -31,6 +32,7 @@ export default function EquiposListScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [generatingPdf, setGeneratingPdf] = useState(null)
   const canEdit = isAdminOrSuperAdmin(user)
 
   const fetchEquipos = useCallback(async () => {
@@ -63,6 +65,18 @@ export default function EquiposListScreen() {
   const statusType = estado => estado === 'OPERATIVO'
     ? 'active'
     : estado === 'AVERIADO' ? 'fault' : 'cancelled'
+
+  const handleGeneratePdf = async item => {
+    if (generatingPdf) return
+    setGeneratingPdf(item.id)
+    try {
+      await generateEquipmentReport(item.id)
+    } catch (e) {
+      Alert.alert('No se pudo generar el PDF', e.message || 'Intente nuevamente')
+    } finally {
+      setGeneratingPdf(null)
+    }
+  }
 
   if (loading && equipos.length === 0) return <LoadingScreen message="Cargando equipos" />
 
@@ -139,6 +153,14 @@ export default function EquiposListScreen() {
                   </View>
                 ) : (
                   <View style={styles.actions}>
+                    {mode === 'view' && item.estadoOperativo === 'DEVUELTO' ? (
+                      <AppIconButton
+                        icon={generatingPdf === item.id ? 'progress-clock' : 'file-pdf-box'}
+                        accessibilityLabel={`Generar PDF de ${item.codigo}`}
+                        disabled={Boolean(generatingPdf)}
+                        onPress={() => handleGeneratePdf(item)}
+                      />
+                    ) : null}
                     <AppIconButton
                       icon="history"
                       accessibilityLabel={`Ver historial de ${item.codigo}`}

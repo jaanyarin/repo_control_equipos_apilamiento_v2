@@ -8,7 +8,9 @@ export const VERSION_HISTORY = [
       'Nueva OSR inicia con número y costo vacíos; editar OSR conserva sus datos',
       'Nuevo catálogo Áreas con Recepción Packing, Almacén de Materiales, Frío y Cámara de Producto Terminado',
       'Selector de área al crear y editar usuarios en web y mobile',
+      'Tarjetas de usuarios mobile muestran el nombre y el área debajo',
       'CRUD de áreas en web y mobile con activación, desactivación y eliminación',
+      'Reporte PDF corporativo de dos páginas disponible para equipos DEVUELTO desde Detalles de equipo',
     ],
   },
   {
