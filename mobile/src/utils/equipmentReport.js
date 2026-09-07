@@ -75,16 +75,25 @@ function classifyPhoto(photo) {
 
 async function photoData(photo, baseUrl, token) {
   if (!photo.url) return null
-  const response = await ReactNativeBlobUtil.fetch('GET', `${baseUrl}${photo.url}`, token ? { Authorization: `Bearer ${token}` } : {})
-  if (response.info().statusCode !== 200) return null
-  return `data:image/jpeg;base64,${await response.base64()}`
+  try {
+    const response = await ReactNativeBlobUtil.fetch('GET', `${baseUrl}${photo.url}`, token ? { Authorization: `Bearer ${token}` } : {})
+    if (response.info().statusCode !== 200) return null
+    const base64 = await response.base64()
+    const { dirs, writeFile } = ReactNativeBlobUtil.fs
+    const fileName = `report_photo_${photo.id || Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`
+    const filePath = `${dirs.CacheDir}/${fileName}`
+    await writeFile(filePath, base64, 'base64')
+    return filePath
+  } catch (e) {
+    return null
+  }
 }
 
 async function photoMarkup(photos, baseUrl, token) {
   const items = await Promise.all(photos.map(async photo => ({ photo, data: await photoData(photo, baseUrl, token) })))
   const valid = items.filter(item => item.data)
   if (valid.length === 0) return '<p class="empty">Sin fotografías registradas.</p>'
-  return `<div class="photos">${valid.map(({ photo, data }) => `<figure><img src="${data}" /><figcaption>${display(photo.description || photo.type || 'Evidencia')}</figcaption></figure>`).join('')}</div>`
+  return `<div class="photos">${valid.map(({ photo, data }) => `<figure><img src="file://${data}" /><figcaption>${display(photo.description || photo.type || 'Evidencia')}</figcaption></figure>`).join('')}</div>`
 }
 
 function failureRows(timeline) {
@@ -100,7 +109,8 @@ function failureRows(timeline) {
 
 function buildHtml(equipment, psrDetails, timeline, photoSections, page1Title, page2Title) {
   const summary = timeline?.summary || {}
-  const psr = psrDetails || equipment.psrOsr || {}
+  const psrRaw = psrDetails || equipment.psrOsr || {}
+  const psr = { ...psrRaw, numeroOsr: psrRaw.osr?.numeroOsr || psrRaw.osrs?.[0]?.numeroOsr }
   const general = section('Información general', [
     row('Proveedor', display(equipment.proveedorNombre)),
     row('Marca', display(equipment.marcaNombre)),
@@ -115,7 +125,7 @@ function buildHtml(equipment, psrDetails, timeline, photoSections, page1Title, p
     row('OSR asociada', display(psr.numeroOsr)),
     row('Fecha Inicio de Servicio', display(formatDate(psr.fechaInicioUso || summary.entryDate))),
     row('Fecha Final de Servicio', display(formatDate(psr.fechaFinUso))),
-    row('Tiempo de Servicio', display(summary.serviceMonths ? `${summary.serviceMonths} meses` : '-')),
+    row('Tiempo de Servicio', display(calcularMeses(psr.fechaInicioUso, psr.fechaFinUso))),
     row('Fecha Ingreso de Máquina', display(formatDate(summary.entryDate))),
     row('Fecha Devolución de Máquina', display(formatDate(summary.finalDate))),
     row('Tiempo de Uso de Máquina', display(calcularMeses(summary.entryDate, summary.finalDate))),
@@ -147,7 +157,8 @@ export async function generateEquipmentReport(equipmentId) {
   ])
   const psrDetails = psrResponse?.data?.data || psrResponse?.data || null
   const timeline = timelineResponse.data?.data || timelineResponse.data
-  const psr = psrDetails || equipment.psrOsr || {}
+  const psrRaw = psrDetails || equipment.psrOsr || {}
+  const psr = { ...psrRaw, numeroOsr: psrRaw.osr?.numeroOsr || psrRaw.osrs?.[0]?.numeroOsr }
   const grouped = { received: [], accessories: [], delivered: [] }
   getPhotos(timeline).forEach(photo => grouped[classifyPhoto(photo)].push(photo))
   const photoSections = {}
