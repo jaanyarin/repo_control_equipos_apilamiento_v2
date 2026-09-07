@@ -201,25 +201,25 @@ public class ReporteService {
         sub2.setSpacingAfter(12);
         doc.add(sub2);
 
-        addPhotoSection(doc, "Fotografías del equipo recepcionado",
+        addIngresoPhotoSection(doc, "Fotografías del equipo recepcionado",
                 evidenciaIngresoRepository.listByEquipo(equipoId));
-        addPhotoSection(doc, "Fotografías de accesorios",
+        addIngresoPhotoSection(doc, "Fotografías de accesorios",
                 evidenciaIngresoRepository.listByEquipo(equipoId).stream()
                         .filter(e -> isAccesorioType(e.getTipo().name())).toList());
-        addPhotoSection(doc, "Fotografías del equipo entregado",
+        addDevolucionPhotoSection(doc, "Fotografías del equipo entregado",
                 evidenciaDevolucionRepository.listByEquipo(equipoId));
 
         doc.close();
         return out.toByteArray();
     }
 
-    private void addPhotoSection(Document doc, String title, List<? extends EvidenciaIngresoEquipo> fotos) {
+    private void addIngresoPhotoSection(Document doc, String title, List<EvidenciaIngresoEquipo> fotos) {
         addPhotoSectionGeneric(doc, title, fotos.stream().map(e -> (PhotoData) () -> {
             try { return e.getContenido(); } catch (Exception ex) { return null; }
         }).toList(), fotos.stream().map(e -> e.getTipo().name().replace("_", " ")).toList());
     }
 
-    private void addPhotoSection(Document doc, String title, List<? extends EvidenciaDevolucionEquipo> fotos) {
+    private void addDevolucionPhotoSection(Document doc, String title, List<EvidenciaDevolucionEquipo> fotos) {
         addPhotoSectionGeneric(doc, title, fotos.stream().map(e -> (PhotoData) () -> {
             try { return e.getContenido(); } catch (Exception ex) { return null; }
         }).toList(), fotos.stream().map(e -> e.getTipo().name().replace("_", " ")).toList());
@@ -348,7 +348,7 @@ public class ReporteService {
     }
 
     private String formatDate(OffsetDateTime odt) {
-        return odt != null ? odt.withZoneSameInstant(ZONE).format(FMT) : "-";
+        return odt != null ? odt.toLocalDateTime().format(FMT) : "-";
     }
 
     private String formatNum(BigDecimal val) {
@@ -361,7 +361,7 @@ public class ReporteService {
 
     private String calcularMeses(LocalDateTime inicio, OffsetDateTime fin) {
         if (inicio == null || fin == null) return "-";
-        long days = ChronoUnit.DAYS.between(inicio, fin.withZoneSameInstant(ZONE).toLocalDateTime());
+        long days = ChronoUnit.DAYS.between(inicio, fin.toLocalDateTime());
         if (days <= 0) return "-";
         return String.format("%.2f meses", days / 30.44);
     }
