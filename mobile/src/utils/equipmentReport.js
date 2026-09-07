@@ -34,6 +34,22 @@ function formatNumber(number) {
   return number == null ? '-' : Number(number).toLocaleString('es-PE', { maximumFractionDigits: 2 })
 }
 
+function calcularMeses(fechaInicio, fechaFin) {
+  if (!fechaInicio || !fechaFin) return '-'
+  const inicio = new Date(fechaInicio)
+  const fin = new Date(fechaFin)
+  const diffMs = fin - inicio
+  if (diffMs <= 0) return '-'
+  const diffDias = diffMs / (1000 * 60 * 60 * 24)
+  return `${(diffDias / 30.44).toFixed(2)} meses`
+}
+
+function calcularTotalHorometro(inicio, fin) {
+  if (inicio == null || fin == null) return '-'
+  const total = Number(fin) - Number(inicio)
+  return total >= 0 ? formatNumber(total) : '-'
+}
+
 function section(title, content) {
   return `<section><h2>${display(title)}</h2>${content}</section>`
 }
@@ -42,8 +58,8 @@ function row(label, content) {
   return `<div class="row"><strong>${display(label)}</strong><span>${content}</span></div>`
 }
 
-function pageHeader(title, equipment) {
-  return `<header><div class="brand">VANGUARD</div><div><h1>${display(title)}</h1><p>${display(equipment.codigo)} · ${display(equipment.modelo)}</p></div></header>`
+function pageHeader(title, subtitle) {
+  return `<header><div class="brand">VANGUARD</div><div><h1>${display(title)}</h1>${subtitle ? `<p>${display(subtitle)}</p>` : ''}</div></header>`
 }
 
 function getPhotos(timeline) {
@@ -73,11 +89,16 @@ async function photoMarkup(photos, baseUrl, token) {
 
 function failureRows(timeline) {
   const failures = (timeline?.events || []).filter(event => event.type === 'AVERIA')
-  if (failures.length === 0) return '<tr><td colspan="4">Sin averías registradas</td></tr>'
-  return failures.map(event => `<tr><td>${display(event.description || event.title || 'Avería')}</td><td>${display(formatDate(event.dateTime))}</td><td>${display(formatDate(event.metadata?.attentionDate))}</td><td>${display(event.metadata?.downtimeMinutes ? `${formatNumber(event.metadata.downtimeMinutes / 1440)} días` : '-')}</td></tr>`).join('')
+  if (failures.length === 0) return '<tr><td colspan="5">Sin averías registradas</td></tr>'
+  return failures.map(event => {
+    const reparacion = (timeline?.events || []).find(e => e.type === 'REPARACION' && e.relatedId === event.relatedId)
+    const downtimeMinutes = reparacion?.metadata?.downtimeMinutes || 0
+    const downtime = downtimeMinutes > 0 ? `${formatNumber(downtimeMinutes / 1440)} días` : '-'
+    return `<tr><td>${display(event.metadata?.failure || event.description)}</td><td>${display(formatDate(event.dateTime))}</td><td>${display(formatNumber(event.metadata?.hourMeter))}</td><td>${display(formatDate(reparacion?.dateTime))}</td><td>${display(formatNumber(reparacion?.metadata?.hourMeter))}</td><td>${display(downtime)}</td></tr>`
+  }).join('')
 }
 
-function buildHtml(equipment, psrDetails, timeline, photoSections) {
+function buildHtml(equipment, psrDetails, timeline, photoSections, page1Title, page2Title) {
   const summary = timeline?.summary || {}
   const psr = psrDetails || equipment.psrOsr || {}
   const general = section('Información general', [
@@ -85,29 +106,33 @@ function buildHtml(equipment, psrDetails, timeline, photoSections) {
     row('Marca', display(equipment.marcaNombre)),
     row('Modelo', display(equipment.modelo)),
     row('Código', display(equipment.codigo)),
-    row('N° serie', display(equipment.numeroSerie)),
-    row('Guía de remisión', display(equipment.numeroGuiaRemision)),
+    row('Nro Serie', display(equipment.numeroSerie)),
+    row('Guía Remisión', display(equipment.numeroGuiaRemision)),
   ].join(''))
   const accessories = section('Información de accesorios', `<table><thead><tr><th>Accesorio</th><th>Incluido</th><th>Número de serie</th></tr></thead><tbody>${accessoryFields.map(item => `<tr><td>${display(item.label)}</td><td>${equipment[item.key] ? 'Sí' : 'No'}</td><td>${display(item.serial ? equipment[item.serial] : '-')}</td></tr>`).join('')}</tbody></table>`)
   const service = section('Información del servicio', [
     row('PSR asociada', display(psr.numeroPsr)),
     row('OSR asociada', display(psr.numeroOsr)),
-    row('Fecha inicio', display(formatDate(psr.fechaInicioUso || summary.entryDate))),
-    row('Fecha fin', display(formatDate(psr.fechaFinUso))),
-    row('Tiempo de servicio', display(summary.serviceMonths ? `${summary.serviceMonths} meses` : '-')),
-    row('Tiempo de paros', display(summary.totalDowntimeMinutes ? `${formatNumber(summary.totalDowntimeMinutes / 1440)} días` : '0 días')),
+    row('Fecha Inicio de Servicio', display(formatDate(psr.fechaInicioUso || summary.entryDate))),
+    row('Fecha Final de Servicio', display(formatDate(psr.fechaFinUso))),
+    row('Tiempo de Servicio', display(summary.serviceMonths ? `${summary.serviceMonths} meses` : '-')),
+    row('Fecha Ingreso de Máquina', display(formatDate(summary.entryDate))),
+    row('Fecha Devolución de Máquina', display(formatDate(summary.finalDate))),
+    row('Tiempo de Uso de Máquina', display(calcularMeses(summary.entryDate, summary.finalDate))),
+    row('Horómetro Inicial', display(formatNumber(summary.initialHourMeter))),
+    row('Horómetro Final', display(formatNumber(summary.finalHourMeter))),
+    row('Total Horómetro', display(calcularTotalHorometro(summary.initialHourMeter, summary.finalHourMeter))),
   ].join(''))
-  const failures = section('Información de averías', `<table><thead><tr><th>Falla</th><th>Fecha inicio</th><th>Fecha fin</th><th>Tiempo paro</th></tr></thead><tbody>${failureRows(timeline)}</tbody></table>`)
-  const totals = section('Resumen operativo', `<div class="totals"><div><strong>${display(formatDate(summary.entryDate))}</strong><span>Fecha ingreso</span></div><div><strong>${display(summary.failureCount || 0)}</strong><span>Averías</span></div><div><strong>${display(formatDate(summary.finalDate))}</strong><span>Fecha devolución</span></div></div>`)
+  const failures = section('Información de averías', `<table><thead><tr><th>Descripción de la Falla</th><th>Fecha Inicio</th><th>Horómetro (avería)</th><th>Fecha Reparación</th><th>Horómetro (reparación)</th><th>Tiempo de paro</th></tr></thead><tbody>${failureRows(timeline)}</tbody></table>`)
   const photos = ['received', 'accessories', 'delivered'].map(key => section(photoSections[key].title, photoSections[key].markup)).join('')
 
   return `<!doctype html><html><head><meta charset="utf-8"><style>
     @page { size: A4; margin: 18mm 14mm; } * { box-sizing: border-box; } body { font-family: Arial, sans-serif; color: ${colors.dark}; font-size: 10px; margin: 0; }
     header { display: flex; align-items: center; gap: 14px; border-bottom: 3px solid ${colors.primary}; padding-bottom: 10px; margin-bottom: 12px; } .brand { color: ${colors.primary}; font-size: 18px; font-weight: 700; letter-spacing: 1px; } h1 { margin: 0; font-size: 17px; } header p { margin: 4px 0 0; color: ${colors.muted}; }
     section { margin-bottom: 10px; border: 1px solid ${colors.border}; } h2 { background: ${colors.primary}; color: #fff; font-size: 11px; margin: 0; padding: 5px 8px; text-align: center; } .row { display: flex; border-bottom: 1px solid ${colors.soft}; padding: 4px 7px; min-height: 20px; } .row:last-child { border-bottom: 0; } .row strong { width: 34%; } .row span { flex: 1; }
-    table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid ${colors.border}; padding: 5px; text-align: left; } th { background: ${colors.soft}; } .totals { display: flex; } .totals div { flex: 1; text-align: center; padding: 8px; border-right: 1px solid ${colors.border}; } .totals div:last-child { border-right: 0; } .totals strong, .totals span { display: block; } .totals span { color: ${colors.muted}; margin-top: 3px; }
+    table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid ${colors.border}; padding: 5px; text-align: left; } th { background: ${colors.soft}; }
     .page-break { page-break-before: always; } .photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 8px; } figure { margin: 0; border: 1px solid ${colors.border}; page-break-inside: avoid; } img { display: block; width: 100%; height: 145px; object-fit: cover; } figcaption { padding: 4px; text-align: center; color: ${colors.muted}; } .empty { padding: 12px; color: ${colors.muted}; text-align: center; }
-  </style></head><body>${pageHeader('Reporte de equipo devuelto', equipment)}${general}${accessories}${service}${failures}${totals}<div class="page-break"></div>${pageHeader('Registro fotográfico', equipment)}${photos}</body></html>`
+  </style></head><body>${pageHeader(page1Title)}${general}${accessories}${service}${failures}<div class="page-break"></div>${pageHeader(page2Title, `${display(equipment.codigo)} · ${display(equipment.modelo)}`)}${photos}</body></html>`
 }
 
 export async function generateEquipmentReport(equipmentId) {
@@ -122,6 +147,7 @@ export async function generateEquipmentReport(equipmentId) {
   ])
   const psrDetails = psrResponse?.data?.data || psrResponse?.data || null
   const timeline = timelineResponse.data?.data || timelineResponse.data
+  const psr = psrDetails || equipment.psrOsr || {}
   const grouped = { received: [], accessories: [], delivered: [] }
   getPhotos(timeline).forEach(photo => grouped[classifyPhoto(photo)].push(photo))
   const photoSections = {}
@@ -131,7 +157,14 @@ export async function generateEquipmentReport(equipmentId) {
       markup: await photoMarkup(photos, baseUrl, token),
     }
   }
-  const file = await generatePDF({ html: buildHtml(equipment, psrDetails, timeline, photoSections), fileName: `reporte_${equipment.codigo || equipmentId}_${Date.now()}`, directory: 'Documents' })
+  const page1Title = `Reporte Detallado de Equipo - PSR: ${psr.numeroPsr || '-'} - OSR: ${psr.numeroOsr || '-'} - GRR: ${equipment.numeroGuiaRemision || '-'}`
+  const page2Title = 'Reporte Fotográfico de Equipo'
+  const html = buildHtml(equipment, psrDetails, timeline, photoSections, page1Title, page2Title)
+  const safePsr = (psr.numeroPsr || 'PSR').replace(/[^a-zA-Z0-9_-]/g, '')
+  const safeOsr = (psr.numeroOsr || 'OSR').replace(/[^a-zA-Z0-9_-]/g, '')
+  const safeGrr = (equipment.numeroGuiaRemision || 'GRR').replace(/[^a-zA-Z0-9_-]/g, '')
+  const fileName = `Reporte_detalle_equipo_psr_${safePsr}_osr_${safeOsr}_grr_${safeGrr}`
+  const file = await generatePDF({ html, fileName, directory: 'Documents' })
   await FileViewer.open(file.filePath, { showOpenWithDialog: true, showAppsSuggestions: true })
   return file.filePath
 }
