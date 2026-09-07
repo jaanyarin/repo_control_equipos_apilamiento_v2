@@ -13,6 +13,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard'
 import PeopleIcon from '@mui/icons-material/People'
 import LockIcon from '@mui/icons-material/Lock'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
+import DomainIcon from '@mui/icons-material/Domain'
 import CampaignIcon from '@mui/icons-material/Campaign'
 import CategoryIcon from '@mui/icons-material/Category'
 import BusinessIcon from '@mui/icons-material/Business'
@@ -31,6 +32,7 @@ const menuItems = [
   { label: 'Usuarios', path: '/usuarios', icon: <PeopleIcon /> },
   { label: 'Roles', path: '/roles', icon: <LockIcon /> },
   { label: 'Sedes', path: '/sedes', icon: <LocationOnIcon /> },
+  { label: 'Áreas', path: '/areas', icon: <DomainIcon /> },
   { label: 'Campañas', path: '/campanas', icon: <CampaignIcon /> },
   { label: 'Tipos Equipo', path: '/tipos-equipo', icon: <CategoryIcon /> },
   { label: 'Proveedores', path: '/proveedores', icon: <BusinessIcon /> },

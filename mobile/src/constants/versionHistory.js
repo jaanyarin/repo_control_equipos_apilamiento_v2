@@ -1,5 +1,17 @@
 export const VERSION_HISTORY = [
   {
+    version: '1.13.0',
+    fecha: '2026-09-06',
+    titulo: 'HDT-016 — Corrección PSR/OSR y catálogo de áreas',
+    cambios: [
+      'El formulario Agregar OSR muestra fecha PSR, fechas de uso y meses calculados',
+      'Nueva OSR inicia con número y costo vacíos; editar OSR conserva sus datos',
+      'Nuevo catálogo Áreas con Recepción Packing, Almacén de Materiales, Frío y Cámara de Producto Terminado',
+      'Selector de área al crear y editar usuarios en web y mobile',
+      'CRUD de áreas en web y mobile con activación, desactivación y eliminación',
+    ],
+  },
+  {
     version: '1.12.0',
     fecha: '2026-08-26',
     titulo: 'HDT-015 — PSR 1:N OSR (múltiples OSR por PSR)',

@@ -20,6 +20,7 @@ import Equipos from './pages/Equipos'
 import Averias from './pages/Averias'
 import PsrOsr from './pages/PsrOsr'
 import MotivosPsr from './pages/MotivosPsr'
+import Areas from './pages/Areas'
 import ThemePreview from './pages/ThemePreview'
 
 function PrivateRoute({ children }) {
@@ -84,6 +85,7 @@ export default function App() {
         <Route path="averias" element={<Averias />} />
         <Route path="psr-osr" element={<PsrOsr />} />
         <Route path="motivos-psr" element={<MotivosPsr />} />
+        <Route path="areas" element={<Areas />} />
         <Route path="theme-preview" element={<ThemePreview />} />
       </Route>
       <Route path="*" element={<Navigate to={user ? '/dashboard' : '/login'} replace />} />

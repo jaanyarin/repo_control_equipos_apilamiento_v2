@@ -17,9 +17,9 @@ Commit de referencia: `320cbbd`
 
 - Node: `v26.4.0`
 - npm: `12.0.0`
-- Java: OpenJDK `17.0.19`
+- Java: Eclipse Temurin JDK `21`
 - `ANDROID_HOME` y `ANDROID_SDK_ROOT`: no definidos en el proceso de diagnostico.
-- `JAVA_HOME`: definido hacia Eclipse Temurin JDK 17.
+- `JAVA_HOME`: debe apuntar a Eclipse Temurin JDK 21.
 
 ### Estado real de `mobile/`
 

@@ -94,7 +94,7 @@ La comunicación entre clientes y backend se realizará mediante HTTPS utilizand
 | Capa | Tecnología | Estado |
 |---|---|---|
 | Backend | Quarkus Java 3.14.4 | ✅ Implementado |
-| Runtime Backend | Java 17 / Docker | ✅ Implementado |
+| Runtime Backend | Java 21 / Docker | ✅ Implementado |
 | Frontend Mobile | Expo React Native SDK ~54.0.35 | ✅ Activo. CRUD operativo: PSR/OSR, catálogos, averías, usuarios, auditoría. Build EAS Cloud (local bloqueado por Sophos). NO migrado a CLI |
 | Frontend Web | React 18 SPA, Vite 5, MUI 6 | ✅ Implementado |
 | Base de Datos | PostgreSQL 18 | ✅ Oficial / Implementado |

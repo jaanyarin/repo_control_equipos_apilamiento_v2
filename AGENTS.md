@@ -19,6 +19,7 @@ Eres un **Arquitecto y Desarrollador Full Stack Senior Mobile/Web**. Trabajas ba
 | UI Mobile | react-native-paper (MD3) | ^5.12.0 |
 | UI Web | Material UI (MUI) | 6 |
 | Backend | Quarkus Java | 3.14.4 |
+| JDK Backend | Eclipse Temurin | 21 |
 | ORM | Hibernate ORM Panache | — |
 | Base de Datos | PostgreSQL | 18 |
 | Migraciones | Flyway | — |
@@ -170,6 +171,8 @@ mapper/EntidadMapper.java          → MapStruct mapper
 | V30__fac_tokens_push.sql | Tokens push FCM (fac_tokens_push) |
 | V31__fecha_date_a_timestamp.sql | Tipos DATE → TIMESTAMP (fecha_psr, uso, fecha_osr, fecha_ingreso) |
 | V32__psr_multiples_osr.sql | PSR 1:N OSR: DROP UNIQUE psr_id en fac_osr + índice compuesto |
+| V33__reparar_osr_psr_1n.sql | Repara instalaciones con unicidad residual en fac_osr.psr_id |
+| V34__dim_areas.sql | Catálogo de áreas y datos semilla para usuarios |
 
 ---
 
@@ -288,7 +291,7 @@ La versión de la aplicación se cuantifica con **SemVer `X.Y.Z`** y se muestra 
 
 - `docs:`, `refactor:`, `test:`, `chore:` **NO** cambian versión.
 - El script `mobile/scripts/bump-version.js` actualiza `package.json` y `android/app/build.gradle` (`versionName` + `versionCode` = `MAJOR*10000 + MINOR*100 + PATCH`, monótono).
-- **Versión actual: `1.12.0`** (1.0.0 = HDT-001+002 base; +0.1.0 por cada HDT implementado hasta HDT-015; HDT-005 cancelado no cuenta).
+- **Versión actual: `1.13.0`** (1.0.0 = HDT-001+002 base; +0.1.0 por cada HDT implementado hasta HDT-016; HDT-005 cancelado no cuenta).
 - El historial completo vive en `mobile/src/constants/versionHistory.js` y se consulta desde el Perfil (botón de historial).
 
 ---
@@ -518,6 +521,18 @@ db: crear migración V8 para tabla de evidencias
 | Mobile: `SelectPsrEquipmentScreen` key por `osrId` + `EquipmentForm` con `osrId` | ✅ |
 | Tests: `PsrServiceTest` 7/7 + `OsrServiceTest` 3/3 + `IngresoEquipoServiceTest` 8/8 | ✅ |
 
+### HDT-016 — Corrección PSR/OSR y catálogo de áreas (IMPLEMENTADO ✅)
+
+| Módulo | Estado |
+|---|---|
+| Mobile: formulario Agregar/Editar OSR muestra fechas de PSR y meses calculados | ✅ |
+| Mobile: nueva OSR inicia con número y costo vacíos; edición conserva la OSR seleccionada | ✅ |
+| Backend: migración V34 y catálogo `dim_areas` con cuatro áreas semilla | ✅ |
+| Backend: CRUD `/api/v1/areas` con permisos y estado activo/inactivo | ✅ |
+| Web/Mobile: CRUD del catálogo Áreas | ✅ |
+| Web/Mobile: selector de área al crear y editar usuarios | ✅ |
+| Validación: tests mobile 8/8, ESLint mobile y build web | ✅ |
+
 ---
 
 ## 13. Configuración de Red y Puertos Congelados (NO CAMBIAR)
@@ -530,7 +545,7 @@ Esta sección documenta la configuración actual de puertos, conexiones y URLs d
 |---|---|---|---|---|
 | Nginx (Frontend + Proxy) | 80 | 80 | HTTP | Frontend SPA + Proxy API |
 | Nginx (HTTPS futuro) | 443 | 443 | HTTPS | Reservado para SSL |
-| Backend Quarkus | 8082 | 8082 | HTTP | API REST |
+| Backend Quarkus | 8082 | 8080 | HTTP | API REST |
 | PostgreSQL 18 | 5433 | 5432 | TCP | Base de datos (Host:5433 para evitar conflicto con PostgreSQL local en 5432) |
 
 ### 13.2 URLs de Acceso (Entorno Local Docker)
@@ -538,7 +553,7 @@ Esta sección documenta la configuración actual de puertos, conexiones y URLs d
 | Servicio | URL | Descripción |
 |---|---|---|
 | Frontend Web (SPA) | `http://localhost/` | Aplicación React con ruteo client-side |
-| API Backend | `http://localhost/api/v1/` | Proxy inverso Nginx → backend:8082 |
+| API Backend | `http://localhost/api/v1/` | Proxy inverso Nginx → backend:8080 |
 | Health Check | `http://localhost/health` | Estado del backend Quarkus |
 | Swagger UI | `http://localhost/swagger` | Documentación OpenAPI |
 | Swagger JSON | `http://localhost/q/openapi` | Especificación OpenAPI en JSON |
@@ -583,7 +598,7 @@ Esta sección documenta la configuración actual de puertos, conexiones y URLs d
 
 | Parámetro | Valor | Dónde se define |
 |---|---|---|
-| Puerto HTTP | 8082 | `application.properties:26` |
+| Puerto HTTP | 8080 | `application.properties:31` |
 | Host | `0.0.0.0` | `application.properties:25` |
 | API Base Path | `/api/v1` | `application.properties:36` |
 | JWT Expiración | 28800s (8h) | `application.properties:63` |

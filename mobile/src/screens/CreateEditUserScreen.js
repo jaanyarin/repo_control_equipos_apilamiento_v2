@@ -18,6 +18,7 @@ import { theme } from '../theme'
 const schema = z.object({
   nombre: z.string().trim().min(1, 'Ingrese el nombre'),
   rolId: z.string().optional(),
+  area: z.string().trim().min(1, 'Seleccione un área'),
   ubicacion: z.string().optional(),
 })
 
@@ -52,6 +53,7 @@ export default function CreateEditUserScreen() {
   const isProtectedSuperAdmin = isEditing && editing.id === 1
 
   const [roles, setRoles] = useState([])
+  const [areas, setAreas] = useState([])
   const [sedes, setSedes] = useState([])
   const [catalogLoading, setCatalogLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
@@ -66,6 +68,7 @@ export default function CreateEditUserScreen() {
     defaultValues: {
       nombre: editing?.nombre || '',
       rolId: isProtectedSuperAdmin ? '1' : (editing?.rolId != null ? String(editing.rolId) : ''),
+      area: editing?.area || '',
       ubicacion: editing?.ubicacion || '',
     },
   })
@@ -77,12 +80,14 @@ export default function CreateEditUserScreen() {
     }
 
     try {
-      const [rolesResponse, sedesResponse] = await Promise.all([
+      const [rolesResponse, areasResponse, sedesResponse] = await Promise.all([
         api.get('/roles'),
+        api.get('/areas'),
         api.get('/sedes'),
       ])
 
       const rolesList = extractList(rolesResponse, 'roles')
+      const areasList = extractList(areasResponse, 'áreas')
       const sedesList = extractList(sedesResponse, 'sedes')
 
       if (rolesList.length === 0) {
@@ -90,6 +95,7 @@ export default function CreateEditUserScreen() {
       }
 
       setRoles(rolesList)
+      setAreas(areasList)
       setSedes(sedesList)
     } catch (error) {
       if (!silent) setCatalogError(getRequestError(error, 'No se pudieron cargar los catálogos'))
@@ -132,6 +138,13 @@ export default function CreateEditUserScreen() {
     [sedes],
   )
 
+  const areaOptions = useMemo(
+    () => areas
+      .filter(item => item.estadoActivo !== false)
+      .map(item => ({ value: item.nombre, label: item.nombre })),
+    [areas],
+  )
+
   const onSubmit = async formData => {
     if (submitting) return
     setSubmitting(true)
@@ -140,6 +153,7 @@ export default function CreateEditUserScreen() {
       const payload = {
         nombre: formData.nombre.trim(),
         rolId: isProtectedSuperAdmin ? 1 : (formData.rolId ? Number(formData.rolId) : null),
+        area: formData.area.trim(),
         ubicacion: formData.ubicacion?.trim() || null,
       }
 
@@ -215,6 +229,24 @@ export default function CreateEditUserScreen() {
                   onChange={onChange}
                   error={errors.rolId?.message}
                   disabled={isProtectedSuperAdmin}
+                  onOpen={() => loadCatalogs(true)}
+                />
+              </View>
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="area"
+            render={({ field: { onChange, value } }) => (
+              <View style={styles.input}>
+                <AppSelect
+                  label="Área"
+                  placeholder="Seleccione un área"
+                  value={value}
+                  options={areaOptions}
+                  onChange={onChange}
+                  error={errors.area?.message}
                   onOpen={() => loadCatalogs(true)}
                 />
               </View>

@@ -36,7 +36,7 @@ La arquitectura se basa en el estado actual del repositorio:
 
 Los diagramas describen la arquitectura y comportamiento implementados. No se deben introducir tecnologías o integraciones que no estén presentes en el repositorio sin actualizar primero la documentación técnica correspondiente.
 
-> Nota: algunos documentos SDD anteriores contienen referencias históricas a Expo, Java 17, NISIRA u otras decisiones. Estos diagramas toman como referencia el estado actual del repositorio, especialmente `README.md`, `docker-compose.yml`, `backend/pom.xml` y `mobile/package.json`.
+> Nota: algunos documentos SDD anteriores contienen referencias históricas a Expo, NISIRA u otras decisiones. Estos diagramas toman como referencia el estado actual del repositorio, especialmente `README.md`, `docker-compose.yml`, `backend/pom.xml` y `mobile/package.json`.
 
 ## Renderizado
 

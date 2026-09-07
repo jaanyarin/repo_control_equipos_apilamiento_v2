@@ -55,11 +55,12 @@ export default function Usuarios() {
   const { user } = useApp()
   const [usuarios, setUsuarios] = useState([])
   const [roles, setRoles] = useState([])
+  const [areas, setAreas] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
-  const [formData, setFormData] = useState({ correo: '', rolId: '', estadoActivo: 'true' })
+  const [formData, setFormData] = useState({ correo: '', rolId: '', area: '', estadoActivo: 'true' })
   const [saving, setSaving] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState(null)
@@ -88,13 +89,15 @@ export default function Usuarios() {
     try {
       setLoading(true)
       setError(null)
-      const [usuariosData, rolesData] = await Promise.all([
+      const [usuariosData, rolesData, areasData] = await Promise.all([
         api.get('/usuarios').then((r) => r.data || r),
         api.get('/roles').then((r) => r.data || r),
+        api.get('/areas').then((r) => r.data || r),
       ])
       usuariosData.sort((a, b) => a.id - b.id)
       setUsuarios(usuariosData)
       setRoles(rolesData)
+      setAreas(areasData)
     } catch (err) {
       setError(err.response?.data?.message || err.message)
     } finally {
@@ -107,7 +110,7 @@ export default function Usuarios() {
 
   const openCreate = () => {
     setEditingUser(null)
-    setFormData({ correo: '', rolId: '', estadoActivo: 'true' })
+    setFormData({ correo: '', rolId: '', area: '', estadoActivo: 'true' })
     setDialogOpen(true)
   }
 
@@ -116,6 +119,7 @@ export default function Usuarios() {
     setFormData({
       correo: user.correo,
       rolId: esSuperAdminProtegido(user) ? 1 : user.rolId,
+      area: user.area || '',
       estadoActivo: esSuperAdminProtegido(user) ? 'true' : (user.estadoActivo ? 'true' : 'false'),
     })
     setDialogOpen(true)
@@ -133,11 +137,16 @@ export default function Usuarios() {
       alert('Seleccione un rol')
       return
     }
+    if (!formData.area) {
+      alert('Seleccione un área')
+      return
+    }
     setSaving(true)
     try {
       if (editingUser) {
         await api.put(`/usuarios/${editingUser.id}`, {
           rolId,
+          area: formData.area,
           estadoActivo: formData.estadoActivo === 'true',
         })
       } else {
@@ -145,6 +154,7 @@ export default function Usuarios() {
           correo,
           nombre: buildNameFromEmail(correo),
           rolId,
+          area: formData.area,
           idMicrosoft: correo,
           estadoActivo: true,
         })
@@ -176,6 +186,7 @@ export default function Usuarios() {
   }
 
   const filteredRoles = filterRolesByUserRole(roles)
+  const activeAreas = areas.filter((area) => area.estadoActivo !== false)
 
   const columns = [
     { field: 'id', label: 'ID' },
@@ -327,6 +338,18 @@ export default function Usuarios() {
                     <MenuItem key={r.id} value={r.id}>{r.nombre}</MenuItem>
                   ))
                 )}
+              </Select>
+            </FormControl>
+            <FormControl size="small" fullWidth required>
+              <InputLabel>Área</InputLabel>
+              <Select
+                value={formData.area}
+                label="Área"
+                onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+              >
+                {activeAreas.map((area) => (
+                  <MenuItem key={area.id} value={area.nombre}>{area.nombre}</MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Box>

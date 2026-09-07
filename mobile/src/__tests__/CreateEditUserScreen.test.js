@@ -138,28 +138,37 @@ describe('CreateEditUserScreen', () => {
             ],
           },
         },
+        '/areas': {
+          data: {
+            success: true,
+            data: [
+              { id: 20, nombre: 'Recepción Packing', codigo: 'RECEPCION_PACKING', estadoActivo: true },
+              { id: 21, nombre: 'Frío', codigo: 'FRIO', estadoActivo: true },
+            ],
+          },
+        },
       }
       return Promise.resolve(responses[endpoint])
     })
   })
 
-  it('muestra solo Nombre, Rol y Ubicación', async () => {
+  it('muestra Nombre, Rol, Área y Ubicación', async () => {
     const screen = render(<CreateEditUserScreen />)
 
     await waitFor(() => {
       expect(screen.getByTestId('input-Nombre')).toBeTruthy()
       expect(screen.getByTestId('select-Rol')).toBeTruthy()
+      expect(screen.getByTestId('select-Área')).toBeTruthy()
       expect(screen.getByTestId('select-Ubicación')).toBeTruthy()
     })
 
     expect(screen.queryByTestId('input-Correo')).toBeNull()
-    expect(screen.queryByTestId('input-Área')).toBeNull()
     expect(screen.queryByTestId('input-Puesto')).toBeNull()
     expect(screen.queryByTestId('input-Empresa')).toBeNull()
     expect(screen.queryByTestId('input-Departamento')).toBeNull()
   })
 
-  it('crea el usuario solo con el nombre (rol y ubicación opcionales)', async () => {
+  it('crea el usuario con área seleccionada', async () => {
     const screen = render(<CreateEditUserScreen />)
 
     await waitFor(() => {
@@ -167,12 +176,14 @@ describe('CreateEditUserScreen', () => {
     })
 
     fireEvent.changeText(screen.getByTestId('input-Nombre'), 'Juan Pérez')
+    fireEvent.press(screen.getByTestId('select-Área'))
     fireEvent.press(screen.getByTestId('submit-user'))
 
     await waitFor(() => {
       expect(mockPost).toHaveBeenCalledWith('/usuarios', {
         nombre: 'Juan Pérez',
         rolId: null,
+        area: 'Recepción Packing',
         ubicacion: null,
       })
       expect(mockPopTo).toHaveBeenCalledWith('Usuarios')
@@ -188,6 +199,7 @@ describe('CreateEditUserScreen', () => {
 
     fireEvent.changeText(screen.getByTestId('input-Nombre'), 'Ana López')
     fireEvent.press(screen.getByTestId('select-Rol'))
+    fireEvent.press(screen.getByTestId('select-Área'))
     fireEvent.press(screen.getByTestId('select-Ubicación'))
     fireEvent.press(screen.getByTestId('submit-user'))
 
@@ -195,6 +207,7 @@ describe('CreateEditUserScreen', () => {
       expect(mockPost).toHaveBeenCalledWith('/usuarios', {
         nombre: 'Ana López',
         rolId: 2,
+        area: 'Recepción Packing',
         ubicacion: 'Packing Uva',
       })
     })
@@ -202,7 +215,7 @@ describe('CreateEditUserScreen', () => {
 
   it('edita el usuario preservando sus valores', async () => {
     mockRouteParams = {
-      user: { id: 5, nombre: 'Pepe', rolId: 2, ubicacion: 'Packing Uva' },
+      user: { id: 5, nombre: 'Pepe', rolId: 2, area: 'Frío', ubicacion: 'Packing Uva' },
     }
 
     const screen = render(<CreateEditUserScreen />)
@@ -219,6 +232,7 @@ describe('CreateEditUserScreen', () => {
       expect(mockPut).toHaveBeenCalledWith('/usuarios/5', {
         nombre: 'Pepe Actualizado',
         rolId: 2,
+        area: 'Frío',
         ubicacion: 'Packing Uva',
       })
     })
@@ -226,7 +240,7 @@ describe('CreateEditUserScreen', () => {
 
   it('editar al Super Admin protegido (id=1) fuerza rolId=1 y no lo cambia', async () => {
     mockRouteParams = {
-      user: { id: 1, nombre: 'Super Admin', rolId: 1, ubicacion: '' },
+      user: { id: 1, nombre: 'Super Admin', rolId: 1, area: 'Frío', ubicacion: '' },
     }
 
     const screen = render(<CreateEditUserScreen />)
@@ -245,6 +259,7 @@ describe('CreateEditUserScreen', () => {
       expect(mockPut).toHaveBeenCalledWith('/usuarios/1', {
         nombre: 'Super Admin Editado',
         rolId: 1,
+        area: 'Frío',
         ubicacion: null,
       })
     })

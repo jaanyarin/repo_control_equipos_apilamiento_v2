@@ -176,10 +176,10 @@ export default function CreatePsrScreen() {
         : isOsrMode
           ? ''
           : editing?.osr?.numeroOsr || editing?.osrs?.[0]?.numeroOsr || '',
-      costoUnitario: (isEditOsrMode ? editingOsr?.costoUnitario : editing?.osr?.costoUnitario ?? editing?.osrs?.[0]?.costoUnitario) != null
+      costoUnitario: (isEditOsrMode ? editingOsr?.costoUnitario : isOsrMode ? null : editing?.osr?.costoUnitario ?? editing?.osrs?.[0]?.costoUnitario) != null
         ? String(isEditOsrMode ? editingOsr?.costoUnitario : editing?.osr?.costoUnitario ?? editing?.osrs?.[0]?.costoUnitario)
         : '',
-      tipoMoneda: (isEditOsrMode ? editingOsr?.tipoMoneda : editing?.osr?.tipoMoneda || editing?.osrs?.[0]?.tipoMoneda) || 'PEN',
+      tipoMoneda: (isEditOsrMode ? editingOsr?.tipoMoneda : isOsrMode ? null : editing?.osr?.tipoMoneda || editing?.osrs?.[0]?.tipoMoneda) || 'PEN',
     },
   })
 

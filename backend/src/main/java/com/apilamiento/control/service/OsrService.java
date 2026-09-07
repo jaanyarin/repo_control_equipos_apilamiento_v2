@@ -10,6 +10,7 @@ import com.apilamiento.control.repository.EquipoRepository;
 import com.apilamiento.control.repository.OsrRepository;
 import com.apilamiento.control.repository.PsrRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -25,6 +26,7 @@ public class OsrService {
     private final EquipoRepository equipoRepository;
     private final OsrMapper mapper;
 
+    @Inject
     public OsrService(OsrRepository osrRepository, PsrRepository psrRepository,
                       EquipoRepository equipoRepository, OsrMapper mapper) {
         this.osrRepository = osrRepository;

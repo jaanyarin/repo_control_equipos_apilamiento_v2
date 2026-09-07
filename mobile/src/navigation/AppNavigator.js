@@ -20,6 +20,7 @@ import MarcasScreen from '../screens/MarcasScreen'
 import ProveedoresScreen from '../screens/ProveedoresScreen'
 import TiposEquipoScreen from '../screens/TiposEquipoScreen'
 import SedesScreen from '../screens/SedesScreen'
+import AreasScreen from '../screens/AreasScreen'
 import CampanasScreen from '../screens/CampanasScreen'
 import SettingsScreen from '../screens/SettingsScreen'
 import RolesScreen from '../screens/RolesScreen'
@@ -82,6 +83,7 @@ function CatalogoTabScreen() {
     { label: 'Proveedores', icon: 'truck', screen: 'Proveedores' },
     { label: 'Tipos Equipo', icon: 'cog', screen: 'TiposEquipo' },
     { label: 'Sedes', icon: 'map-marker', screen: 'Sedes' },
+    { label: 'Áreas', icon: 'domain', screen: 'Areas' },
     { label: 'Motivos PSR', icon: 'clipboard-list', screen: 'MotivosPsr' },
   ]
   const operacionItems = [
@@ -218,6 +220,7 @@ function MainNavigator() {
       <MainStack.Screen name="Proveedores" component={ProveedoresScreen} options={{ title: 'Proveedores' }} />
       <MainStack.Screen name="TiposEquipo" component={TiposEquipoScreen} options={{ title: 'Tipos de Equipo' }} />
       <MainStack.Screen name="Sedes" component={SedesScreen} options={{ title: 'Sedes' }} />
+      <MainStack.Screen name="Areas" component={AreasScreen} options={{ title: 'Áreas' }} />
       <MainStack.Screen name="Campanas" component={CampanasScreen} options={{ title: 'Campañas' }} />
       <MainStack.Screen name="Roles" component={RolesScreen} options={{ title: 'Roles' }} />
       <MainStack.Screen name="Usuarios" component={UsuariosScreen} options={{ title: 'Usuarios' }} />

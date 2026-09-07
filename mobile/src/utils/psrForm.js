@@ -1,5 +1,5 @@
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
-const ISO_DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
+const ISO_DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?$/
 
 export function extractApiList(response, catalogName) {
   const body = response?.data ?? response
@@ -36,7 +36,7 @@ export function formatDisplayDate(dateStr) {
   if (ISO_DATETIME_PATTERN.test(dateStr)) {
     const [datePart, timePart] = dateStr.split('T')
     const [, month, day] = datePart.split('-')
-    return `${day}/${month}/${datePart.split('-')[0]} ${timePart}`
+    return `${day}/${month}/${datePart.split('-')[0]} ${timePart.slice(0, 5)}`
   }
   if (!ISO_DATE_PATTERN.test(raw)) return ''
   const [year, month, day] = raw.split('-')
