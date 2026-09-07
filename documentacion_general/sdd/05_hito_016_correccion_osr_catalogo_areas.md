@@ -57,10 +57,16 @@ Corregir el formulario mobile de creación y edición de OSR para conservar la i
 
 - Migración Flyway aplicada en PostgreSQL: versiones `V34`, `V35`, `V36`.
 - Backend Docker construido y arrancado con JDK 21.
-- Tests backend: `AreaServiceTest` 14, `EquipoServiceTest` 4, `IngresoEquipoServiceTest` 8, `UsuarioServiceTest` 10 — 36/36 pasan.
+- Tests backend: `AreaServiceTest` 14, `EquipoServiceTest` 4, `IngresoEquipoServiceTest` 8, `UsuarioServiceTest` 10, `PsrServiceTest` 7 — 43/43 pasan.
 - Tests mobile: 8/8.
 - ESLint mobile: correcto.
 - Build frontend web: correcto.
+
+## Bug fixes (2026-09-07)
+
+- **Sede selector**: `sedeOptions` ahora filtra solo sedes activas (`activeOnly=true`).
+- **DatePicker crash**: `Keyboard.dismiss()` con null-safety (try-catch) en `handleOpen`.
+- **Error 500 PSR**: Eliminados setters `LocalDate` duplicados en `PsrRequest` y `PsrDTO` que causaban `InvalidDefinitionException` de Jackson (conflicto `LocalDateTime` vs `LocalDate`).
 
 ## Archivos principales
 

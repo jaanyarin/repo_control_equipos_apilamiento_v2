@@ -50,14 +50,23 @@ android {
         applicationId "com.apilamiento.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 11300
-        versionName "1.13.0"
+        versionCode 11301
+        versionName "1.13.1"
     }
     buildTypes {
         release {
             signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+
+    // Renombra el APK final agregando el versionName dinámicamente
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            if (variant.buildType.name == 'release') {
+                outputFileName = "control-apilamiento-v${variant.versionName}.apk"
+            }
         }
     }
 }

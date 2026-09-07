@@ -1,5 +1,15 @@
 export const VERSION_HISTORY = [
   {
+    version: '1.13.1',
+    fecha: '2026-09-07',
+    titulo: 'Fix: bugs en Crear PSR (sedes, DatePicker, error 500)',
+    cambios: [
+      'Selector de sede ahora muestra solo sedes activas',
+      'DatePicker: corrección de crash "cannot read property dismiss of undefined"',
+      'Fix error 500 al crear PSR (setters LocalDate duplicados eliminados)',
+    ],
+  },
+  {
     version: '1.13.0',
     fecha: '2026-09-06',
     titulo: 'HDT-016 — Corrección PSR/OSR y catálogo de áreas',
