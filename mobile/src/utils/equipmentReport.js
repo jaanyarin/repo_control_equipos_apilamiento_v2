@@ -1,5 +1,5 @@
 import { generatePDF } from 'react-native-html-to-pdf'
-import Share from 'react-native-share'
+import FileViewer from 'react-native-file-viewer'
 import ReactNativeBlobUtil from 'react-native-blob-util'
 import api, { getToken, loadApiUrl } from '../api'
 import { theme } from '../theme'
@@ -132,6 +132,6 @@ export async function generateEquipmentReport(equipmentId) {
     }
   }
   const file = await generatePDF({ html: buildHtml(equipment, psrDetails, timeline, photoSections), fileName: `reporte_${equipment.codigo || equipmentId}_${Date.now()}`, directory: 'Documents' })
-  await Share.open({ url: file.filePath, type: 'application/pdf', title: 'Reporte de equipo', failOnCancel: false })
+  await FileViewer.open(file.filePath, { showOpenWithDialog: true, showAppsSuggestions: true })
   return file.filePath
 }

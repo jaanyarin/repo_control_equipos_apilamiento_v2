@@ -16,6 +16,7 @@ public class UsuarioMapper {
         dto.setNombre(entity.getNombre());
         dto.setPuesto(entity.getPuesto());
         dto.setArea(entity.getArea());
+        dto.setAreaId(entity.getAreaId());
         dto.setEmpresa(entity.getEmpresa());
         dto.setDepartamento(entity.getDepartamento());
         dto.setUbicacion(entity.getUbicacion());

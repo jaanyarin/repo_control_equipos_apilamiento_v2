@@ -18,6 +18,8 @@ public class EquipoDTO {
 
     @NotNull(message = "El tipo de equipo es obligatorio")
     private Long tipoEquipoId;
+    private Long areaId;
+    private String areaNombre;
     private String proveedorNombre;
     private String marcaNombre;
     private String tipoEquipoNombre;
@@ -71,6 +73,10 @@ public class EquipoDTO {
 
     public Long getTipoEquipoId() { return tipoEquipoId; }
     public void setTipoEquipoId(Long tipoEquipoId) { this.tipoEquipoId = tipoEquipoId; }
+    public Long getAreaId() { return areaId; }
+    public void setAreaId(Long areaId) { this.areaId = areaId; }
+    public String getAreaNombre() { return areaNombre; }
+    public void setAreaNombre(String areaNombre) { this.areaNombre = areaNombre; }
     public String getProveedorNombre() { return proveedorNombre; }
     public void setProveedorNombre(String proveedorNombre) { this.proveedorNombre = proveedorNombre; }
     public String getMarcaNombre() { return marcaNombre; }

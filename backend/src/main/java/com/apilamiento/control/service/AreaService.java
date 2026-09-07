@@ -98,10 +98,14 @@ public class AreaService {
     public Long areaIdDelUsuario(Long usuarioId) {
         if (usuarioId == null) return null;
         return usuarioRepository.findByIdOptional(usuarioId)
-                .map(usuario -> usuario.getArea())
-                .filter(area -> area != null && !area.isBlank())
-                .flatMap(area -> repository.findByNombre(area.trim()))
-                .map(area -> area.getId())
+                .map(usuario -> {
+                    if (usuario.getAreaId() != null) return usuario.getAreaId();
+                    String areaName = usuario.getArea();
+                    if (areaName == null || areaName.isBlank()) return null;
+                    return repository.findByNombre(areaName.trim())
+                            .map(area -> area.getId())
+                            .orElse(null);
+                })
                 .orElse(null);
     }
 }

@@ -4,6 +4,7 @@ import com.apilamiento.control.dto.UsuarioDTO;
 import com.apilamiento.control.entity.Rol;
 import com.apilamiento.control.entity.Usuario;
 import com.apilamiento.control.mapper.UsuarioMapper;
+import com.apilamiento.control.repository.AreaRepository;
 import com.apilamiento.control.repository.RolRepository;
 import com.apilamiento.control.repository.UsuarioRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -21,11 +22,14 @@ public class UsuarioService {
 
     private final UsuarioRepository repository;
     private final RolRepository rolRepository;
+    private final AreaRepository areaRepository;
     private final UsuarioMapper mapper;
 
-    public UsuarioService(UsuarioRepository repository, RolRepository rolRepository, UsuarioMapper mapper) {
+    public UsuarioService(UsuarioRepository repository, RolRepository rolRepository,
+                          AreaRepository areaRepository, UsuarioMapper mapper) {
         this.repository = repository;
         this.rolRepository = rolRepository;
+        this.areaRepository = areaRepository;
         this.mapper = mapper;
     }
 
@@ -61,6 +65,7 @@ public class UsuarioService {
         entity.setNombre(nombre);
         entity.setPuesto(dto.getPuesto());
         entity.setArea(dto.getArea());
+        entity.setAreaId(resolveAreaId(dto.getArea()));
         entity.setEmpresa(dto.getEmpresa());
         entity.setDepartamento(dto.getDepartamento());
         entity.setUbicacion(dto.getUbicacion());
@@ -92,7 +97,10 @@ public class UsuarioService {
         }
         if (dto.getNombre() != null) entity.setNombre(dto.getNombre());
         if (dto.getPuesto() != null) entity.setPuesto(dto.getPuesto());
-        if (dto.getArea() != null) entity.setArea(dto.getArea());
+        if (dto.getArea() != null) {
+            entity.setArea(dto.getArea());
+            entity.setAreaId(resolveAreaId(dto.getArea()));
+        }
         if (dto.getEmpresa() != null) entity.setEmpresa(dto.getEmpresa());
         if (dto.getDepartamento() != null) entity.setDepartamento(dto.getDepartamento());
         if (dto.getUbicacion() != null) entity.setUbicacion(dto.getUbicacion());
@@ -119,5 +127,12 @@ public class UsuarioService {
         return entity != null
                 && (Long.valueOf(1L).equals(entity.getId())
                     || "seed-superadmin".equalsIgnoreCase(entity.getIdMicrosoft()));
+    }
+
+    private Long resolveAreaId(String areaName) {
+        if (areaName == null || areaName.isBlank()) return null;
+        return areaRepository.findByNombre(areaName.trim())
+                .map(area -> area.getId())
+                .orElse(null);
     }
 }

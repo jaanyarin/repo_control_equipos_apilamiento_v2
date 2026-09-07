@@ -29,13 +29,18 @@ public class EquipoResource {
     }
 
     @GET
-    public Response listar() {
-        return Response.ok(ApiResponse.ok(service.listarTodos())).build();
+    public Response listar(@Context SecurityContext context) {
+        return Response.ok(ApiResponse.ok(service.listarTodos(
+                SecurityUtil.getUsuarioId(context), context.isUserInRole("Super Admin")))).build();
     }
 
     @GET
     @Path("/{id}/timeline")
-    public Response timeline(@PathParam("id") Long id) {
+    public Response timeline(@PathParam("id") Long id, @Context SecurityContext context) {
+        if (!service.puedeAcceder(id, SecurityUtil.getUsuarioId(context), context.isUserInRole("Super Admin"))) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error("Equipo no encontrado", "NOT_FOUND")).build();
+        }
         EquipoTimelineDTO dto = timelineService.obtenerTimeline(id);
         if (dto == null) {
             return Response.status(Response.Status.NOT_FOUND)
@@ -46,14 +51,15 @@ public class EquipoResource {
 
     @GET
     @Path("/resumen")
-    public Response resumen() {
-        return Response.ok(ApiResponse.ok(service.listarResumen())).build();
+    public Response resumen(@Context SecurityContext context) {
+        return Response.ok(ApiResponse.ok(service.filtrarPorAcceso(service.listarResumen(),
+                SecurityUtil.getUsuarioId(context), context.isUserInRole("Super Admin")))).build();
     }
 
     @GET
     @Path("/{id}")
-    public Response buscar(@PathParam("id") Long id) {
-        EquipoDTO dto = service.buscarPorId(id);
+    public Response buscar(@PathParam("id") Long id, @Context SecurityContext context) {
+        EquipoDTO dto = service.buscarPorId(id, SecurityUtil.getUsuarioId(context), context.isUserInRole("Super Admin"));
         if (dto == null) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(ApiResponse.error("Equipo no encontrado", "NOT_FOUND")).build();
@@ -63,26 +69,30 @@ public class EquipoResource {
 
     @GET
     @Path("/por-proveedor/{proveedorId}")
-    public Response listarPorProveedor(@PathParam("proveedorId") Long proveedorId) {
-        return Response.ok(ApiResponse.ok(service.listarPorProveedor(proveedorId))).build();
+    public Response listarPorProveedor(@PathParam("proveedorId") Long proveedorId, @Context SecurityContext context) {
+        return Response.ok(ApiResponse.ok(service.filtrarPorAcceso(service.listarPorProveedor(proveedorId),
+                SecurityUtil.getUsuarioId(context), context.isUserInRole("Super Admin")))).build();
     }
 
     @GET
     @Path("/por-marca/{marcaId}")
-    public Response listarPorMarca(@PathParam("marcaId") Long marcaId) {
-        return Response.ok(ApiResponse.ok(service.listarPorMarca(marcaId))).build();
+    public Response listarPorMarca(@PathParam("marcaId") Long marcaId, @Context SecurityContext context) {
+        return Response.ok(ApiResponse.ok(service.filtrarPorAcceso(service.listarPorMarca(marcaId),
+                SecurityUtil.getUsuarioId(context), context.isUserInRole("Super Admin")))).build();
     }
 
     @GET
     @Path("/por-tipo/{tipoEquipoId}")
-    public Response listarPorTipo(@PathParam("tipoEquipoId") Long tipoEquipoId) {
-        return Response.ok(ApiResponse.ok(service.listarPorTipoEquipo(tipoEquipoId))).build();
+    public Response listarPorTipo(@PathParam("tipoEquipoId") Long tipoEquipoId, @Context SecurityContext context) {
+        return Response.ok(ApiResponse.ok(service.filtrarPorAcceso(service.listarPorTipoEquipo(tipoEquipoId),
+                SecurityUtil.getUsuarioId(context), context.isUserInRole("Super Admin")))).build();
     }
 
     @GET
     @Path("/por-estado/{estadoOperativo}")
-    public Response listarPorEstado(@PathParam("estadoOperativo") String estadoOperativo) {
-        return Response.ok(ApiResponse.ok(service.listarPorEstadoOperativo(estadoOperativo))).build();
+    public Response listarPorEstado(@PathParam("estadoOperativo") String estadoOperativo, @Context SecurityContext context) {
+        return Response.ok(ApiResponse.ok(service.filtrarPorAcceso(service.listarPorEstadoOperativo(estadoOperativo),
+                SecurityUtil.getUsuarioId(context), context.isUserInRole("Super Admin")))).build();
     }
 
     @POST
@@ -98,6 +108,10 @@ public class EquipoResource {
     @RolesAllowed({"Super Admin", "Admin"})
     public Response actualizar(@PathParam("id") Long id, @Valid EquipoDTO dto,
             @Context SecurityContext context) {
+        if (!service.puedeAcceder(id, SecurityUtil.getUsuarioId(context), context.isUserInRole("Super Admin"))) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error("Equipo no encontrado", "NOT_FOUND")).build();
+        }
         dto.setUsuarioActualizacion(SecurityUtil.getUsuarioId(context));
         EquipoDTO actualizado = service.actualizar(id, dto);
         if (actualizado == null) {
@@ -109,7 +123,11 @@ public class EquipoResource {
 
     @DELETE
     @Path("/{id}")
-    public Response eliminar(@PathParam("id") Long id) {
+    public Response eliminar(@PathParam("id") Long id, @Context SecurityContext context) {
+        if (!service.puedeAcceder(id, SecurityUtil.getUsuarioId(context), context.isUserInRole("Super Admin"))) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(ApiResponse.error("Equipo no encontrado", "NOT_FOUND")).build();
+        }
         boolean resultado = service.eliminar(id);
         if (!resultado) {
             return Response.status(Response.Status.NOT_FOUND)

@@ -11,6 +11,7 @@ public class UsuarioDTO {
     private String correo;
     private String puesto;
     private String area;
+    private Long areaId;
     private String empresa;
     private String departamento;
     private String ubicacion;
@@ -36,6 +37,8 @@ public class UsuarioDTO {
     public void setPuesto(String puesto) { this.puesto = puesto; }
     public String getArea() { return area; }
     public void setArea(String area) { this.area = area; }
+    public Long getAreaId() { return areaId; }
+    public void setAreaId(Long areaId) { this.areaId = areaId; }
     public String getEmpresa() { return empresa; }
     public void setEmpresa(String empresa) { this.empresa = empresa; }
     public String getDepartamento() { return departamento; }

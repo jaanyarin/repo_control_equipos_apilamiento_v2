@@ -5,6 +5,7 @@ import com.apilamiento.control.entity.Rol;
 import com.apilamiento.control.entity.Usuario;
 import com.apilamiento.control.mapper.UsuarioMapper;
 import com.apilamiento.control.repository.RolRepository;
+import com.apilamiento.control.repository.AreaRepository;
 import com.apilamiento.control.repository.UsuarioRepository;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.WebApplicationException;
@@ -29,13 +30,16 @@ class UsuarioServiceTest {
     @Mock
     RolRepository rolRepository;
 
+    @Mock
+    AreaRepository areaRepository;
+
     UsuarioMapper mapper = new UsuarioMapper();
 
     UsuarioService service;
 
     @BeforeEach
     void setUp() {
-        service = new UsuarioService(repository, rolRepository, mapper);
+        service = new UsuarioService(repository, rolRepository, areaRepository, mapper);
     }
 
     private Usuario usuarioPersistido(Long id, String nombre, Long rolId) {

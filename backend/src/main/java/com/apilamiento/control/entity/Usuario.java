@@ -27,6 +27,9 @@ public class Usuario {
     @Column(length = 255)
     private String area;
 
+    @Column(name = "area_id")
+    private Long areaId;
+
     @Column(length = 255)
     private String empresa;
 
@@ -91,6 +94,8 @@ public class Usuario {
     public void setPuesto(String puesto) { this.puesto = puesto; }
     public String getArea() { return area; }
     public void setArea(String area) { this.area = area; }
+    public Long getAreaId() { return areaId; }
+    public void setAreaId(Long areaId) { this.areaId = areaId; }
     public String getEmpresa() { return empresa; }
     public void setEmpresa(String empresa) { this.empresa = empresa; }
     public String getDepartamento() { return departamento; }

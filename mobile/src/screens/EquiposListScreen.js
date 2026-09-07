@@ -136,6 +136,7 @@ export default function EquiposListScreen() {
                       <StatusChip status={statusType(item.estadoOperativo)} label={item.estadoOperativo || 'DESCONOCIDO'} />
                     </View>
                     <Text style={styles.cardMeta}>{item.proveedorNombre || 'Sin proveedor'} · {item.tipoEquipoNombre || 'Sin tipo'}</Text>
+                    <Text style={styles.cardArea}>Área: {item.areaNombre || 'Sin área asignada'}</Text>
                   </View>
                 </TouchableRipple>
                 {isManage && canEdit ? (
@@ -196,5 +197,6 @@ const styles = StyleSheet.create({
   cardTitle: { ...theme.typography.subtitle1, color: theme.colors.text.primary },
   cardModel: { ...theme.typography.body2, color: theme.colors.text.secondary, marginTop: theme.spacing[1] },
   cardMeta: { ...theme.typography.caption, color: theme.colors.text.tertiary },
+  cardArea: { ...theme.typography.caption, color: theme.colors.action.primary, marginTop: theme.spacing[1] },
   actions: { position: 'absolute', right: theme.spacing[2], bottom: theme.spacing[1], flexDirection: 'row' },
 })

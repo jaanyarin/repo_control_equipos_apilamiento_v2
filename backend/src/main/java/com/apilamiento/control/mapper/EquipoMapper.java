@@ -42,6 +42,7 @@ public class EquipoMapper {
         dto.setProveedorId(entity.getProveedorId());
         dto.setMarcaId(entity.getMarcaId());
         dto.setTipoEquipoId(entity.getTipoEquipoId());
+        dto.setAreaId(entity.getAreaId());
         dto.setEstadoActivo(entity.getEstadoActivo());
         dto.setUsuarioCreacion(entity.getUsuarioCreacion());
         dto.setUsuarioActualizacion(entity.getUsuarioActualizacion());

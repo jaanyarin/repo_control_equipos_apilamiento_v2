@@ -173,6 +173,7 @@ mapper/EntidadMapper.java          → MapStruct mapper
 | V32__psr_multiples_osr.sql | PSR 1:N OSR: DROP UNIQUE psr_id en fac_osr + índice compuesto |
 | V33__reparar_osr_psr_1n.sql | Repara instalaciones con unicidad residual en fac_osr.psr_id |
 | V34__dim_areas.sql | Catálogo de áreas y datos semilla para usuarios |
+| V35__fac_equipos_area.sql | Relación persistente de equipos con áreas y backfill histórico |
 
 ---
 

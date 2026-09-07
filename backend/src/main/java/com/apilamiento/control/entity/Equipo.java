@@ -24,6 +24,9 @@ public class Equipo {
     @Column(name = "tipo_equipo_id")
     private Long tipoEquipoId;
 
+    @Column(name = "area_id")
+    private Long areaId;
+
     @Column(nullable = false, length = 150)
     private String modelo;
 
@@ -137,6 +140,9 @@ public class Equipo {
 
     public Long getTipoEquipoId() { return tipoEquipoId; }
     public void setTipoEquipoId(Long tipoEquipoId) { this.tipoEquipoId = tipoEquipoId; }
+
+    public Long getAreaId() { return areaId; }
+    public void setAreaId(Long areaId) { this.areaId = areaId; }
 
     public String getModelo() { return modelo; }
     public void setModelo(String modelo) { this.modelo = modelo; }

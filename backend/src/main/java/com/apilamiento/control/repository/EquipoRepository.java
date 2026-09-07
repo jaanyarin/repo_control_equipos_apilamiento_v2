@@ -37,4 +37,8 @@ public class EquipoRepository implements PanacheRepository<Equipo> {
     public List<Equipo> listCompletos() {
         return list("ingresoCompleto = true and estadoActivo = true order by id");
     }
+
+    public List<Equipo> listCompletosByAreaId(Long areaId) {
+        return list("areaId = ?1 and ingresoCompleto = true and estadoActivo = true order by id", areaId);
+    }
 }
