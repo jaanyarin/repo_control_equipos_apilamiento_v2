@@ -36,14 +36,17 @@ public class IngresoEquipoService {
     private final NotificacionPushService notificacionPushService;
     private final EquipoMapper equipoMapper;
     private final EvidenciaIngresoEquipoMapper evidenciaMapper;
+    private final AreaService areaService;
 
+    @jakarta.inject.Inject
     public IngresoEquipoService(PsrRepository psrRepository, OsrRepository osrRepository,
             MotivoPsrRepository motivoRepository, EquipoRepository equipoRepository,
             ProveedorRepository proveedorRepository, MarcaRepository marcaRepository,
             TipoEquipoRepository tipoEquipoRepository,
             EvidenciaIngresoEquipoRepository evidenciaRepository,
             NotificacionPushService notificacionPushService,
-            EquipoMapper equipoMapper, EvidenciaIngresoEquipoMapper evidenciaMapper) {
+            EquipoMapper equipoMapper, EvidenciaIngresoEquipoMapper evidenciaMapper,
+            AreaService areaService) {
         this.psrRepository = psrRepository;
         this.osrRepository = osrRepository;
         this.motivoRepository = motivoRepository;
@@ -55,6 +58,20 @@ public class IngresoEquipoService {
         this.notificacionPushService = notificacionPushService;
         this.equipoMapper = equipoMapper;
         this.evidenciaMapper = evidenciaMapper;
+        this.areaService = areaService;
+    }
+
+    public IngresoEquipoService(PsrRepository psrRepository, OsrRepository osrRepository,
+            MotivoPsrRepository motivoRepository, EquipoRepository equipoRepository,
+            ProveedorRepository proveedorRepository, MarcaRepository marcaRepository,
+            TipoEquipoRepository tipoEquipoRepository,
+            EvidenciaIngresoEquipoRepository evidenciaRepository,
+            NotificacionPushService notificacionPushService,
+            EquipoMapper equipoMapper, EvidenciaIngresoEquipoMapper evidenciaMapper) {
+        this(psrRepository, osrRepository, motivoRepository, equipoRepository,
+                proveedorRepository, marcaRepository, tipoEquipoRepository,
+                evidenciaRepository, notificacionPushService, equipoMapper,
+                evidenciaMapper, null);
     }
 
     public List<PsrPendienteEquipoDTO> listarPsrPendientes() {
@@ -140,10 +157,15 @@ public class IngresoEquipoService {
         entity.setEstadoActivo(true);
         entity.setEstadoOperativo("OPERATIVO");
         entity.setUsuarioCreacion(usuarioId);
+        entity.setAreaId(areaIdDelUsuario(usuarioId));
         equipoRepository.persist(entity);
         equipoRepository.flush();
         osr.setEquipoId(entity.getId());
         return equipoMapper.toDTO(entity);
+    }
+
+    private Long areaIdDelUsuario(Long usuarioId) {
+        return areaService != null ? areaService.areaIdDelUsuario(usuarioId) : null;
     }
 
     @Transactional

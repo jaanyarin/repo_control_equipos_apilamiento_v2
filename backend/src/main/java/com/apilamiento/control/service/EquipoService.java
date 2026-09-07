@@ -36,12 +36,15 @@ public class EquipoService {
     private final SedeRepository sedeRepository;
     private final CampanaRepository campanaRepository;
     private final AveriaRepository averiaRepository;
+    private final AreaService areaService;
 
-    public EquipoService(EquipoRepository repository, EquipoMapper mapper,
+        @jakarta.inject.Inject
+        public EquipoService(EquipoRepository repository, EquipoMapper mapper,
             ProveedorRepository proveedorRepository, MarcaRepository marcaRepository,
             TipoEquipoRepository tipoEquipoRepository, OsrRepository osrRepository,
             PsrRepository psrRepository, SedeRepository sedeRepository,
-            CampanaRepository campanaRepository, AveriaRepository averiaRepository) {
+            CampanaRepository campanaRepository, AveriaRepository averiaRepository,
+            AreaService areaService) {
         this.repository = repository;
         this.mapper = mapper;
         this.proveedorRepository = proveedorRepository;
@@ -52,6 +55,17 @@ public class EquipoService {
         this.sedeRepository = sedeRepository;
         this.campanaRepository = campanaRepository;
         this.averiaRepository = averiaRepository;
+        this.areaService = areaService;
+    }
+
+    public EquipoService(EquipoRepository repository, EquipoMapper mapper,
+            ProveedorRepository proveedorRepository, MarcaRepository marcaRepository,
+            TipoEquipoRepository tipoEquipoRepository, OsrRepository osrRepository,
+            PsrRepository psrRepository, SedeRepository sedeRepository,
+            CampanaRepository campanaRepository, AveriaRepository averiaRepository) {
+        this(repository, mapper, proveedorRepository, marcaRepository, tipoEquipoRepository,
+                osrRepository, psrRepository, sedeRepository, campanaRepository,
+                averiaRepository, null);
     }
 
     public List<EquipoDTO> listarTodos() {
@@ -60,10 +74,35 @@ public class EquipoService {
                 .toList();
     }
 
+    public List<EquipoDTO> listarTodos(Long usuarioId, boolean superAdmin) {
+        if (superAdmin) return listarTodos();
+        Long areaId = areaIdDelUsuario(usuarioId);
+        if (areaId == null) return List.of();
+        return repository.listCompletosByAreaId(areaId).stream().map(this::toDTO).toList();
+    }
+
     public EquipoDTO buscarPorId(Long id) {
         return repository.findByIdOptional(id)
                 .map(this::toDTOConVinculacion)
                 .orElse(null);
+    }
+
+    public EquipoDTO buscarPorId(Long id, Long usuarioId, boolean superAdmin) {
+        Equipo entity = repository.findById(id);
+        if (entity == null || !puedeAcceder(entity, usuarioId, superAdmin)) return null;
+        return toDTOConVinculacion(entity);
+    }
+
+    public boolean puedeAcceder(Long equipoId, Long usuarioId, boolean superAdmin) {
+        Equipo entity = repository.findById(equipoId);
+        return entity != null && puedeAcceder(entity, usuarioId, superAdmin);
+    }
+
+    public List<EquipoDTO> filtrarPorAcceso(List<EquipoDTO> equipos, Long usuarioId, boolean superAdmin) {
+        if (superAdmin) return equipos;
+        Long areaId = areaIdDelUsuario(usuarioId);
+        if (areaId == null) return List.of();
+        return equipos.stream().filter(item -> areaId.equals(item.getAreaId())).toList();
     }
 
     public List<EquipoDTO> listarPorProveedor(Long proveedorId) {
@@ -102,6 +141,10 @@ public class EquipoService {
                 .ifPresent(value -> dto.setMarcaNombre(value.getNombre()));
         tipoEquipoRepository.findByIdOptional(entity.getTipoEquipoId())
                 .ifPresent(value -> dto.setTipoEquipoNombre(value.getNombre()));
+        if (entity.getAreaId() != null && areaService != null) {
+            var areaDto = areaService.buscarPorId(entity.getAreaId());
+            if (areaDto != null) dto.setAreaNombre(areaDto.getNombre());
+        }
         return dto;
     }
 
@@ -164,10 +207,19 @@ public class EquipoService {
         entity.setProveedorId(dto.getProveedorId());
         entity.setMarcaId(dto.getMarcaId());
         entity.setTipoEquipoId(dto.getTipoEquipoId());
+        entity.setAreaId(areaIdDelUsuario(dto.getUsuarioCreacion()));
         entity.setEstadoActivo(true);
         entity.setUsuarioCreacion(dto.getUsuarioCreacion() != null ? dto.getUsuarioCreacion() : 1L);
         repository.persist(entity);
         return toDTO(entity);
+    }
+
+    private boolean puedeAcceder(Equipo entity, Long usuarioId, boolean superAdmin) {
+        return superAdmin || (entity.getAreaId() != null && entity.getAreaId().equals(areaIdDelUsuario(usuarioId)));
+    }
+
+    private Long areaIdDelUsuario(Long usuarioId) {
+        return areaService != null ? areaService.areaIdDelUsuario(usuarioId) : null;
     }
 
     @Transactional

@@ -4,6 +4,8 @@ import com.apilamiento.control.dto.AreaDTO;
 import com.apilamiento.control.entity.Area;
 import com.apilamiento.control.mapper.AreaMapper;
 import com.apilamiento.control.repository.AreaRepository;
+import com.apilamiento.control.repository.EquipoRepository;
+import com.apilamiento.control.repository.UsuarioRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
@@ -16,10 +18,15 @@ import java.util.List;
 public class AreaService {
     private final AreaRepository repository;
     private final AreaMapper mapper;
+    private final EquipoRepository equipoRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public AreaService(AreaRepository repository, AreaMapper mapper) {
+    public AreaService(AreaRepository repository, AreaMapper mapper,
+                       EquipoRepository equipoRepository, UsuarioRepository usuarioRepository) {
         this.repository = repository;
         this.mapper = mapper;
+        this.equipoRepository = equipoRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     public List<AreaDTO> listarTodas() {
@@ -68,11 +75,33 @@ public class AreaService {
     public boolean eliminar(Long id) {
         Area entity = repository.findById(id);
         if (entity == null) return false;
+        long equiposAsignados = equipoRepository.count("areaId", id);
+        if (equiposAsignados > 0) {
+            throw new WebApplicationException(
+                "No se puede eliminar el área: tiene " + equiposAsignados + " equipo(s) asignado(s)",
+                Response.Status.CONFLICT);
+        }
+        long usuariosAsignados = usuarioRepository.count("area", entity.getNombre());
+        if (usuariosAsignados > 0) {
+            throw new WebApplicationException(
+                "No se puede eliminar el área: tiene " + usuariosAsignados + " usuario(s) asignado(s)",
+                Response.Status.CONFLICT);
+        }
         repository.delete(entity);
         return true;
     }
 
     private String generarCodigo(String nombre) {
         return nombre.toUpperCase().replaceAll("\\s+", "_").replaceAll("[^A-Z0-9ÁÉÍÓÚÑÜ_]", "");
+    }
+
+    public Long areaIdDelUsuario(Long usuarioId) {
+        if (usuarioId == null) return null;
+        return usuarioRepository.findByIdOptional(usuarioId)
+                .map(usuario -> usuario.getArea())
+                .filter(area -> area != null && !area.isBlank())
+                .flatMap(area -> repository.findByNombre(area.trim()))
+                .map(area -> area.getId())
+                .orElse(null);
     }
 }
