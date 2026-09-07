@@ -73,6 +73,8 @@ function classifyPhoto(photo) {
   return 'received'
 }
 
+const TEMP_PHOTOS_DIR = 'equipment_report_photos'
+
 async function photoData(photo, baseUrl, token) {
   if (!photo.url) return null
   try {
@@ -84,9 +86,14 @@ async function photoData(photo, baseUrl, token) {
       console.warn('[equipmentReport] Foto no disponible:', photo.url, 'status:', status)
       return null
     }
-    const contentType = response.info().headers?.['Content-Type'] || response.info().headers?.['content-type'] || 'image/jpeg'
     const base64 = await response.base64()
-    return `data:${contentType};base64,${base64}`
+    const { dirs, writeFile } = ReactNativeBlobUtil.fs
+    const photoDir = `${dirs.CacheDir}/${TEMP_PHOTOS_DIR}`
+    await ReactNativeBlobUtil.fs.mkdir(photoDir).catch(() => {})
+    const safeName = (photo.id || `photo_${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g, '_')
+    const filePath = `${photoDir}/${safeName}.jpg`
+    await writeFile(filePath, base64, 'base64')
+    return `${safeName}.jpg`
   } catch (e) {
     console.warn('[equipmentReport] Error descargando foto:', photo.url, e.message)
     return null
@@ -179,7 +186,11 @@ export async function generateEquipmentReport(equipmentId) {
   const safeOsr = (psr.numeroOsr || 'OSR').replace(/[^a-zA-Z0-9_-]/g, '')
   const safeGrr = (equipment.numeroGuiaRemision || 'GRR').replace(/[^a-zA-Z0-9_-]/g, '')
   const fileName = `Reporte_detalle_equipo_psr_${safePsr}_osr_${safeOsr}_grr_${safeGrr}`
-  const file = await generatePDF({ html, fileName, directory: 'Documents' })
+  const { dirs } = ReactNativeBlobUtil.fs
+  const photoDir = `${dirs.CacheDir}/${TEMP_PHOTOS_DIR}`
+  const baseURL = `file://${photoDir}/`
+  const file = await generatePDF({ html, fileName, directory: 'Documents', baseURL })
+  await ReactNativeBlobUtil.fs.unlink(photoDir).catch(() => {})
   await FileViewer.open(file.filePath, { showOpenWithDialog: true, showAppsSuggestions: true })
   return file.filePath
 }
