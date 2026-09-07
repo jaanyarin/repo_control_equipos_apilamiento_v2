@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.LocalDateTime;
-import java.time.LocalDate;
 
 public class EquipoDTO {
     private Long id;
@@ -157,7 +156,6 @@ public class EquipoDTO {
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
     public LocalDateTime getFechaIngreso() { return fechaIngreso; }
     public void setFechaIngreso(LocalDateTime fechaIngreso) { this.fechaIngreso = fechaIngreso; }
-    public void setFechaIngreso(LocalDate fechaIngreso) { this.fechaIngreso = fechaIngreso != null ? fechaIngreso.atStartOfDay() : null; }
     public OffsetDateTime getFechaDevolucion() { return fechaDevolucion; }
     public void setFechaDevolucion(OffsetDateTime fechaDevolucion) { this.fechaDevolucion = fechaDevolucion; }
     public String getNumeroGuiaRemision() { return numeroGuiaRemision; }

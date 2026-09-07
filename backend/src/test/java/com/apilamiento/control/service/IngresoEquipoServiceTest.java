@@ -15,7 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -184,7 +184,7 @@ class IngresoEquipoServiceTest {
         equipoDTO.setModelo("MODEL-X");
         equipoDTO.setCodigo("cod-hor-01");
         equipoDTO.setNumeroSerie("SN001");
-        equipoDTO.setFechaIngreso(LocalDate.of(2026, 8, 10));
+        equipoDTO.setFechaIngreso(LocalDateTime.of(2026, 8, 10, 0, 0));
         equipoDTO.setNumeroGuiaRemision("GUIA-001");
         equipoDTO.setHorometroInicio(new BigDecimal("1234.5"));
         equipoDTO.setHorometroFin(new BigDecimal("24345.6"));

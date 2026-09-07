@@ -31,15 +31,19 @@ import { hasPsrAdminRole } from '../utils/roles'
 
 function DatePickerField({ label, value, onChange, error, readOnly = false }) {
   const [show, setShow] = useState(false)
+  const processedRef = useRef(false)
 
   const handleChange = useCallback((event, selectedDate) => {
-    setShow(false)
-    if (event.type !== 'dismissed' && selectedDate) {
+    if (event.type === 'dismissed') return
+    if (selectedDate && !processedRef.current) {
+      processedRef.current = true
       onChange(formatApiDate(selectedDate))
+      setShow(false)
     }
   }, [onChange])
 
   const handleOpen = useCallback(() => {
+    processedRef.current = false
     if (Keyboard?.dismiss) {
       try { Keyboard.dismiss() } catch (_) {}
     }
