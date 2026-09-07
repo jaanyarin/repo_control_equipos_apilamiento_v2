@@ -76,15 +76,19 @@ function classifyPhoto(photo) {
 async function photoData(photo, baseUrl, token) {
   if (!photo.url) return null
   try {
-    const response = await ReactNativeBlobUtil.fetch('GET', `${baseUrl}${photo.url}`, token ? { Authorization: `Bearer ${token}` } : {})
-    if (response.info().statusCode !== 200) return null
+    const url = `${baseUrl}${photo.url}`
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    const response = await ReactNativeBlobUtil.fetch('GET', url, headers)
+    const status = response.info().statusCode
+    if (status !== 200) {
+      console.warn('[equipmentReport] Foto no disponible:', photo.url, 'status:', status)
+      return null
+    }
+    const contentType = response.info().headers?.['Content-Type'] || response.info().headers?.['content-type'] || 'image/jpeg'
     const base64 = await response.base64()
-    const { dirs, writeFile } = ReactNativeBlobUtil.fs
-    const fileName = `report_photo_${photo.id || Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`
-    const filePath = `${dirs.CacheDir}/${fileName}`
-    await writeFile(filePath, base64, 'base64')
-    return filePath
+    return `data:${contentType};base64,${base64}`
   } catch (e) {
+    console.warn('[equipmentReport] Error descargando foto:', photo.url, e.message)
     return null
   }
 }
@@ -93,7 +97,7 @@ async function photoMarkup(photos, baseUrl, token) {
   const items = await Promise.all(photos.map(async photo => ({ photo, data: await photoData(photo, baseUrl, token) })))
   const valid = items.filter(item => item.data)
   if (valid.length === 0) return '<p class="empty">Sin fotografías registradas.</p>'
-  return `<div class="photos">${valid.map(({ photo, data }) => `<figure><img src="file://${data}" /><figcaption>${display(photo.description || photo.type || 'Evidencia')}</figcaption></figure>`).join('')}</div>`
+  return `<div class="photos">${valid.map(({ photo, data }) => `<figure><img src="${data}" /><figcaption>${display(photo.description || photo.type || 'Evidencia')}</figcaption></figure>`).join('')}</div>`
 }
 
 function failureRows(timeline) {
