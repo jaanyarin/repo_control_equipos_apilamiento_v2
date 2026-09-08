@@ -7,6 +7,7 @@ import com.lowagie.text.Font;
 import com.lowagie.text.Image;
 import com.lowagie.text.pdf.*;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -62,6 +63,7 @@ public class ReporteService {
         this.evidenciaDevolucionRepository = evidenciaDevolucionRepository;
     }
 
+    @Transactional
     public byte[] generarPdf(Long equipoId) {
         Equipo equipo = equipoRepository.findByIdOptional(equipoId)
                 .orElseThrow(() -> new jakarta.ws.rs.WebApplicationException("Equipo no encontrado",
