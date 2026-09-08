@@ -10,28 +10,27 @@ export async function generateEquipmentReport(equipmentId) {
   try {
     res = await ReactNativeBlobUtil.fetch('GET', url, {
       Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
     })
   } catch (netErr) {
     const msg = netErr?.message || String(netErr)
     throw new Error(`Error de red: ${msg} — URL: ${url}`)
   }
 
-  const info = res.info()
-  const status = info?.statusCode
-
-  if (!status || status !== 200) {
-    let body = ''
-    try { body = await res.text() } catch (_) {}
+  const b64 = await res.base64()
+  const PDF_MAGIC = 'JVBER' // %PDF en base64
+  if (!b64 || !b64.startsWith(PDF_MAGIC)) {
+    let detail = ''
+    try { detail = atob(b64).substring(0, 300) } catch (_) {}
     throw new Error(
-      `HTTP ${status || 'sin respuesta'} al descargar reporte. ` +
-      (body ? `Detalle: ${body.substring(0, 200)}` : `URL: ${url}`)
+      detail
+        ? `Error del servidor: ${detail}`
+        : `Respuesta vacía del servidor — URL: ${url}`
     )
   }
 
   const { dirs } = ReactNativeBlobUtil.fs
   const filePath = `${dirs.CacheDir}/reporte_equipo_${equipmentId}.pdf`
-  await ReactNativeBlobUtil.fs.writeFile(filePath, await res.base64(), 'base64')
+  await ReactNativeBlobUtil.fs.writeFile(filePath, b64, 'base64')
   await FileViewer.open(filePath, { showOpenWithDialog: true, showAppsSuggestions: true })
   return filePath
 }

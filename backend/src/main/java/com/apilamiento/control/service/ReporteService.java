@@ -24,9 +24,10 @@ public class ReporteService {
     private static final ZoneId ZONE = ZoneId.of("America/Lima");
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final Color PRIMARY = new Color(25, 118, 210);
-    private static final Color HEADER_BG = new Color(25, 118, 210);
-    private static final Color ROW_ALT = new Color(245, 245, 245);
+    private static final Color HEADER_BG = new Color(33, 150, 243);
     private static final Color BORDER = new Color(200, 200, 200);
+    private static final Color LABEL_BG = new Color(232, 240, 254);
+    private static final Color WHITE = Color.WHITE;
 
     private final EquipoRepository equipoRepository;
     private final OsrRepository osrRepository;
@@ -92,71 +93,70 @@ public class ReporteService {
         String numeroOsr = osr != null ? osr.getNumeroOsr() : "-";
         String grr = equipo.getNumeroGuiaRemision() != null ? equipo.getNumeroGuiaRemision() : "-";
 
-        PdfPTable headerTable = new PdfPTable(1);
-        headerTable.setWidthPercentage(100);
-        PdfPCell brandCell = new PdfPCell(new Phrase("VANGUARD", new Font(Font.HELVETICA, 18, Font.BOLD, PRIMARY)));
-        brandCell.setBorder(Rectangle.BOTTOM);
-        brandCell.setBorderColor(PRIMARY);
-        brandCell.setBorderWidth(3);
-        brandCell.setPaddingBottom(8);
-        headerTable.addCell(brandCell);
-        doc.add(headerTable);
-        doc.add(new Paragraph(" "));
-
-        String title = "Reporte Detallado de Equipo";
-        String subtitle = "PSR: " + numeroPsr + "  |  OSR: " + numeroOsr + "  |  GRR: " + grr;
-        Paragraph titleP = new Paragraph(title, new Font(Font.HELVETICA, 16, Font.BOLD));
-        titleP.setAlignment(Element.ALIGN_CENTER);
-        doc.add(titleP);
-        Paragraph subtitleP = new Paragraph(subtitle, new Font(Font.HELVETICA, 10, Font.NORMAL, Color.GRAY));
-        subtitleP.setAlignment(Element.ALIGN_CENTER);
-        subtitleP.setSpacingAfter(12);
-        doc.add(subtitleP);
+        addPageHeader(doc, "Reporte Detallado de Equipo",
+                "PSR: " + numeroPsr + "  |  OSR: " + numeroOsr + "  |  GRR: " + grr);
 
         addSectionTitle(doc, "Información general");
-        PdfPTable generalTbl = createInfoTable();
-        addRow(generalTbl, "Proveedor", proveedor != null ? proveedor.getRazonSocial() : "-");
-        addRow(generalTbl, "Marca", marca != null ? marca.getNombre() : "-");
-        addRow(generalTbl, "Modelo", equipo.getModelo());
-        addRow(generalTbl, "Código", equipo.getCodigo());
-        addRow(generalTbl, "Nro Serie", equipo.getNumeroSerie());
-        addRow(generalTbl, "Guía Remisión", grr);
+        PdfPTable generalTbl = createCompactInfoTable();
+        addRow4Col(generalTbl,
+                "Proveedor", proveedor != null ? proveedor.getRazonSocial() : "-",
+                "Marca", marca != null ? marca.getNombre() : "-");
+        addRow4Col(generalTbl,
+                "Modelo", equipo.getModelo(),
+                "Código", equipo.getCodigo());
+        addRow4Col(generalTbl,
+                "Nro Serie", equipo.getNumeroSerie(),
+                "Guía Remisión", grr);
         doc.add(generalTbl);
         doc.add(new Paragraph(" "));
 
         addSectionTitle(doc, "Información de accesorios");
-        PdfPTable accTbl = createInfoTable();
-        addRow(accTbl, "Batería", accBool(equipo.getBateria()) + (equipo.getSerieBateria() != null ? " (" + equipo.getSerieBateria() + ")" : ""));
-        addRow(accTbl, "Batería Adicional", accBool(equipo.getBateriaAdicional()) + (equipo.getSerieBateriaAdicional() != null ? " (" + equipo.getSerieBateriaAdicional() + ")" : ""));
-        addRow(accTbl, "Cargador", accBool(equipo.getCargador()) + (equipo.getSerieCargador() != null ? " (" + equipo.getSerieCargador() + ")" : ""));
-        addRow(accTbl, "Transformador", accBool(equipo.getTransformador()) + (equipo.getSerieTransformador() != null ? " (" + equipo.getSerieTransformador() + ")" : ""));
-        addRow(accTbl, "Extintor", accBool(equipo.getExtintor()));
-        addRow(accTbl, "Cono de seguridad", accBool(equipo.getConoSeguridad()));
-        addRow(accTbl, "Botiquín", accBool(equipo.getBotiquin()));
-        addRow(accTbl, "Mesa de rodillos", accBool(equipo.getMesaRodillos()));
-        addRow(accTbl, "Elevador de batería", accBool(equipo.getElevadorBateria()));
-        addRow(accTbl, "Cable adicional", accBool(equipo.getCableAdicional()));
-        addRow(accTbl, "Conector adicional", accBool(equipo.getConectorAdicional()));
+        PdfPTable accTbl = createCompactInfoTable();
+        addRow4Col(accTbl,
+                "Batería", accBool(equipo.getBateria()) + (equipo.getSerieBateria() != null ? " (" + equipo.getSerieBateria() + ")" : ""),
+                "Batería Adic.", accBool(equipo.getBateriaAdicional()) + (equipo.getSerieBateriaAdicional() != null ? " (" + equipo.getSerieBateriaAdicional() + ")" : ""));
+        addRow4Col(accTbl,
+                "Cargador", accBool(equipo.getCargador()) + (equipo.getSerieCargador() != null ? " (" + equipo.getSerieCargador() + ")" : ""),
+                "Transformador", accBool(equipo.getTransformador()) + (equipo.getSerieTransformador() != null ? " (" + equipo.getSerieTransformador() + ")" : ""));
+        addRow4Col(accTbl,
+                "Extintor", accBool(equipo.getExtintor()),
+                "Cono seguridad", accBool(equipo.getConoSeguridad()));
+        addRow4Col(accTbl,
+                "Botiquín", accBool(equipo.getBotiquin()),
+                "Mesa rodillos", accBool(equipo.getMesaRodillos()));
+        addRow4Col(accTbl,
+                "Elevador batería", accBool(equipo.getElevadorBateria()),
+                "Cable adicional", accBool(equipo.getCableAdicional()));
+        addRow4Col(accTbl,
+                "Conector adicional", accBool(equipo.getConectorAdicional()), "", "");
         doc.add(accTbl);
         doc.add(new Paragraph(" "));
 
         addSectionTitle(doc, "Información del servicio");
-        PdfPTable svcTbl = createInfoTable();
-        addRow(svcTbl, "PSR asociada", numeroPsr);
-        addRow(svcTbl, "OSR asociada", numeroOsr);
-        addRow(svcTbl, "Campaña", campana != null ? campana.getNombre() : "-");
-        addRow(svcTbl, "Sede", sede != null ? sede.getNombre() : "-");
-        addRow(svcTbl, "Motivo", motivo != null ? motivo.getNombre() : "-");
-        addRow(svcTbl, "Fecha PSR", psr != null ? formatDate(psr.getFechaPsr()) : "-");
-        addRow(svcTbl, "Fecha Inicio de Servicio", psr != null ? formatDate(psr.getFechaInicioUso()) : "-");
-        addRow(svcTbl, "Fecha Final de Servicio", psr != null ? formatDate(psr.getFechaFinUso()) : "-");
-        addRow(svcTbl, "Tiempo de Servicio", psr != null ? calcularMeses(psr.getFechaInicioUso(), psr.getFechaFinUso()) : "-");
-        addRow(svcTbl, "Fecha Ingreso de Máquina", formatDate(equipo.getFechaIngreso()));
-        addRow(svcTbl, "Fecha Devolución de Máquina", formatDate(equipo.getFechaDevolucion()));
-        addRow(svcTbl, "Tiempo de Uso de Máquina", calcularMeses(equipo.getFechaIngreso(), equipo.getFechaDevolucion()));
-        addRow(svcTbl, "Horómetro Inicial", formatNum(equipo.getHorometroInicio()));
-        addRow(svcTbl, "Horómetro Final", formatNum(equipo.getHorometroFin()));
-        addRow(svcTbl, "Total Horómetro", totalHorometro(equipo.getHorometroInicio(), equipo.getHorometroFin()));
+        PdfPTable svcTbl = createCompactInfoTable();
+        addRow4Col(svcTbl,
+                "PSR asociada", numeroPsr,
+                "OSR asociada", numeroOsr);
+        addRow4Col(svcTbl,
+                "Campaña", campana != null ? campana.getNombre() : "-",
+                "Sede", sede != null ? sede.getNombre() : "-");
+        addRow4Col(svcTbl,
+                "Motivo", motivo != null ? motivo.getNombre() : "-",
+                "Fecha PSR", psr != null ? formatDate(psr.getFechaPsr()) : "-");
+        addRow4Col(svcTbl,
+                "Inicio de Servicio", psr != null ? formatDate(psr.getFechaInicioUso()) : "-",
+                "Fin de Servicio", psr != null ? formatDate(psr.getFechaFinUso()) : "-");
+        addRow4Col(svcTbl,
+                "Tiempo de Servicio", psr != null ? calcularMeses(psr.getFechaInicioUso(), psr.getFechaFinUso()) : "-",
+                "Ingreso Máquina", formatDate(equipo.getFechaIngreso()));
+        addRow4Col(svcTbl,
+                "Devolución Máquina", formatDate(equipo.getFechaDevolucion()),
+                "Tiempo de Uso", calcularMeses(equipo.getFechaIngreso(), equipo.getFechaDevolucion()));
+        addRow4Col(svcTbl,
+                "Horómetro Inicial", formatNum(equipo.getHorometroInicio()),
+                "Horómetro Final", formatNum(equipo.getHorometroFin()));
+        addRow4Col(svcTbl,
+                "Total Horómetro", totalHorometro(equipo.getHorometroInicio(), equipo.getHorometroFin()), "", "");
         doc.add(svcTbl);
         doc.add(new Paragraph(" "));
 
@@ -183,36 +183,48 @@ public class ReporteService {
 
         doc.newPage();
 
-        String page2Title = "Reporte Fotográfico de Equipo";
-        PdfPTable header2 = new PdfPTable(1);
-        header2.setWidthPercentage(100);
-        PdfPCell brand2 = new PdfPCell(new Phrase("VANGUARD", new Font(Font.HELVETICA, 18, Font.BOLD, PRIMARY)));
-        brand2.setBorder(Rectangle.BOTTOM);
-        brand2.setBorderColor(PRIMARY);
-        brand2.setBorderWidth(3);
-        brand2.setPaddingBottom(8);
-        header2.addCell(brand2);
-        doc.add(header2);
-        doc.add(new Paragraph(" "));
-        Paragraph t2 = new Paragraph(page2Title, new Font(Font.HELVETICA, 16, Font.BOLD));
-        t2.setAlignment(Element.ALIGN_CENTER);
-        doc.add(t2);
-        Paragraph sub2 = new Paragraph(equipo.getCodigo() + " · " + equipo.getModelo(),
-                new Font(Font.HELVETICA, 10, Font.NORMAL, Color.GRAY));
-        sub2.setAlignment(Element.ALIGN_CENTER);
-        sub2.setSpacingAfter(12);
-        doc.add(sub2);
+        addPageHeader(doc, "Reporte Fotográfico — Recepción",
+                equipo.getCodigo() + " · " + equipo.getModelo());
 
-        addIngresoPhotoSection(doc, "Fotografías del equipo recepcionado",
-                evidenciaIngresoRepository.listByEquipo(equipoId));
-        addIngresoPhotoSection(doc, "Fotografías de accesorios",
-                evidenciaIngresoRepository.listByEquipo(equipoId).stream()
-                        .filter(e -> isAccesorioType(e.getTipo().name())).toList());
-        addDevolucionPhotoSection(doc, "Fotografías del equipo entregado",
-                evidenciaDevolucionRepository.listByEquipo(equipoId));
+        List<EvidenciaIngresoEquipo> todasIngreso = evidenciaIngresoRepository.listByEquipo(equipoId);
+        addIngresoPhotoSection(doc, "Fotografías de recepción del equipo",
+                todasIngreso.stream().filter(e -> !isAccesorioType(e.getTipo().name())).toList());
+        addIngresoPhotoSection(doc, "Fotografías de accesorios recepcionados",
+                todasIngreso.stream().filter(e -> isAccesorioType(e.getTipo().name())).toList());
+
+        doc.newPage();
+
+        addPageHeader(doc, "Reporte Fotográfico — Devolución",
+                equipo.getCodigo() + " · " + equipo.getModelo());
+
+        List<EvidenciaDevolucionEquipo> todasDevolucion = evidenciaDevolucionRepository.listByEquipo(equipoId);
+        addDevolucionPhotoSection(doc, "Fotografías de equipo devuelto",
+                todasDevolucion.stream().filter(e -> !isAccesorioType(e.getTipo().name())).toList());
+        addDevolucionPhotoSection(doc, "Fotografías de accesorios devueltos",
+                todasDevolucion.stream().filter(e -> isAccesorioType(e.getTipo().name())).toList());
 
         doc.close();
         return out.toByteArray();
+    }
+
+    private void addPageHeader(Document doc, String title, String subtitle) {
+        PdfPTable headerTable = new PdfPTable(1);
+        headerTable.setWidthPercentage(100);
+        PdfPCell brandCell = new PdfPCell(new Phrase("VANGUARD", new Font(Font.HELVETICA, 18, Font.BOLD, PRIMARY)));
+        brandCell.setBorder(Rectangle.BOTTOM);
+        brandCell.setBorderColor(PRIMARY);
+        brandCell.setBorderWidth(3);
+        brandCell.setPaddingBottom(8);
+        headerTable.addCell(brandCell);
+        doc.add(headerTable);
+        doc.add(new Paragraph(" "));
+        Paragraph titleP = new Paragraph(title, new Font(Font.HELVETICA, 16, Font.BOLD));
+        titleP.setAlignment(Element.ALIGN_CENTER);
+        doc.add(titleP);
+        Paragraph subtitleP = new Paragraph(subtitle, new Font(Font.HELVETICA, 10, Font.NORMAL, Color.GRAY));
+        subtitleP.setAlignment(Element.ALIGN_CENTER);
+        subtitleP.setSpacingAfter(12);
+        doc.add(subtitleP);
     }
 
     private void addIngresoPhotoSection(Document doc, String title, List<EvidenciaIngresoEquipo> fotos) {
@@ -236,8 +248,8 @@ public class ReporteService {
             doc.add(empty);
             return;
         }
-        float photoWidth = 170;
-        float photoHeight = 130;
+        float photoWidth = 128;
+        float photoHeight = 98;
         PdfPTable grid = new PdfPTable(3);
         grid.setWidthPercentage(100);
         for (int i = 0; i < photos.size(); i++) {
@@ -250,10 +262,10 @@ public class ReporteService {
                 PdfPCell imgCell = new PdfPCell(img, true);
                 imgCell.setHorizontalAlignment(Element.ALIGN_CENTER);
                 imgCell.setBorderColor(BORDER);
-                imgCell.setPadding(4);
+                imgCell.setPadding(3);
                 String label = i < labels.size() ? labels.get(i) : "Evidencia";
                 PdfPCell capCell = new PdfPCell(new Phrase(label,
-                        new Font(Font.HELVETICA, 8, Font.NORMAL, Color.GRAY)));
+                        new Font(Font.HELVETICA, 7, Font.NORMAL, Color.GRAY)));
                 capCell.setHorizontalAlignment(Element.ALIGN_CENTER);
                 capCell.setBorderColor(BORDER);
                 capCell.setPadding(2);
@@ -294,10 +306,10 @@ public class ReporteService {
         PdfPTable tbl = new PdfPTable(1);
         tbl.setWidthPercentage(100);
         PdfPCell cell = new PdfPCell(new Phrase(title,
-                new Font(Font.HELVETICA, 11, Font.BOLD, Color.WHITE)));
+                new Font(Font.HELVETICA, 11, Font.BOLD, WHITE)));
         cell.setBackgroundColor(HEADER_BG);
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setPadding(5);
+        cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        cell.setPadding(6);
         cell.setBorder(Rectangle.NO_BORDER);
         tbl.addCell(cell);
         tbl.setSpacingAfter(4);
@@ -305,30 +317,41 @@ public class ReporteService {
         doc.add(tbl);
     }
 
-    private PdfPTable createInfoTable() {
-        PdfPTable tbl = new PdfPTable(2);
+    private PdfPTable createCompactInfoTable() {
+        PdfPTable tbl = new PdfPTable(4);
         tbl.setWidthPercentage(100);
-        tbl.setWidths(new float[]{35, 65});
+        tbl.setWidths(new float[]{22, 28, 22, 28});
         return tbl;
     }
 
-    private void addRow(PdfPTable tbl, String label, String value) {
-        PdfPCell lbl = new PdfPCell(new Phrase(label != null ? label : "-",
+    private void addRow4Col(PdfPTable tbl, String l1, String v1, String l2, String v2) {
+        addLabelCell(tbl, l1);
+        addValueCell(tbl, v1);
+        addLabelCell(tbl, l2);
+        addValueCell(tbl, v2);
+    }
+
+    private void addLabelCell(PdfPTable tbl, String text) {
+        PdfPCell cell = new PdfPCell(new Phrase(text != null ? text : "-",
                 new Font(Font.HELVETICA, 9, Font.BOLD)));
-        lbl.setBorderColor(BORDER);
-        lbl.setPadding(4);
-        PdfPCell val = new PdfPCell(new Phrase(value != null ? value : "-",
+        cell.setBackgroundColor(LABEL_BG);
+        cell.setBorderColor(BORDER);
+        cell.setPadding(4);
+        tbl.addCell(cell);
+    }
+
+    private void addValueCell(PdfPTable tbl, String text) {
+        PdfPCell cell = new PdfPCell(new Phrase(text != null ? text : "-",
                 new Font(Font.HELVETICA, 9)));
-        val.setBorderColor(BORDER);
-        val.setPadding(4);
-        tbl.addCell(lbl);
-        tbl.addCell(val);
+        cell.setBorderColor(BORDER);
+        cell.setPadding(4);
+        tbl.addCell(cell);
     }
 
     private void addTableHeader(PdfPTable tbl, String[] headers) {
         for (String h : headers) {
             PdfPCell cell = new PdfPCell(new Phrase(h,
-                    new Font(Font.HELVETICA, 8, Font.BOLD, Color.WHITE)));
+                    new Font(Font.HELVETICA, 8, Font.BOLD, WHITE)));
             cell.setBackgroundColor(PRIMARY);
             cell.setHorizontalAlignment(Element.ALIGN_CENTER);
             cell.setPadding(4);

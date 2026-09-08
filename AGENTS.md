@@ -293,7 +293,7 @@ La versión de la aplicación se cuantifica con **SemVer `X.Y.Z`** y se muestra 
 
 - `docs:`, `refactor:`, `test:`, `chore:` **NO** cambian versión.
 - El script `mobile/scripts/bump-version.js` actualiza `package.json` y `android/app/build.gradle` (`versionName` + `versionCode` = `MAJOR*10000 + MINOR*100 + PATCH`, monótono).
-- **Versión actual: `1.13.0`** (1.0.0 = HDT-001+002 base; +0.1.0 por cada HDT implementado hasta HDT-016; HDT-005 cancelado no cuenta).
+- **Versión actual: `1.14.0`** (1.0.0 = HDT-001+002 base; +0.1.0 por cada HDT implementado hasta HDT-017; HDT-005 cancelado no cuenta).
 - El historial completo vive en `mobile/src/constants/versionHistory.js` y se consulta desde el Perfil (botón de historial).
 
 ---
@@ -534,6 +534,20 @@ db: crear migración V8 para tabla de evidencias
 | Web/Mobile: CRUD del catálogo Áreas | ✅ |
 | Web/Mobile: selector de área al crear y editar usuarios | ✅ |
 | Validación: tests mobile 8/8, ESLint mobile y build web | ✅ |
+
+### HDT-017 — Reporte PDF: mejora UX/UI y fix descarga mobile (IMPLEMENTADO ✅)
+
+| Módulo | Estado |
+|---|---|
+| Fix descarga PDF mobile: magic bytes `JVBER` en lugar de `statusCode` undefined | ✅ |
+| Tablas de Info General y Servicio reorganizadas en 4 columnas compactas | ✅ |
+| Tabla de accesorios reorganizada en grid 2×2 | ✅ |
+| Color de celdas label con fondo azul claro (LABEL_BG) | ✅ |
+| Fotos reducidas 25% (128×98 px) | ✅ |
+| Hoja 2: recepción equipo + recepción accesorios (sin duplicados) | ✅ |
+| Hoja 3: devolución equipo + devolución accesorios (nueva) | ✅ |
+| Backend: BUILD SUCCESS (135 source files) | ✅ |
+| Mobile: ESLint limpio | ✅ |
 
 ---
 

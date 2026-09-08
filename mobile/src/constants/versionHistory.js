@@ -1,5 +1,21 @@
 export const VERSION_HISTORY = [
   {
+    version: '1.14.0',
+    fecha: '2026-09-08',
+    titulo: 'Reporte PDF: mejora de UX/UI y fix de descarga en mobile',
+    cambios: [
+      'Fix descarga de PDF en mobile: ReactNativeBlobUtil.statusCode undefined → verificación por magic bytes PDF',
+      'PDF: tablas de Información General y Servicio reorganizadas en 2 columnas compactas (4 col: label1|val1|label2|val2)',
+      'PDF: sección de accesorios reorganizada en grid 2 columnas',
+      'PDF: color de celdas label con fondo azul claro (LABEL_BG) para mejor legibilidad',
+      'PDF: alineación de títulos de sección a la izquierda',
+      'PDF: fotos reducidas 25% (128×98 px) para mayor densidad por hoja',
+      'PDF: hoja 2 = recepción equipo + recepción accesorios (por separado, sin duplicados)',
+      'PDF: hoja 3 = devolución equipo + devolución accesorios (nueva)',
+      'PDF: extracción de addPageHeader() para reutilizar en las 3 hojas',
+    ],
+  },
+  {
     version: '1.13.1',
     fecha: '2026-09-07',
     titulo: 'Fix: bugs en Crear PSR (sedes, DatePicker, error 500)',
