@@ -77,3 +77,4 @@ backend/.m2-ci/
 
 # Grabaciones de sesiones (opencode, etc.)
 .recordings/
+opencode.json
